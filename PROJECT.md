@@ -159,8 +159,7 @@ Opened when a user selects a result. Displays a **card** with:
 | Database | MongoDB + Mongoose |
 | Auth | JWT (jsonwebtoken + bcryptjs) |
 | HTTP Client | Axios |
-| Styling | CSS / TailwindCSS |
-| Dev Tools | Nodemon, ESLint |
+| Styling | CSS / Bootstrap |
 
 ---
 
