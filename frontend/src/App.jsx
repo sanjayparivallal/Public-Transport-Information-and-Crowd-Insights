@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import './index.css';
 
+import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 
 import Login from './pages/auth/Login';
@@ -14,6 +16,7 @@ import TransportDetail from './pages/transport/TransportDetail';
 import Profile from './pages/profile/Profile';
 import ManageTransport from './pages/authority/ManageTransport';
 
+// Auth pages don't show the Navbar
 const AUTH_ROUTES = ['/login', '/signup/commuter', '/signup/authority'];
 
 const App = () => {
@@ -23,24 +26,29 @@ const App = () => {
   return (
     <>
       {showNavbar && <Navbar />}
-      <div className={showNavbar ? 'container mt-4' : ''}>
+      <div className={showNavbar ? '' : ''}>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup/commuter" element={<SignupCommuter />} />
-          <Route path="/signup/authority" element={<SignupAuthority />} />
+          {/* Public auth routes */}
+          <Route path="/login"             element={<Login />} />
+          <Route path="/signup/commuter"   element={<SignupCommuter />} />
+          <Route path="/signup/authority"  element={<SignupAuthority />} />
 
-          <Route path="/dashboard" element={<CommuterDashboard />} />
-          <Route path="/dashboard/commuter" element={<CommuterDashboard />} />
+          {/* Dashboard routes */}
+          <Route path="/dashboard"           element={<CommuterDashboard />} />
+          <Route path="/dashboard/commuter"  element={<CommuterDashboard />} />
           <Route path="/dashboard/authority" element={<AuthorityDashboard />} />
 
-          <Route path="/search" element={<SearchRoutes />} />
-          <Route path="/transport/:id" element={<TransportDetail />} />
+          {/* Search & Transport */}
+          <Route path="/search"          element={<SearchRoutes />} />
+          <Route path="/transport/:id"   element={<TransportDetail />} />
 
-          <Route path="/profile" element={<Profile />} />
+          {/* Profile & Authority manage */}
+          <Route path="/profile"          element={<Profile />} />
           <Route path="/authority/manage" element={<ManageTransport />} />
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/search" replace />} />
+          <Route path="*" element={<Navigate to="/search" replace />} />
         </Routes>
       </div>
     </>
@@ -50,7 +58,9 @@ const App = () => {
 export default function Root() {
   return (
     <BrowserRouter>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
