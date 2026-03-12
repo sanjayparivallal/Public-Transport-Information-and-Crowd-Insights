@@ -50,7 +50,13 @@ const searchTransports = async ({
 
   // Stage 3: filter on transport fields
   const transportMatch = { 'transportId.isActive': true };
-  if (busNo) transportMatch['transportId.transportNumber'] = { $regex: busNo, $options: 'i' };
+  if (busNo) {
+    if (!transportMatch.$or) transportMatch.$or = [];
+    transportMatch.$or.push(
+      { 'transportId.transportNumber': { $regex: busNo, $options: 'i' } },
+      { 'transportId.name': { $regex: busNo, $options: 'i' } }
+    );
+  }
   if (type)  transportMatch['transportId.type'] = type;
   if (myTransports && userId && mongoose.isValidObjectId(userId)) {
     transportMatch['transportId.authorityId'] = new mongoose.Types.ObjectId(String(userId));

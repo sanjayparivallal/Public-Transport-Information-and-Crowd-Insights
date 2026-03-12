@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { registerCommuter } from '../../api/authApi';
 
 const SignupCommuter = () => {
@@ -12,13 +13,10 @@ const SignupCommuter = () => {
   const [showPw, setShowPw]   = useState(false);
   const [showCp, setShowCp]   = useState(false);
   const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState('');
-  const [success, setSuccess]   = useState('');
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
     setErrors(prev => ({ ...prev, [e.target.name]: '' }));
-    setApiError('');
   };
 
   const validate = () => {
@@ -45,10 +43,10 @@ const SignupCommuter = () => {
       const payload = { name: form.name.trim(), email: form.email.trim(), password: form.password };
       if (form.phone.trim()) payload.phone = form.phone.trim();
       await registerCommuter(payload);
-      setSuccess('Account created! Redirecting to login…');
+      toast.success('Account created! Redirecting to login…');
       setTimeout(() => navigate('/login'), 1800);
     } catch (err) {
-      setApiError(err.message || 'Registration failed. Please try again.');
+      toast.error(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -64,13 +62,6 @@ const SignupCommuter = () => {
 
         <h1 className="auth-title">Create Commuter Account</h1>
         <p className="auth-subtitle">Join as a commuter to search routes, get crowd info &amp; more</p>
-
-        {apiError && (
-          <div className="alert-custom alert-error mb-3">⚠️ {apiError}</div>
-        )}
-        {success && (
-          <div className="alert-custom alert-success mb-3">✅ {success}</div>
-        )}
 
         <form onSubmit={handleSubmit} noValidate>
           {/* Full Name */}

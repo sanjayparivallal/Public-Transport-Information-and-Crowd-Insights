@@ -58,16 +58,18 @@ const Navbar = () => {
               </li>
             )}
 
-            <li className="nav-item">
-              <NavLink
-                to="/search"
-                className={({ isActive }) =>
-                  `nav-link${isActive ? ' active' : ''}`
-                }
-              >
-                🔍 Search Routes
-              </NavLink>
-            </li>
+            {user && (
+              <li className="nav-item">
+                <NavLink
+                  to="/search"
+                  className={({ isActive }) =>
+                    `nav-link${isActive ? ' active' : ''}`
+                  }
+                >
+                  🔍 Search Routes
+                </NavLink>
+              </li>
+            )}
 
             {user && (
               <li className="nav-item">

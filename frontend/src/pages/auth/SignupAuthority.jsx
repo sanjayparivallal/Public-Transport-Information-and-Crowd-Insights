@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { registerAuthority } from '../../api/authApi';
 
 const SignupAuthority = () => {
@@ -15,13 +16,10 @@ const SignupAuthority = () => {
   const [showPw, setShowPw]    = useState(false);
   const [showCp, setShowCp]    = useState(false);
   const [loading, setLoading]  = useState(false);
-  const [apiError, setApiError] = useState('');
-  const [success, setSuccess]   = useState('');
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
     setErrors(prev => ({ ...prev, [e.target.name]: '' }));
-    setApiError('');
   };
 
   const validate = () => {
@@ -67,10 +65,10 @@ const SignupAuthority = () => {
       if (form.officeAddress.trim()) payload.officeAddress = form.officeAddress.trim();
 
       await registerAuthority(payload);
-      setSuccess('Authority account created! Redirecting to login…');
-      setTimeout(() => navigate('/login'), 1800);
+      toast.success('Authority account created! Redirecting to login…');
+      setTimeout(() => navigate('/login/authority'), 1800);
     } catch (err) {
-      setApiError(err.message || 'Registration failed. Please try again.');
+      toast.error(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -86,13 +84,6 @@ const SignupAuthority = () => {
 
         <h1 className="auth-title">Authority Registration</h1>
         <p className="auth-subtitle">Register your transport authority to manage buses and trains</p>
-
-        {apiError && (
-          <div className="alert-custom alert-error mb-3">⚠️ {apiError}</div>
-        )}
-        {success && (
-          <div className="alert-custom alert-success mb-3">✅ {success}</div>
-        )}
 
         <form onSubmit={handleSubmit} noValidate>
           {/* ── Personal Info ── */}
@@ -271,7 +262,7 @@ const SignupAuthority = () => {
         </form>
 
         <div className="auth-links mt-3">
-          Already have an account? <Link to="/login">Sign In</Link>
+          Already have an account? <Link to="/login/authority">Sign In</Link>
           <br />
           Registering as a commuter? <Link to="/signup/commuter">Commuter Sign Up</Link>
         </div>

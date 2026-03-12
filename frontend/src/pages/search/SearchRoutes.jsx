@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { searchTransports } from '../../api/transportApi';
 import TransportCard from '../../components/TransportCard';
 
@@ -12,7 +13,6 @@ const SearchRoutes = () => {
   const [results, setResults]     = useState([]);
   const [loading, setLoading]     = useState(false);
   const [searched, setSearched]   = useState(false);
-  const [error, setError]         = useState('');
   const [pagination, setPagination] = useState(null);
   const [page, setPage]           = useState(1);
 
@@ -22,23 +22,24 @@ const SearchRoutes = () => {
 
   const doSearch = async (pageNum = 1) => {
     setLoading(true);
-    setError('');
     try {
       const params = { page: pageNum, limit: 20 };
-      if (filters.busNo.trim())         params.busNo         = filters.busNo.trim();
+      if (filters.busNo.trim())         params.busNo         = filters.busNo.trim().toLowerCase();
       if (filters.type)                 params.type          = filters.type;
-      if (filters.origin.trim())        params.origin        = filters.origin.trim();
-      if (filters.destination.trim())   params.destination   = filters.destination.trim();
+      if (filters.origin.trim())        params.origin        = filters.origin.trim().toLowerCase();
+      if (filters.destination.trim())   params.destination   = filters.destination.trim().toLowerCase();
       if (filters.departureTime.trim()) params.departureTime = filters.departureTime.trim();
 
       const res = await searchTransports(params);
-      const data = res.data;
-      setResults(data.results || []);
-      setPagination(data.pagination || null);
+      // Backend sendSuccess returns { success: true, data: { results, pagination } }
+      // Axios puts that in res.data
+      const payload = res.data?.data || res.data;
+      setResults(payload.results || []);
+      setPagination(payload.pagination || null);
       setPage(pageNum);
       setSearched(true);
     } catch (err) {
-      setError(err.message || 'Search failed. Please try again.');
+      toast.error(err.message || 'Search failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -54,7 +55,6 @@ const SearchRoutes = () => {
     setResults([]);
     setSearched(false);
     setPagination(null);
-    setError('');
   };
 
   return (
@@ -136,11 +136,6 @@ const SearchRoutes = () => {
             </div>
           </form>
         </div>
-
-        {/* Error */}
-        {error && (
-          <div className="alert-custom alert-error mb-3">⚠️ {error}</div>
-        )}
 
         {/* Loading */}
         {loading && (
