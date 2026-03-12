@@ -35,17 +35,19 @@ const LoginAuthority = () => {
 
     setLoading(true);
     try {
-      const res = await loginUser({ email: form.email.trim(), password: form.password });
+      const res = await loginUser({ email: form.email.trim().toLowerCase(), password: form.password });
 
-      // Support both res.data and res.data.data response shapes
-      const payload     = res.data?.data || res.data;
+      // Backend returns: { success:true, data: { accessToken, refreshToken, authority } }
+      // (authorities are NOT in the `user` key — they use `authority`)
+      const payload      = res.data?.data || res.data;
       const accessToken  = payload.accessToken;
       const refreshToken = payload.refreshToken;
-      const user         = payload.user;
+      // Authority login returns `authority`, commuter login returns `user`
+      const userObj      = payload.user || payload.authority;
 
-      if (!accessToken || !user) throw new Error('Invalid response from server.');
+      if (!accessToken || !userObj) throw new Error('Invalid response from server.');
 
-      if (user.role !== 'authority') {
+      if (userObj.role !== 'authority') {
         logout();
         throw new Error('Please use the Commuter Login portal.');
       }
@@ -53,17 +55,24 @@ const LoginAuthority = () => {
       // Store & set auth state
       localStorage.setItem('token', accessToken);
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-      login(user, accessToken, refreshToken);
+      login(userObj, accessToken, refreshToken);
 
-      // Redirect: go back to where they came from, or role-based default
+      // Redirect
       const from = location.state?.from;
-      if (from && from !== '/login') {
+      if (from && from !== '/login/authority') {
         navigate(from, { replace: true });
       } else {
         navigate('/dashboard/authority', { replace: true });
       }
     } catch (err) {
-      toast.error(err.message || 'Login failed. Please check your credentials.');
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('invalid credentials')) {
+        toast.error('❌ Incorrect email or password. Please try again.');
+      } else if (msg.toLowerCase().includes('disabled')) {
+        toast.error('🚫 Your account has been disabled. Contact support.');
+      } else {
+        toast.error(msg || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

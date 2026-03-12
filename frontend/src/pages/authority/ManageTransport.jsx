@@ -376,8 +376,9 @@ const ManageTransport = () => {
     setError('');
     try {
       const res = await getManagedTransports();
-      const d   = res.data?.data;
-      setTransports(d?.results || d?.transports || (Array.isArray(d) ? d : []));
+      // /transport/mine returns { success, data: { transports: [...], total } }
+      const d = res.data?.data || res.data;
+      setTransports(d?.transports || (Array.isArray(d) ? d : []));
     } catch (err) {
       setError(err.message || 'Failed to load transports.');
     } finally {

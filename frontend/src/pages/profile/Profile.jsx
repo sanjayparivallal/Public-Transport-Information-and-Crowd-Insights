@@ -19,7 +19,8 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const res = await getProfile();
-        const data = res.data?.user || res.data;
+        const raw = res.data?.data || res.data;
+        const data = raw?.user || raw?.authorityProfile || raw;
         setProfile(data);
         setForm({ name: data?.name || '', phone: data?.phone || '', password: '' });
       } catch (err) {

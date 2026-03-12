@@ -52,8 +52,8 @@ const AuthorityDashboard = () => {
         setProfile(d?.authorityProfile || d?.user || d);
       }
       if (transportsRes) {
-        const d = transportsRes.data?.data;
-        setTransports(d?.results || d?.transports || (Array.isArray(d) ? d : []));
+        const d = transportsRes.data?.data || transportsRes.data;
+        setTransports(d?.transports || d?.results || (Array.isArray(d) ? d : []));
       }
       if (incidentsRes) {
         const d = incidentsRes.data?.data;

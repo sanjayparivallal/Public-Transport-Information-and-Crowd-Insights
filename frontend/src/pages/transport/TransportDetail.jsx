@@ -41,17 +41,22 @@ const TransportDetail = () => {
         ]);
 
         if (tRes.status === 'fulfilled') {
-          setTransport(tRes.value.data?.transport || tRes.value.data);
+          // Backend sendSuccess wraps in { success, data: ... }
+          const tPayload = tRes.value.data?.data || tRes.value.data;
+          setTransport(tPayload?.transport || tPayload);
         } else {
           setError('Transport not found or access denied.');
           setLoading(false);
           return;
         }
         if (cRes.status === 'fulfilled') {
-          setCrowd(cRes.value.data);
+          // Crowd: { success, data: { crowdLevel, reports, livePosition } }
+          const cPayload = cRes.value.data?.data || cRes.value.data;
+          setCrowd(cPayload);
         }
         if (iRes.status === 'fulfilled') {
-          setIncidents(iRes.value.data?.incidents || []);
+          const iPayload = iRes.value.data?.data || iRes.value.data;
+          setIncidents(iPayload?.incidents || []);
         }
       } catch (err) {
         setError(err.message || 'Failed to load transport details.');
