@@ -31,6 +31,16 @@ const searchTransports = async (req, res, next) => {
   }
 };
 
+// GET /api/transport/mine — Authority: get own transports as flat list
+const getMyTransports = async (req, res, next) => {
+  try {
+    const data = await transportService.getMyTransports(req.user.id);
+    return sendSuccess(res, 200, data);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // GET /api/transport/:id
 const getTransportById = async (req, res, next) => {
   try {
@@ -89,4 +99,4 @@ const assignStaff = async (req, res, next) => {
   }
 };
 
-module.exports = { searchTransports, getTransportById, createTransport, updateTransport, deleteTransport, assignStaff };
+module.exports = { searchTransports, getTransportById, getMyTransports, createTransport, updateTransport, deleteTransport, assignStaff };

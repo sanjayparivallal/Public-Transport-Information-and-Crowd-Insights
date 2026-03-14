@@ -1,68 +1,160 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { logoutUser } from '../api/authApi';
 
 const Navbar = () => {
-    return (
-        <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm px-4 py-2">
-            <Link className="navbar-brand fw-bold fs-5" to="/">
-                🚌 PublicTransit
-            </Link>
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-            <button
-                className="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#mainNav"
-                aria-controls="mainNav"
-                aria-expanded="false"
-                aria-label="Toggle navigation"
-            >
-                <span className="navbar-toggler-icon" />
-            </button>
+  const handleLogout = async () => {
+    try { await logoutUser(); } catch (_) { /* ignore */ }
+    logout();
+    navigate('/login');
+  };
 
-            <div className="collapse navbar-collapse" id="mainNav">
-                <ul className="navbar-nav mx-auto gap-2">
-                    <li className="nav-item">
-                        <NavLink
-                            to="/dashboard"
-                            className={({ isActive }) =>
-                                isActive ? 'nav-link active fw-semibold' : 'nav-link'
-                            }
-                        >
-                            Dashboard
-                        </NavLink>
-                    </li>
-                    <li className="nav-item">
-                        <NavLink
-                            to="/search"
-                            className={({ isActive }) =>
-                                isActive ? 'nav-link active fw-semibold' : 'nav-link'
-                            }
-                        >
-                            Search
-                        </NavLink>
-                    </li>
-                    <li className="nav-item">
-                        <NavLink
-                            to="/profile"
-                            className={({ isActive }) =>
-                                isActive ? 'nav-link active fw-semibold' : 'nav-link'
-                            }
-                        >
-                            Profile
-                        </NavLink>
-                    </li>
-                </ul>
+  const isAuthority = user?.role === 'authority';
+  const isCommuter  = user?.role === 'commuter';
+  const isStaff     = user?.role === 'driver' || user?.role === 'conductor';
 
-                <ul className="navbar-nav ms-auto">
-                    <li className="nav-item">
-                        <button className="btn btn-outline-danger btn-sm fw-semibold px-3">
-                            Logout
-                        </button>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    );
+  const dashboardPath = isAuthority
+    ? '/dashboard/authority'
+    : '/dashboard/commuter';
+
+  return (
+    <nav className="navbar navbar-expand-lg transit-navbar">
+      <div className="container-fluid">
+        {/* Brand */}
+        <Link className="navbar-brand" to={user ? dashboardPath : '/login'}>
+          🚌 <span style={{ color: '#93c5fd' }}>Public</span>Transit
+        </Link>
+
+        {/* Toggler */}
+        <button
+          className="navbar-toggler border-0"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#mainNav"
+          aria-controls="mainNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+          style={{ color: 'white' }}
+        >
+          <span className="navbar-toggler-icon" />
+        </button>
+
+        {/* Links */}
+        <div className="collapse navbar-collapse" id="mainNav">
+          <ul className="navbar-nav mx-auto gap-1">
+            {user && (
+              <li className="nav-item">
+                <NavLink
+                  to={dashboardPath}
+                  className={({ isActive }) =>
+                    `nav-link${isActive ? ' active' : ''}`
+                  }
+                >
+                  🏠 Dashboard
+                </NavLink>
+              </li>
+            )}
+
+            {user && (
+              <li className="nav-item">
+                <NavLink
+                  to="/search"
+                  className={({ isActive }) =>
+                    `nav-link${isActive ? ' active' : ''}`
+                  }
+                >
+                  🔍 Search Routes
+                </NavLink>
+              </li>
+            )}
+
+            {user && (
+              <li className="nav-item">
+                <NavLink
+                  to="/profile"
+                  className={({ isActive }) =>
+                    `nav-link${isActive ? ' active' : ''}`
+                  }
+                >
+                  👤 Profile
+                </NavLink>
+              </li>
+            )}
+
+            {isAuthority && (
+              <li className="nav-item">
+                <NavLink
+                  to="/authority/manage"
+                  className={({ isActive }) =>
+                    `nav-link${isActive ? ' active' : ''}`
+                  }
+                >
+                  🛠️ Manage
+                </NavLink>
+              </li>
+            )}
+          </ul>
+
+          {/* Right side */}
+          <ul className="navbar-nav align-items-center gap-2">
+            {user ? (
+              <>
+                <li className="nav-item">
+                  <div className="user-badge">
+                    <span>👤</span>
+                    <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user.name || user.email}
+                    </span>
+                    <span className={`role-pill ${user.role}`}>{user.role}</span>
+                  </div>
+                </li>
+                <li className="nav-item">
+                  <button
+                    onClick={handleLogout}
+                    className="btn btn-sm fw-semibold"
+                    style={{
+                      background: 'rgba(239,68,68,.15)',
+                      border: '1px solid rgba(239,68,68,.4)',
+                      color: '#fca5a5',
+                      borderRadius: 8,
+                      padding: '.35rem .9rem',
+                    }}
+                  >
+                    🚪 Logout
+                  </button>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="nav-item">
+                  <Link to="/login" className="nav-link">Login</Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    to="/signup/commuter"
+                    className="btn btn-sm fw-semibold ms-1"
+                    style={{
+                      background: 'rgba(255,255,255,.15)',
+                      border: '1px solid rgba(255,255,255,.3)',
+                      color: 'white',
+                      borderRadius: 8,
+                      padding: '.35rem .9rem',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Sign Up
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  );
 };
 
 export default Navbar;

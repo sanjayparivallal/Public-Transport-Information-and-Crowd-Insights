@@ -15,7 +15,7 @@ export const getAuthorityProfile = () => api.get('/users/profile');
  * Uses the search endpoint with no params — the backend uses req.user for scoping
  * when an authority is logged in.
  */
-export const getManagedTransports = () => api.get('/transport/search', { params: { myTransports: true } });
+export const getManagedTransports = () => api.get('/transport/mine');
 
 /**
  * Get all open + acknowledged incidents across all managed transports (authority view).

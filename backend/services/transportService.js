@@ -50,7 +50,13 @@ const searchTransports = async ({
 
   // Stage 3: filter on transport fields
   const transportMatch = { 'transportId.isActive': true };
-  if (busNo) transportMatch['transportId.transportNumber'] = { $regex: busNo, $options: 'i' };
+  if (busNo) {
+    if (!transportMatch.$or) transportMatch.$or = [];
+    transportMatch.$or.push(
+      { 'transportId.transportNumber': { $regex: busNo, $options: 'i' } },
+      { 'transportId.name': { $regex: busNo, $options: 'i' } }
+    );
+  }
   if (type)  transportMatch['transportId.type'] = type;
   if (myTransports && userId && mongoose.isValidObjectId(userId)) {
     transportMatch['transportId.authorityId'] = new mongoose.Types.ObjectId(String(userId));
@@ -291,9 +297,28 @@ const assignStaff = async (authorityUserId, transportId, { email, assignRole }) 
   };
 };
 
+/**
+ * GET /api/transport/mine — Authority gets their own transports (flat list)
+ * Returns Transport documents directly, not Route documents.
+ */
+const getMyTransports = async (userId) => {
+  const authority = await Authority.findById(userId);
+  if (!authority) {
+    const err = new Error('Authority profile not found');
+    err.statusCode = 403;
+    throw err;
+  }
+  const transports = await Transport.find({ authorityId: authority._id })
+    .populate('assignedDriver',    'name email phone')
+    .populate('assignedConductor', 'name email phone')
+    .lean();
+  return { transports, total: transports.length };
+};
+
 module.exports = {
   searchTransports,
   getTransportById,
+  getMyTransports,
   createTransport,
   updateTransport,
   deleteTransport,

@@ -5,6 +5,7 @@ const { requireRole } = require('../middleware/roleMiddleware');
 const {
   searchTransports,
   getTransportById,
+  getMyTransports,
   createTransport,
   updateTransport,
   deleteTransport,
@@ -16,6 +17,9 @@ router.use(protect);
 
 // GET  /api/transport/search — all logged-in users
 router.get('/search', searchTransports);
+
+// GET  /api/transport/mine — authority gets their own transports (flat list, not routes)
+router.get('/mine', requireRole('authority'), getMyTransports);
 
 // GET  /api/transport/:id — all logged-in users
 router.get('/:id', getTransportById);

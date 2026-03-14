@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { loginUser } from '../../api/authApi';
 import { useAuth } from '../../context/AuthContext';
 
-const Login = () => {
+const LoginAuthority = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, logout, user } = useAuth();
@@ -37,18 +37,19 @@ const Login = () => {
     try {
       const res = await loginUser({ email: form.email.trim().toLowerCase(), password: form.password });
 
-      // Backend returns { success:true, data: { accessToken, refreshToken, user } } for commuters
-      // and { success:true, data: { accessToken, refreshToken, authority } } for authorities
+      // Backend returns: { success:true, data: { accessToken, refreshToken, authority } }
+      // (authorities are NOT in the `user` key — they use `authority`)
       const payload      = res.data?.data || res.data;
       const accessToken  = payload.accessToken;
       const refreshToken = payload.refreshToken;
+      // Authority login returns `authority`, commuter login returns `user`
       const userObj      = payload.user || payload.authority;
 
       if (!accessToken || !userObj) throw new Error('Invalid response from server.');
 
-      if (userObj.role === 'authority') {
+      if (userObj.role !== 'authority') {
         logout();
-        throw new Error('Please use the Authority Login portal.');
+        throw new Error('Please use the Commuter Login portal.');
       }
 
       // Store & set auth state
@@ -56,12 +57,12 @@ const Login = () => {
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       login(userObj, accessToken, refreshToken);
 
-      // Redirect: go back to where they came from, or role-based default
+      // Redirect
       const from = location.state?.from;
-      if (from && from !== '/login') {
+      if (from && from !== '/login/authority') {
         navigate(from, { replace: true });
       } else {
-        navigate('/dashboard/commuter', { replace: true });
+        navigate('/dashboard/authority', { replace: true });
       }
     } catch (err) {
       const msg = err.message || '';
@@ -86,8 +87,8 @@ const Login = () => {
           <span style={{ color: '#2563eb' }}>Transit</span>
         </Link>
 
-        <h1 className="auth-title">Welcome Back</h1>
-        <p className="auth-subtitle">Sign in to your commuter account</p>
+        <h1 className="auth-title">Authority Portal</h1>
+        <p className="auth-subtitle">Sign in to manage your transport fleet</p>
 
         <form onSubmit={handleSubmit} noValidate>
           {/* Email */}
@@ -151,15 +152,15 @@ const Login = () => {
         <div className="divider">or continue with</div>
 
         <div className="auth-links">
-          Not a commuter?{' '}
-          <Link to="/login/authority">Authority Login</Link>
+          Not an authority?{' '}
+          <Link to="/login">Commuter Login</Link>
           <br />
-          Don't have an account?{' '}
-          <Link to="/signup/commuter">Commuter Sign Up</Link>
+          Need an account?{' '}
+          <Link to="/signup/authority">Authority Sign Up</Link>
         </div>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default LoginAuthority;
