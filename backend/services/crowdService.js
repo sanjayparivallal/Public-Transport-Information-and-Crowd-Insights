@@ -1,7 +1,7 @@
-const CrowdLevel  = require('../models/CrowdLevel');
+const CrowdLevel = require('../models/CrowdLevel');
 const CrowdReport = require('../models/CrowdReport');
-const Transport   = require('../models/Transport');
-const Route       = require('../models/Route');
+const Transport = require('../models/Transport');
+const Route = require('../models/Route');
 
 /**
  * Staff (driver/conductor/authority) updates the official crowd level.

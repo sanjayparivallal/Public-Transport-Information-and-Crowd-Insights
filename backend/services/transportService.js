@@ -315,6 +315,63 @@ const getMyTransports = async (userId) => {
   return { transports, total: transports.length };
 };
 
+/**
+ * DELETE /api/transport/:id/unassign/:role
+ * Unassign a driver or conductor from this transport.
+ */
+const unassignStaff = async (authorityUserId, transportId, assignRole) => {
+  if (!['driver', 'conductor'].includes(assignRole)) {
+    const err = new Error('assignRole must be "driver" or "conductor"');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const authority = await Authority.findById(authorityUserId);
+  if (!authority) {
+    const err = new Error('Authority profile not found');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const transport = await Transport.findOne({ _id: transportId, authorityId: authority._id });
+  if (!transport) {
+    const err = new Error('Transport not found or not owned by this authority');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const transportField = assignRole === 'driver' ? 'assignedDriver' : 'assignedConductor';
+  const staffUserId = transport[transportField];
+
+  if (!staffUserId) {
+    const err = new Error(`No ${assignRole} is currently assigned to this transport`);
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const staffUser = await User.findById(staffUserId);
+
+  // 1. Remove from transport document
+  await Transport.findByIdAndUpdate(transport._id, { $unset: { [transportField]: "" } });
+
+  // 2. Remove from authority managed list
+  const listField = assignRole === 'driver' ? 'managedDrivers' : 'managedConductors';
+  await Authority.findByIdAndUpdate(authority._id, {
+    $pull: { [listField]: staffUserId },
+  });
+
+  // 3. Reset user profile
+  if (staffUser) {
+    staffUser.role = 'commuter';
+    staffUser.assignedTransport = undefined;
+    staffUser.assignedBy = undefined;
+    staffUser.assignedAt = undefined;
+    await staffUser.save();
+  }
+
+  return { message: `${assignRole} unassigned successfully` };
+};
+
 module.exports = {
   searchTransports,
   getTransportById,
@@ -323,4 +380,5 @@ module.exports = {
   updateTransport,
   deleteTransport,
   assignStaff,
+  unassignStaff,
 };

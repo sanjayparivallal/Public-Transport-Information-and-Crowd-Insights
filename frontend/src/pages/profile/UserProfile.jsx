@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getProfile, updateProfile } from '../../api/userApi';
 import { getTransportById } from '../../api/transportApi';
+import { UserIcon, EditIcon, CheckCircleIcon, BusIcon, TrainIcon, StarIcon, AlertIcon, ClipboardIcon, PauseIcon } from '../../components/icons';
 
 /**
  * UserProfile.jsx
@@ -33,8 +34,9 @@ const UserProfile = () => {
         setProfile(data);
         setForm({ name: data?.name || '', phone: data?.phone || '', password: '' });
 
-        if (data?.assignedTransport) {
-          const tRes = await getTransportById(data.assignedTransport).catch(() => null);
+        const assignedId = data?.assignedTransport?._id || data?.assignedTransport;
+        if (assignedId) {
+          const tRes = await getTransportById(assignedId).catch(() => null);
           if (tRes) {
             setAssignedDetail(
               tRes.data?.data?.transport || tRes.data?.data || tRes.data
@@ -80,13 +82,18 @@ const UserProfile = () => {
   }
 
   const isStaff = user.role === 'driver' || user.role === 'conductor';
+  const assignedTransportFallback = profile?.assignedTransport
+    ? (typeof profile.assignedTransport === 'object'
+      ? (profile.assignedTransport._id || profile.assignedTransport.transportNumber || '—')
+      : String(profile.assignedTransport))
+    : null;
 
   return (
     <>
       {/* Page Header */}
       <div className="page-header">
         <div className="container">
-          <h1>👤 User Profile</h1>
+          <h1 className="d-flex align-items-center"><UserIcon size={32} className="me-2"/> User Profile</h1>
           <p>View and update your personal account information</p>
         </div>
       </div>
@@ -95,8 +102,8 @@ const UserProfile = () => {
         <div className="row justify-content-center">
           <div className="col-lg-8">
 
-            {msg   && <div className="alert-custom alert-success mb-3">✅ {msg}</div>}
-            {error && <div className="alert-custom alert-error   mb-3">⚠️ {error}</div>}
+            {msg   && <div className="alert-custom alert-success mb-3 d-flex align-items-center"><CheckCircleIcon size={16} className="me-2"/> {msg}</div>}
+            {error && <div className="alert-custom alert-error   mb-3 d-flex align-items-center"><AlertIcon size={16} className="me-2"/> {error}</div>}
 
             {loading ? (
               <div className="loading-state"><div className="spinner-large" /></div>
@@ -105,13 +112,13 @@ const UserProfile = () => {
                 {/* Account Information */}
                 <div className="detail-section">
                   <div className="detail-section-title d-flex justify-content-between align-items-center">
-                    <span>📋 Account Information</span>
+                    <span className="d-flex align-items-center"><ClipboardIcon size={20} className="me-2"/> Account Information</span>
                     {!editing && (
                       <button
-                        className="btn btn-sm btn-outline-primary"
+                        className="btn btn-sm btn-outline-primary d-flex align-items-center"
                         onClick={() => { setEditing(true); setMsg(''); setError(''); }}
                       >
-                        ✏️ Edit
+                        <EditIcon size={14} className="me-2"/> Edit
                       </button>
                     )}
                   </div>
@@ -128,7 +135,7 @@ const UserProfile = () => {
                       <div className="info-item">
                         <label>Account Status</label>
                         <span style={{ color: profile?.isActive !== false ? 'var(--success)' : '#94a3b8', fontWeight: 700 }}>
-                          {profile?.isActive !== false ? '✅ Active' : '⏸ Inactive'}
+                          {profile?.isActive !== false ? <span className="d-flex align-items-center"><CheckCircleIcon size={14} className="me-1"/> Active</span> : <span className="d-flex align-items-center"><PauseIcon size={14} className="me-1"/> Inactive</span>}
                         </span>
                       </div>
                       <div className="info-item">
@@ -187,7 +194,7 @@ const UserProfile = () => {
                       </div>
                       <div className="d-flex gap-2">
                         <button className="btn btn-primary flex-fill" onClick={handleSave} disabled={saving}>
-                          {saving ? 'Saving…' : '💾 Save Changes'}
+                          {saving ? 'Saving…' : 'Save Changes'}
                         </button>
                         <button
                           className="btn btn-outline-secondary"
@@ -203,7 +210,7 @@ const UserProfile = () => {
                 {/* Assigned Transport (Driver / Conductor) */}
                 {isStaff && (
                   <div className="detail-section">
-                    <div className="detail-section-title">🚌 Assigned Transport</div>
+                    <div className="detail-section-title d-flex align-items-center"><BusIcon size={20} className="me-2"/> Assigned Transport</div>
                     {assignedDetail ? (
                       <div className="row g-3 align-items-center">
                         <div className="col-md-9">
@@ -216,7 +223,7 @@ const UserProfile = () => {
                             <div className="info-item">
                               <label>Type</label>
                               <span className={`meta-chip ${assignedDetail.type}`}>
-                                {assignedDetail.type === 'bus' ? '🚌' : '🚂'} {assignedDetail.type}
+                                {assignedDetail.type === 'bus' ? <BusIcon size={16} className="me-1"/> : <TrainIcon size={16} className="me-1"/>} {assignedDetail.type}
                               </span>
                             </div>
                             <div className="info-item"><label>Operator</label><span>{assignedDetail.operator || '—'}</span></div>
@@ -233,9 +240,9 @@ const UserProfile = () => {
                           </Link>
                         </div>
                       </div>
-                    ) : profile?.assignedTransport ? (
+                    ) : assignedTransportFallback ? (
                       <p style={{ color: '#64748b', margin: 0 }}>
-                        Assigned transport ID: <code>{profile.assignedTransport}</code>
+                        Assigned transport ID: <code>{assignedTransportFallback}</code>
                       </p>
                     ) : (
                       <div className="empty-state" style={{ padding: '1rem' }}>
@@ -249,7 +256,7 @@ const UserProfile = () => {
                 {!isStaff && (
                   <div className="detail-section">
                     <div className="detail-section-title d-flex justify-content-between align-items-center">
-                      <span>⭐ Favourite Transports</span>
+                      <span className="d-flex align-items-center"><StarIcon size={20} className="me-2" filled/> Favourite Transports</span>
                       <Link to="/search" className="btn btn-sm btn-outline-primary">Search & Add</Link>
                     </div>
                     {(profile?.favouriteTransports || []).length === 0 ? (
@@ -267,13 +274,13 @@ const UserProfile = () => {
 
                 {/* Account Actions */}
                 <div className="detail-section">
-                  <div className="detail-section-title" style={{ color: '#ef4444' }}>⚠️ Account Actions</div>
+                  <div className="detail-section-title d-flex align-items-center" style={{ color: '#ef4444' }}><AlertIcon size={20} className="me-2"/> Account Actions</div>
                   <div className="d-flex gap-2 flex-wrap">
                     <button
                       className="btn btn-outline-danger btn-sm"
                       onClick={() => { logout(); navigate('/login'); }}
                     >
-                      🚪 Logout
+                      Logout
                     </button>
                     <Link to="/dashboard/commuter" className="btn btn-outline-secondary btn-sm">
                       ← Back to Dashboard

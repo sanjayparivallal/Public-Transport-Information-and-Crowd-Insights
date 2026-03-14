@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import CrowdBadge from './CrowdBadge';
+import { BusIcon, TrainIcon, ClockIcon, BuildingIcon, ArrowRightIcon } from './icons';
 
 const TransportCard = ({ transport }) => {
   const navigate = useNavigate();
@@ -34,13 +35,14 @@ const TransportCard = ({ transport }) => {
           <div className="transport-name mt-1">{displayName}</div>
           <div className="route-flow mt-1">
             <span>{origin}</span>
-            <span className="arrow">→</span>
+            <ArrowRightIcon size={16} className="mx-1 text-muted"/>
             <span>{destination}</span>
           </div>
         </div>
         <div className="d-flex flex-column align-items-end gap-2">
           <span className={`meta-chip ${displayType}`}>
-            {displayType === 'bus' ? '🚌' : '🚂'} {displayType}
+            {displayType === 'bus' ? <BusIcon size={16} className="me-1"/> : <TrainIcon size={16} className="me-1"/>} 
+            {displayType}
           </span>
           <CrowdBadge level={crowdLevel} />
         </div>
@@ -49,21 +51,21 @@ const TransportCard = ({ transport }) => {
       <div className="d-flex align-items-center gap-3 mt-3 flex-wrap">
         {departure && (
           <span className="meta-chip">
-            🕐 Dep: {departure}
+            <ClockIcon size={14} className="me-1"/> Dep: {departure}
           </span>
         )}
         {arrival && (
           <span className="meta-chip">
-            🕓 Arr: {arrival}
+            <ClockIcon size={14} className="me-1"/> Arr: {arrival}
           </span>
         )}
         {displayOp && (
           <span className="meta-chip">
-            🏢 {displayOp}
+            <BuildingIcon size={14} className="me-1"/> {displayOp}
           </span>
         )}
-        <span className="ms-auto text-primary fw-semibold" style={{ fontSize: '.84rem' }}>
-          View Details →
+        <span className="ms-auto text-primary fw-semibold d-flex align-items-center" style={{ fontSize: '.84rem' }}>
+          View Details <ArrowRightIcon size={14} className="ms-1"/>
         </span>
       </div>
     </div>

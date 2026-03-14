@@ -7,7 +7,9 @@ import {
   updateTransport,
   deleteTransport,
   assignStaff,
+  removeStaff,
 } from '../../api/adminApi';
+import { BusIcon, TrainIcon, EditIcon, CheckCircleIcon, UserIcon, WrenchIcon, AlertIcon, SearchIcon, ClipboardIcon, BuildingIcon, TrashIcon } from '../../components/icons';
 
 /* ── Helpers ─────────────────────────────────────────────── */
 const EMPTY_FORM = {
@@ -59,8 +61,8 @@ const StatusBadge = ({ isActive }) => (
 );
 
 const TypeChip = ({ type }) => (
-  <span className={`meta-chip ${type}`}>
-    {type === 'bus' ? '🚌' : '🚂'} {type}
+  <span className={`meta-chip ${type} d-flex align-items-center d-inline-flex`}>
+    {type === 'bus' ? <BusIcon size={14} className="me-1"/> : <TrainIcon size={14} className="me-1"/>} <span style={{ textTransform: 'capitalize' }}>{type}</span>
   </span>
 );
 
@@ -110,15 +112,15 @@ const TransportFormModal = ({ modalId, transport, onSaved }) => {
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content" style={{ borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
           <div className="modal-header" style={{ borderBottom: '1px solid var(--border)' }}>
-            <h5 className="modal-title fw-bold">
-              {transport ? '✏️ Edit Transport' : '➕ Add New Transport'}
+            <h5 className="modal-title fw-bold d-flex align-items-center">
+              {transport ? <><EditIcon size={20} className="me-2"/> Edit Transport</> : 'Add New Transport'}
             </h5>
             <button type="button" className="btn-close" data-bs-dismiss="modal" />
           </div>
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
               {error && (
-                <div className="alert-custom alert-error mb-3">⚠️ {error}</div>
+                <div className="alert-custom alert-error mb-3 d-flex align-items-center"><AlertIcon size={18} className="me-2"/> {error}</div>
               )}
               <div className="row g-3">
                 <div className="col-sm-6">
@@ -146,8 +148,8 @@ const TransportFormModal = ({ modalId, transport, onSaved }) => {
                 <div className="col-sm-6">
                   <label className="form-label">Type</label>
                   <select className="form-select" value={form.type} onChange={set('type')}>
-                    <option value="bus">🚌 Bus</option>
-                    <option value="train">🚂 Train</option>
+                    <option value="bus">Bus</option>
+                    <option value="train">Train</option>
                   </select>
                 </div>
                 <div className="col-sm-6">
@@ -200,10 +202,10 @@ const TransportFormModal = ({ modalId, transport, onSaved }) => {
               <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal">
                 Cancel
               </button>
-              <button type="submit" className="btn btn-primary px-4" disabled={saving}>
+              <button type="submit" className="btn btn-primary px-4 d-flex align-items-center" disabled={saving}>
                 {saving
                   ? <><span className="spinner-border spinner-border-sm me-2" />Saving…</>
-                  : (transport ? '💾 Save Changes' : '➕ Add Transport')}
+                  : (transport ? 'Save Changes' : 'Add Transport')}
               </button>
             </div>
           </form>
@@ -247,7 +249,7 @@ const AssignStaffModal = ({ transport, onSaved }) => {
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content" style={{ borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
           <div className="modal-header" style={{ borderBottom: '1px solid var(--border)' }}>
-            <h5 className="modal-title fw-bold">👤 Assign Staff</h5>
+            <h5 className="modal-title fw-bold d-flex align-items-center"><UserIcon size={20} className="me-2"/> Assign Staff</h5>
             <button type="button" className="btn-close" data-bs-dismiss="modal" />
           </div>
           <form onSubmit={handleSubmit}>
@@ -257,8 +259,8 @@ const AssignStaffModal = ({ transport, onSaved }) => {
                   Transport: <strong>{transport.name} (#{transport.transportNumber})</strong>
                 </div>
               )}
-              {error   && <div className="alert-custom alert-error   mb-3">⚠️ {error}</div>}
-              {success && <div className="alert-custom alert-success mb-3">{success}</div>}
+              {error   && <div className="alert-custom alert-error   mb-3 d-flex align-items-center"><AlertIcon size={18} className="me-2"/> {error}</div>}
+              {success && <div className="alert-custom alert-success mb-3 d-flex align-items-center"><CheckCircleIcon size={18} className="me-2"/> {success}</div>}
               <div className="mb-3">
                 <label className="form-label">Commuter Email <span className="text-danger">*</span></label>
                 <input
@@ -274,8 +276,8 @@ const AssignStaffModal = ({ transport, onSaved }) => {
               <div className="mb-3">
                 <label className="form-label">Assign As</label>
                 <select className="form-select" value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="driver">🚗 Driver</option>
-                  <option value="conductor">🎫 Conductor / TTR</option>
+                  <option value="driver">Driver</option>
+                  <option value="conductor">Conductor / TTR</option>
                 </select>
               </div>
             </div>
@@ -323,11 +325,11 @@ const DeleteModal = ({ transport, onDeleted }) => {
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content" style={{ borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
           <div className="modal-header" style={{ borderBottom: '1px solid var(--border)' }}>
-            <h5 className="modal-title fw-bold text-danger">🗑️ Delete Transport</h5>
+            <h5 className="modal-title fw-bold text-danger d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Delete Transport</h5>
             <button type="button" className="btn-close" data-bs-dismiss="modal" />
           </div>
           <div className="modal-body">
-            {error && <div className="alert-custom alert-error mb-3">⚠️ {error}</div>}
+            {error && <div className="alert-custom alert-error mb-3 d-flex align-items-center"><AlertIcon size={18} className="me-2"/> {error}</div>}
             {transport && (
               <p style={{ color: 'var(--text)' }}>
                 Are you sure you want to delete{' '}
@@ -340,13 +342,13 @@ const DeleteModal = ({ transport, onDeleted }) => {
             <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
             <button
               type="button"
-              className="btn btn-danger px-4"
+              className="btn btn-danger px-4 d-flex align-items-center"
               onClick={handleDelete}
               disabled={deleting}
             >
               {deleting
                 ? <><span className="spinner-border spinner-border-sm me-2" />Deleting…</>
-                : '🗑️ Yes, Delete'}
+                : 'Yes, Delete'}
             </button>
           </div>
         </div>
@@ -387,6 +389,16 @@ const ManageTransport = () => {
   }, []);
 
   useEffect(() => { fetchTransports(); }, [fetchTransports]);
+
+  const handleRemoveStaff = async (transportId, role) => {
+    if (!window.confirm(`Are you sure you want to remove the ${role}?`)) return;
+    try {
+      await removeStaff(transportId, role);
+      fetchTransports(); // Refresh list to show empty staff
+    } catch (err) {
+      setError(err.message || `Failed to remove ${role}`);
+    }
+  };
 
   const openAddModal = () => {
     setSelectedTransport(null);
@@ -432,7 +444,7 @@ const ManageTransport = () => {
     return (
       <div className="container py-5 text-center">
         <div className="empty-state">
-          <div className="empty-state-icon">🔒</div>
+          <div className="empty-state-icon text-muted"><AlertIcon size={48} /></div>
           <h3>Access Restricted</h3>
           <p style={{ color: '#64748b' }}>Only Transport Authorities can access this page.</p>
           <button className="btn btn-primary mt-3" onClick={() => navigate('/login')}>
@@ -468,11 +480,11 @@ const ManageTransport = () => {
       <div className="page-header">
         <div className="container d-flex align-items-center justify-content-between flex-wrap gap-3">
           <div>
-            <h1>🛠️ Manage Transports</h1>
+            <h1 className="d-flex align-items-center"><WrenchIcon size={32} className="me-2"/> Manage Transports</h1>
             <p>Add, edit, and manage buses and trains under your authority</p>
           </div>
           <button className="btn btn-light fw-semibold px-4" onClick={openAddModal}>
-            ➕ Add Transport
+            Add Transport
           </button>
         </div>
       </div>
@@ -481,7 +493,7 @@ const ManageTransport = () => {
 
         {/* Error */}
         {error && (
-          <div className="alert-custom alert-error mb-4">⚠️ {error}</div>
+          <div className="alert-custom alert-error mb-4 d-flex align-items-center"><AlertIcon size={18} className="me-2"/> {error}</div>
         )}
 
         {/* Stats */}
@@ -505,7 +517,7 @@ const ManageTransport = () => {
         <div className="detail-section">
           <div className="row g-3 align-items-end">
             <div className="col-sm-8 col-md-6">
-              <label className="form-label">🔍 Search</label>
+              <label className="form-label d-flex align-items-center"><SearchIcon size={16} className="me-1"/> Search</label>
               <input
                 type="text"
                 className="form-control"
@@ -522,13 +534,13 @@ const ManageTransport = () => {
                 onChange={(e) => setTypeFilter(e.target.value)}
               >
                 <option value="all">All Types</option>
-                <option value="bus">🚌 Bus</option>
-                <option value="train">🚂 Train</option>
+                <option value="bus">Bus</option>
+                <option value="train">Train</option>
               </select>
             </div>
             <div className="col-md-3 ms-auto text-end">
               <button className="btn btn-primary w-100" onClick={openAddModal}>
-                ➕ Add Transport
+                Add Transport
               </button>
             </div>
           </div>
@@ -540,8 +552,8 @@ const ManageTransport = () => {
             className="d-flex align-items-center justify-content-between px-3 py-3"
             style={{ borderBottom: '1px solid var(--border)' }}
           >
-            <span style={{ fontWeight: 700, fontSize: '.95rem' }}>
-              🚌 Transport List
+            <span style={{ fontWeight: 700, fontSize: '.95rem' }} className="d-flex align-items-center">
+              <ClipboardIcon size={18} className="me-2"/> Transport List
             </span>
             <span className="result-count">{filtered.length} transport{filtered.length !== 1 ? 's' : ''}</span>
           </div>
@@ -553,7 +565,7 @@ const ManageTransport = () => {
             </div>
           ) : filtered.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">🚌</div>
+              <div className="empty-state-icon" style={{ color: '#3b82f6' }}><BusIcon size={48} /></div>
               <h4>
                 {transports.length === 0
                   ? 'No transports yet'
@@ -566,7 +578,7 @@ const ManageTransport = () => {
               </p>
               {transports.length === 0 && (
                 <button className="btn btn-primary mt-3" onClick={openAddModal}>
-                  ➕ Add Transport
+                  Add Transport
                 </button>
               )}
             </div>
@@ -592,10 +604,22 @@ const ManageTransport = () => {
                       <td className="py-3">
                         <div style={{ fontWeight: 700, fontSize: '.95rem' }}>{t.name || '—'}</div>
                         {t.operator && (
-                          <div style={{ fontSize: '.8rem', color: '#64748b' }}>🏢 {t.operator}</div>
+                          <div className="d-flex align-items-center" style={{ fontSize: '.8rem', color: '#64748b' }}><BuildingIcon size={14} className="me-1"/> {t.operator}</div>
                         )}
                         {t.vehicleNumber && (
-                          <div style={{ fontSize: '.78rem', color: '#94a3b8' }}>🔖 {t.vehicleNumber}</div>
+                          <div style={{ fontSize: '.78rem', color: '#94a3b8' }}>{t.vehicleNumber}</div>
+                        )}
+                        {t.assignedDriver && (
+                          <div style={{ fontSize: '.8rem', color: '#16a34a', marginTop: '4px' }} className="d-flex align-items-center gap-1">
+                            Driver: {t.assignedDriver.name}
+                            <button className="btn btn-sm btn-link p-0 ms-1 d-flex align-items-center" onClick={() => handleRemoveStaff(t._id, 'driver')} title="Unassign Driver" style={{ color: '#ef4444' }}><AlertIcon size={14}/></button>
+                          </div>
+                        )}
+                        {t.assignedConductor && (
+                          <div style={{ fontSize: '.8rem', color: '#0284c7', marginTop: '2px' }} className="d-flex align-items-center gap-1">
+                            Cond: {t.assignedConductor.name}
+                            <button className="btn btn-sm btn-link p-0 ms-1 d-flex align-items-center" onClick={() => handleRemoveStaff(t._id, 'conductor')} title="Unassign Conductor" style={{ color: '#ef4444' }}><AlertIcon size={14}/></button>
+                          </div>
                         )}
                       </td>
                       <td className="py-3">
@@ -622,31 +646,31 @@ const ManageTransport = () => {
                         <div className="d-flex gap-2 justify-content-end flex-wrap">
                           <Link
                             to={`/transport/${t._id}`}
-                            className="btn btn-sm btn-outline-secondary"
+                            className="btn btn-sm btn-outline-secondary d-flex align-items-center"
                             title="View Details"
                           >
-                            👁️ View
+                            <SearchIcon size={14} className="me-1"/> View
                           </Link>
                           <button
-                            className="btn btn-sm btn-outline-primary"
+                            className="btn btn-sm btn-outline-primary d-flex align-items-center"
                             onClick={() => openEditModal(t)}
                             title="Edit Transport"
                           >
-                            ✏️ Edit
+                            <EditIcon size={14} className="me-1"/> Edit
                           </button>
                           <button
-                            className="btn btn-sm btn-outline-success"
+                            className="btn btn-sm btn-outline-success d-flex align-items-center"
                             onClick={() => openAssignModal(t)}
                             title="Assign Driver / Conductor"
                           >
-                            👤 Staff
+                            <UserIcon size={14} className="me-1"/> Staff
                           </button>
                           <button
-                            className="btn btn-sm btn-outline-danger"
+                            className="btn btn-sm btn-outline-danger d-flex align-items-center"
                             onClick={() => openDeleteModal(t)}
                             title="Delete Transport"
                           >
-                            🗑️
+                            <TrashIcon size={14} />
                           </button>
                         </div>
                       </td>

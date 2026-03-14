@@ -38,8 +38,16 @@ export const assignStaff = (transportId, data) =>
   api.post(`/transport/${transportId}/assign`, data);
 
 /**
+ * Remove driver or conductor from a transport.
+ * @param {string} transportId
+ * @param {'driver'|'conductor'} role
+ */
+export const removeStaff = (transportId, role) =>
+  api.delete(`/transport/${transportId}/unassign/${role}`);
+
+/**
  * Create a transport (admin shorthand).
- * @param {{ transportNumber: string, transportName: string, type: 'bus'|'train' }} data
+ * @param {{ transportNumber: string, name: string, type: 'bus'|'train' }} data
  */
 export const createTransport = (data) => api.post('/transport', data);
 

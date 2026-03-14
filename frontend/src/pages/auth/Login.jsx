@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { loginUser } from '../../api/authApi';
 import { useAuth } from '../../context/AuthContext';
+import { BusIcon, MailIcon, LockIcon, EyeIcon, EyeOffIcon, LogInIcon } from '../../components/icons';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -81,9 +82,9 @@ const Login = () => {
     <div className="auth-page">
       <div className="auth-card">
         {/* Logo */}
-        <Link to="/" className="auth-logo text-decoration-none mb-3 d-block">
-          🚌 <span style={{ color: '#1e293b' }}>Public</span>
-          <span style={{ color: '#2563eb' }}>Transit</span>
+        <Link to="/" className="auth-logo text-decoration-none mb-3 d-flex align-items-center justify-content-center">
+          <BusIcon size={24} className="me-2" style={{ color: '#1e293b' }} />
+          <span><span style={{ color: '#1e293b' }}>Public</span><span style={{ color: '#2563eb' }}>Transit</span></span>
         </Link>
 
         <h1 className="auth-title">Welcome Back</h1>
@@ -94,7 +95,7 @@ const Login = () => {
           <div className="mb-3">
             <label className="form-label" htmlFor="email">Email Address</label>
             <div className="input-group-icon">
-              <span className="icon">✉️</span>
+              <span className="icon"><MailIcon size={18} /></span>
               <input
                 id="email"
                 name="email"
@@ -113,7 +114,7 @@ const Login = () => {
           <div className="mb-4">
             <label className="form-label" htmlFor="password">Password</label>
             <div className="input-group-icon">
-              <span className="icon">🔒</span>
+              <span className="icon"><LockIcon size={18} /></span>
               <input
                 id="password"
                 name="password"
@@ -131,7 +132,7 @@ const Login = () => {
                 onClick={() => setShowPw(v => !v)}
                 aria-label={showPw ? 'Hide password' : 'Show password'}
               >
-                {showPw ? '🙈' : '👁️'}
+                {showPw ? <EyeOffIcon size={18}/> : <EyeIcon size={18}/>}
               </button>
             </div>
           </div>
@@ -143,7 +144,9 @@ const Login = () => {
                 Signing in…
               </>
             ) : (
-              '→ Sign In'
+              <>
+                <LogInIcon size={18} className="me-2"/> Sign In
+              </>
             )}
           </button>
         </form>

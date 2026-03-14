@@ -5,6 +5,7 @@ import { getProfile } from '../../api/userApi';
 import { getTransportById } from '../../api/transportApi';
 import { getCrowd } from '../../api/crowdApi';
 import CrowdBadge from '../../components/CrowdBadge';
+import { BusIcon, TrainIcon, UserIcon, CheckCircleIcon, ZapIcon, SearchIcon, EditIcon, StarIcon, BuildingIcon, LightbulbIcon, PauseIcon } from '../../components/icons';
 
 const CommuterDashboard = () => {
   const { user } = useAuth();
@@ -54,7 +55,7 @@ const CommuterDashboard = () => {
         }
 
         // Fetch assigned transport detail (driver / conductor)
-        const assignedId = data?.assignedTransport;
+        const assignedId = data?.assignedTransport?._id || data?.assignedTransport;
         if (assignedId) {
           const tRes = await getTransportById(assignedId).catch(() => null);
           if (tRes) {
@@ -78,13 +79,18 @@ const CommuterDashboard = () => {
   }
 
   const isStaff = user.role === 'driver' || user.role === 'conductor';
+  const assignedTransportFallback = profile?.assignedTransport
+    ? (typeof profile.assignedTransport === 'object'
+      ? (profile.assignedTransport._id || profile.assignedTransport.transportNumber || '—')
+      : String(profile.assignedTransport))
+    : null;
 
   return (
     <>
       {/* Page Header */}
       <div className="page-header">
         <div className="container">
-          <h1>👋 Welcome, {profile?.name || user.name || user.email}</h1>
+          <h1>Welcome, {profile?.name || user.name || user.email}</h1>
           <p className="text-capitalize">
             {isStaff ? `${user.role} dashboard` : 'Your commuter dashboard — search routes and track crowd levels'}
           </p>
@@ -101,7 +107,7 @@ const CommuterDashboard = () => {
               {/* Account Info */}
               <div className="col-md-8">
                 <div className="detail-section">
-                  <div className="detail-section-title">👤 Your Account</div>
+                  <div className="detail-section-title d-flex align-items-center"><UserIcon size={20} className="me-2"/> Your Account</div>
                   <div className="info-grid">
                     <div className="info-item"><label>Name</label><span>{profile?.name || '—'}</span></div>
                     <div className="info-item"><label>Email</label><span>{profile?.email || user.email}</span></div>
@@ -115,7 +121,7 @@ const CommuterDashboard = () => {
                     <div className="info-item">
                       <label>Account Status</label>
                       <span style={{ color: profile?.isActive !== false ? 'var(--success)' : '#94a3b8', fontWeight: 700 }}>
-                        {profile?.isActive !== false ? '✅ Active' : '⏸ Inactive'}
+                        {profile?.isActive !== false ? <span className="d-flex align-items-center"><CheckCircleIcon size={14} className="me-1"/> Active</span> : <span className="d-flex align-items-center"><PauseIcon size={14} className="me-1"/> Inactive</span>}
                       </span>
                     </div>
                     <div className="info-item">
@@ -129,20 +135,20 @@ const CommuterDashboard = () => {
               {/* Quick Actions */}
               <div className="col-md-4">
                 <div className="detail-section h-100">
-                  <div className="detail-section-title">⚡ Quick Actions</div>
+                  <div className="detail-section-title d-flex align-items-center"><ZapIcon size={20} className="me-2"/> Quick Actions</div>
                   <div className="d-flex flex-column gap-2">
-                    <button className="btn btn-primary w-100 text-start" onClick={() => navigate('/search')}>
-                      🔍 Search Routes
+                    <button className="btn btn-primary w-100 text-start d-flex align-items-center" onClick={() => navigate('/search')}>
+                      <SearchIcon size={18} className="me-2"/> Search Routes
                     </button>
-                    <button className="btn btn-outline-primary w-100 text-start" onClick={() => navigate('/profile')}>
-                      ✏️ Edit Profile
+                    <button className="btn btn-outline-primary w-100 text-start d-flex align-items-center" onClick={() => navigate('/profile')}>
+                      <EditIcon size={18} className="me-2"/> Edit Profile
                     </button>
                     {isStaff && assignedDetail?._id && (
                       <button
-                        className="btn btn-outline-warning w-100 text-start"
+                        className="btn btn-outline-warning w-100 text-start d-flex align-items-center"
                         onClick={() => navigate(`/transport/${assignedDetail._id}`)}
                       >
-                        🚌 View My Transport
+                        <BusIcon size={18} className="me-2"/> View My Transport
                       </button>
                     )}
                   </div>
@@ -153,7 +159,7 @@ const CommuterDashboard = () => {
             {/* Assigned Transport (Driver / Conductor) */}
             {isStaff && (
               <div className="detail-section">
-                <div className="detail-section-title">🚌 Assigned Transport</div>
+                <div className="detail-section-title d-flex align-items-center"><BusIcon size={20} className="me-2"/> Assigned Transport</div>
                 {assignedDetail ? (
                   <div className="row g-3 align-items-center">
                     <div className="col-md-8">
@@ -169,7 +175,7 @@ const CommuterDashboard = () => {
                         <div className="info-item">
                           <label>Type</label>
                           <span className={`meta-chip ${assignedDetail.type}`}>
-                            {assignedDetail.type === 'bus' ? '🚌' : '🚂'} {assignedDetail.type}
+                            {assignedDetail.type === 'bus' ? <BusIcon size={16} className="me-1"/> : <TrainIcon size={16} className="me-1"/>} {assignedDetail.type}
                           </span>
                         </div>
                         <div className="info-item">
@@ -195,13 +201,13 @@ const CommuterDashboard = () => {
                       </Link>
                     </div>
                   </div>
-                ) : profile?.assignedTransport ? (
+                ) : assignedTransportFallback ? (
                   <p style={{ color: '#64748b', margin: 0 }}>
-                    Transport ID: <code>{profile.assignedTransport}</code> — details unavailable.
+                    Transport ID: <code>{assignedTransportFallback}</code> — details unavailable.
                   </p>
                 ) : (
                   <div className="empty-state" style={{ padding: '1.5rem' }}>
-                    <div className="empty-state-icon" style={{ fontSize: '2rem' }}>🚌</div>
+                    <div className="empty-state-icon" style={{ color: '#3b82f6' }}><BusIcon size={48} /></div>
                     <p style={{ color: '#64748b', margin: 0 }}>No transport assigned yet. Contact your authority.</p>
                   </div>
                 )}
@@ -212,7 +218,7 @@ const CommuterDashboard = () => {
             {!isStaff && (
               <div className="detail-section">
                 <div className="detail-section-title d-flex justify-content-between align-items-center">
-                  <span>⭐ Favourite Transports</span>
+                  <span className="d-flex align-items-center"><StarIcon size={20} className="me-2" filled/> Favourite Transports</span>
                   <Link to="/search" className="btn btn-sm btn-outline-primary">+ Add Favourite</Link>
                 </div>
 
@@ -222,13 +228,13 @@ const CommuterDashboard = () => {
                   </div>
                 ) : favTransports.length === 0 ? (
                   <div className="empty-state" style={{ padding: '1.5rem' }}>
-                    <div className="empty-state-icon" style={{ fontSize: '2.5rem' }}>⭐</div>
+                    <div className="empty-state-icon text-warning"><StarIcon size={48} filled /></div>
                     <h5>No favourites yet</h5>
                     <p style={{ color: '#64748b', fontSize: '.9rem' }}>
-                      Search for a route and click the ⭐ Favourite button to save it here.
+                      Search for a route and click the <StarIcon size={16} className="mx-1" style={{verticalAlign: 'text-bottom'}} filled/> Favourite button to save it here.
                     </p>
-                    <button className="btn btn-primary btn-sm mt-2" onClick={() => navigate('/search')}>
-                      🔍 Search Routes
+                    <button className="btn btn-primary btn-sm mt-2 d-flex align-items-center justify-content-center mx-auto" onClick={() => navigate('/search')}>
+                      <SearchIcon size={16} className="me-2"/> Search Routes
                     </button>
                   </div>
                 ) : (
@@ -248,7 +254,7 @@ const CommuterDashboard = () => {
                               <div className="transport-name mt-1">{t.name || '—'}</div>
                             </div>
                             <span className={`meta-chip ${t.type}`}>
-                              {t.type === 'bus' ? '🚌' : '🚂'} {t.type}
+                              {t.type === 'bus' ? <BusIcon size={16} className="me-1"/> : <TrainIcon size={16} className="me-1"/>} {t.type}
                             </span>
                           </div>
                           <div className="d-flex align-items-center justify-content-between mt-3">
@@ -259,7 +265,7 @@ const CommuterDashboard = () => {
                           </div>
                           {t.operator && (
                             <div className="mt-2">
-                              <span className="meta-chip">🏢 {t.operator}</span>
+                              <span className="meta-chip"><BuildingIcon size={14} className="me-1"/> {t.operator}</span>
                             </div>
                           )}
                         </div>
@@ -273,7 +279,7 @@ const CommuterDashboard = () => {
             {/* Getting Started tip (shown only when no favourites) */}
             {!isStaff && favTransports.length === 0 && (
               <div className="detail-section">
-                <div className="detail-section-title">💡 Getting Started</div>
+                <div className="detail-section-title d-flex align-items-center"><LightbulbIcon size={20} className="me-2"/> Getting Started</div>
                 <p style={{ color: '#64748b', fontSize: '.9rem', margin: 0 }}>
                   Use the <strong>Search Routes</strong> page to find buses and trains between districts.
                   Click any transport to view its stops, crowd level, schedule, and fare — then save it

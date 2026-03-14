@@ -59,7 +59,7 @@ const getAllIncidents = async (req, res, next) => {
         .sort({ reportedAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('transportId', 'transportNumber transportName')
+        .populate('transportId', 'transportNumber name')
         .populate('reportedBy',  'name email role')
         .populate('resolvedBy',  'name')
         .lean(),
@@ -85,9 +85,8 @@ const getIncidentsByTransport = async (req, res, next) => {
     const skip  = (page - 1) * limit;
 
     const filter = { transportId: req.params.transportId };
-    if (req.user.role !== 'authority') {
-      filter.reportedBy = req.user.id;
-    }
+    
+    // Allow users to see all incidents for this transport.
     if (status)       filter.status       = status;
     if (severity)     filter.severity     = severity;
     if (incidentType) filter.incidentType = incidentType;
@@ -135,4 +134,15 @@ const resolveIncident = async (req, res, next) => {
   }
 };
 
-module.exports = { reportIncident, getAllIncidents, getIncidentsByTransport, resolveIncident };
+// DELETE /api/incidents/:id  — authority only
+const deleteIncident = async (req, res, next) => {
+  try {
+    const incident = await Incident.findByIdAndDelete(req.params.id);
+    if (!incident) return sendError(res, 404, 'Incident not found');
+    return sendSuccess(res, 200, null, 'Incident deleted successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { reportIncident, getAllIncidents, getIncidentsByTransport, resolveIncident, deleteIncident };

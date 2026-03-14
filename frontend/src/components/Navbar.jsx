@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logoutUser } from '../api/authApi';
+import { BusIcon, HomeIcon, SearchIcon, UserIcon, WrenchIcon, LogOutIcon } from './icons';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -24,8 +25,8 @@ const Navbar = () => {
     <nav className="navbar navbar-expand-lg transit-navbar">
       <div className="container-fluid">
         {/* Brand */}
-        <Link className="navbar-brand" to={user ? dashboardPath : '/login'}>
-          🚌 <span style={{ color: '#93c5fd' }}>Public</span>Transit
+        <Link className="navbar-brand d-flex align-items-center" to={user ? dashboardPath : '/login'}>
+          <BusIcon size={24} className="me-2" style={{ color: '#93c5fd' }} /> <span><span style={{ color: '#93c5fd' }}>Public</span>Transit</span>
         </Link>
 
         {/* Toggler */}
@@ -50,10 +51,10 @@ const Navbar = () => {
                 <NavLink
                   to={dashboardPath}
                   className={({ isActive }) =>
-                    `nav-link${isActive ? ' active' : ''}`
+                    `nav-link d-flex align-items-center${isActive ? ' active' : ''}`
                   }
                 >
-                  🏠 Dashboard
+                  <HomeIcon size={18} className="me-1"/> Dashboard
                 </NavLink>
               </li>
             )}
@@ -63,10 +64,10 @@ const Navbar = () => {
                 <NavLink
                   to="/search"
                   className={({ isActive }) =>
-                    `nav-link${isActive ? ' active' : ''}`
+                    `nav-link d-flex align-items-center${isActive ? ' active' : ''}`
                   }
                 >
-                  🔍 Search Routes
+                  <SearchIcon size={18} className="me-1"/> Search Routes
                 </NavLink>
               </li>
             )}
@@ -74,12 +75,12 @@ const Navbar = () => {
             {user && (
               <li className="nav-item">
                 <NavLink
-                  to="/profile"
+                  to={isAuthority ? '/profile/authority' : '/profile'}
                   className={({ isActive }) =>
-                    `nav-link${isActive ? ' active' : ''}`
+                    `nav-link d-flex align-items-center${isActive ? ' active' : ''}`
                   }
                 >
-                  👤 Profile
+                  <UserIcon size={18} className="me-1"/> Profile
                 </NavLink>
               </li>
             )}
@@ -89,10 +90,10 @@ const Navbar = () => {
                 <NavLink
                   to="/authority/manage"
                   className={({ isActive }) =>
-                    `nav-link${isActive ? ' active' : ''}`
+                    `nav-link d-flex align-items-center${isActive ? ' active' : ''}`
                   }
                 >
-                  🛠️ Manage
+                  <WrenchIcon size={18} className="me-1"/> Manage
                 </NavLink>
               </li>
             )}
@@ -104,7 +105,7 @@ const Navbar = () => {
               <>
                 <li className="nav-item">
                   <div className="user-badge">
-                    <span>👤</span>
+                    <UserIcon size={16} />
                     <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {user.name || user.email}
                     </span>
@@ -114,7 +115,7 @@ const Navbar = () => {
                 <li className="nav-item">
                   <button
                     onClick={handleLogout}
-                    className="btn btn-sm fw-semibold"
+                    className="btn btn-sm fw-semibold d-flex align-items-center"
                     style={{
                       background: 'rgba(239,68,68,.15)',
                       border: '1px solid rgba(239,68,68,.4)',
@@ -123,7 +124,7 @@ const Navbar = () => {
                       padding: '.35rem .9rem',
                     }}
                   >
-                    🚪 Logout
+                    <LogOutIcon size={16} className="me-1"/> Logout
                   </button>
                 </li>
               </>

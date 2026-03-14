@@ -1,3 +1,5 @@
+import { LocationIcon } from './icons';
+
 const StopsTimeline = ({ stops = [], currentStop }) => {
   if (!stops.length) {
     return (
@@ -33,7 +35,7 @@ const StopsTimeline = ({ stops = [], currentStop }) => {
                     className="badge"
                     style={{ background: '#2563eb', color: 'white', fontSize: '.68rem' }}
                   >
-                    📍 Now here
+                    <LocationIcon size={12} className="me-1"/> Now here
                   </span>
                 )}
                 {isFirst   && <span style={{ fontSize: '.75rem', color: '#10b981', fontWeight: 700 }}>Origin</span>}

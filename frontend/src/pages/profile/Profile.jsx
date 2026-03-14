@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getProfile, updateProfile } from '../../api/userApi';
 import { useAuth } from '../../context/AuthContext';
+import { UserIcon, CheckCircleIcon, AlertIcon, EditIcon, KeyIcon, SaveIcon, LogOutIcon } from '../../components/icons';
 
 const Profile = () => {
   const { user, logout } = useAuth();
@@ -10,6 +11,7 @@ const Profile = () => {
   const [profile, setProfile]   = useState(null);
   const [loading, setLoading]   = useState(true);
   const [editing, setEditing]   = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [form, setForm]         = useState({ name: '', phone: '', password: '' });
   const [saving, setSaving]     = useState(false);
   const [msg, setMsg]           = useState('');
@@ -37,10 +39,13 @@ const Profile = () => {
       const payload = {};
       if (form.name.trim())     payload.name     = form.name.trim();
       if (form.phone.trim())    payload.phone    = form.phone.trim();
-      if (form.password.trim()) payload.password = form.password.trim();
+      if (form.password.trim() && showPasswordModal) payload.password = form.password.trim();
+      
       await updateProfile(payload);
-      setMsg('Profile updated successfully!');
+      setMsg(showPasswordModal ? 'Password updated successfully!' : 'Profile updated successfully!');
+      
       setEditing(false);
+      setShowPasswordModal(false);
       setForm(prev => ({ ...prev, password: '' }));
     } catch (err) {
       setError(err.message || 'Update failed.');
@@ -51,19 +56,25 @@ const Profile = () => {
     return <div className="container py-5 text-center"><Link to="/login">Please login</Link></div>;
   }
 
+  const assignedTransportLabel = profile?.assignedTransport
+    ? (typeof profile.assignedTransport === 'object'
+      ? `${profile.assignedTransport.transportNumber || '—'}${profile.assignedTransport.name ? ` - ${profile.assignedTransport.name}` : ''}`
+      : String(profile.assignedTransport))
+    : null;
+
   return (
     <>
       <div className="page-header">
         <div className="container">
-          <h1>👤 My Profile</h1>
+          <h1 className="d-flex align-items-center"><UserIcon size={32} className="me-2"/> My Profile</h1>
           <p>View and update your account information</p>
         </div>
       </div>
       <div className="container pb-5">
         <div className="row justify-content-center">
           <div className="col-lg-7">
-            {msg   && <div className="alert-custom alert-success mb-3">✅ {msg}</div>}
-            {error && <div className="alert-custom alert-error   mb-3">⚠️ {error}</div>}
+            {msg   && <div className="alert-custom alert-success mb-3 d-flex align-items-center"><CheckCircleIcon size={18} className="me-2"/> {msg}</div>}
+            {error && <div className="alert-custom alert-error   mb-3 d-flex align-items-center"><AlertIcon size={18} className="me-2"/> {error}</div>}
 
             {loading ? (
               <div className="loading-state"><div className="spinner-large" /></div>
@@ -72,8 +83,8 @@ const Profile = () => {
                 <div className="detail-section-title d-flex justify-content-between align-items-center">
                   <span>Account Information</span>
                   {!editing && (
-                    <button className="btn btn-sm btn-outline-primary" onClick={() => setEditing(true)}>
-                      ✏️ Edit
+                    <button className="btn btn-sm btn-outline-primary d-flex align-items-center" onClick={() => setEditing(true)}>
+                      <EditIcon size={14} className="me-1"/> Edit
                     </button>
                   )}
                 </div>
@@ -90,9 +101,17 @@ const Profile = () => {
                     {profile?.region && (
                       <div className="info-item"><label>Region</label><span>{profile.region}</span></div>
                     )}
-                    {profile?.assignedTransport && (
-                      <div className="info-item"><label>Assigned Transport</label><span>{profile.assignedTransport}</span></div>
+                    {assignedTransportLabel && (
+                      <div className="info-item"><label>Assigned Transport</label><span>{assignedTransportLabel}</span></div>
                     )}
+                    <div className="info-item mt-3 pt-3" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)' }}>
+                      <button
+                        className="btn btn-sm btn-outline-warning d-flex align-items-center"
+                        onClick={() => { setForm(p => ({ ...p, password: '' })); setShowPasswordModal(true); setMsg(''); setError(''); }}
+                      >
+                        <KeyIcon size={14} className="me-1"/> Change Password
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div>
@@ -106,15 +125,9 @@ const Profile = () => {
                       <input type="tel" className="form-control" value={form.phone}
                         onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} />
                     </div>
-                    <div className="mb-4">
-                      <label className="form-label">New Password <span style={{ color: '#94a3b8', fontWeight: 400 }}>(leave blank to keep current)</span></label>
-                      <input type="password" className="form-control" value={form.password}
-                        onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                        placeholder="Enter new password…" />
-                    </div>
                     <div className="d-flex gap-2">
-                      <button className="btn btn-primary flex-fill" onClick={handleSave} disabled={saving}>
-                        {saving ? 'Saving…' : '💾 Save Changes'}
+                      <button className="btn btn-primary flex-fill d-flex align-items-center justify-content-center" onClick={handleSave} disabled={saving}>
+                        {saving ? 'Saving…' : <><SaveIcon size={18} className="me-1"/> Save Profile</>}
                       </button>
                       <button className="btn btn-outline-secondary" onClick={() => setEditing(false)}>Cancel</button>
                     </div>
@@ -123,13 +136,46 @@ const Profile = () => {
               </div>
             )}
 
+            {/* Password Change Modal */}
+            {showPasswordModal && (
+              <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <div className="modal-dialog modal-dialog-centered">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h5 className="modal-title">Change Password</h5>
+                      <button type="button" className="btn-close" onClick={() => setShowPasswordModal(false)}></button>
+                    </div>
+                    <div className="modal-body">
+                      <div className="mb-3">
+                        <label className="form-label">New Password</label>
+                        <input
+                          type="password"
+                          className="form-control"
+                          value={form.password}
+                          onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                          placeholder="Enter new password…"
+                          autoComplete="new-password"
+                        />
+                      </div>
+                    </div>
+                    <div className="modal-footer d-flex">
+                      <button type="button" className="btn btn-outline-secondary flex-fill" onClick={() => setShowPasswordModal(false)}>Cancel</button>
+                      <button type="button" className="btn btn-warning flex-fill" onClick={handleSave} disabled={saving || !form.password}>
+                        {saving ? 'Updating…' : 'Update Password'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="detail-section mt-3">
-              <div className="detail-section-title text-danger">⚠️ Account Actions</div>
+              <div className="detail-section-title text-danger d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Account Actions</div>
               <button
-                className="btn btn-outline-danger btn-sm"
+                className="btn btn-outline-danger btn-sm d-flex align-items-center"
                 onClick={() => { logout(); navigate('/login'); }}
               >
-                🚪 Logout
+                <LogOutIcon size={14} className="me-2"/> Logout
               </button>
             </div>
           </div>

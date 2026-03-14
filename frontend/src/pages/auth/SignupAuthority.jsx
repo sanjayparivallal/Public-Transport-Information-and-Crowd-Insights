@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { registerAuthority } from '../../api/authApi';
+import { BusIcon, MailIcon, LockIcon, EyeIcon, EyeOffIcon, PhoneIcon, UserIcon, BuildingIcon, LocationIcon, MapIcon, IdCardIcon } from '../../components/icons';
 
 const SignupAuthority = () => {
   const navigate = useNavigate();
@@ -77,9 +78,9 @@ const SignupAuthority = () => {
   return (
     <div className="auth-page">
       <div className="auth-card auth-card-wide">
-        <Link to="/" className="auth-logo text-decoration-none mb-3 d-block">
-          🚌 <span style={{ color: '#1e293b' }}>Public</span>
-          <span style={{ color: '#2563eb' }}>Transit</span>
+        <Link to="/" className="auth-logo text-decoration-none mb-3 d-flex align-items-center justify-content-center">
+          <BusIcon size={24} className="me-2" style={{ color: '#1e293b' }} />
+          <span><span style={{ color: '#1e293b' }}>Public</span><span style={{ color: '#2563eb' }}>Transit</span></span>
         </Link>
 
         <h1 className="auth-title">Authority Registration</h1>
@@ -94,7 +95,7 @@ const SignupAuthority = () => {
             <div className="col-md-6">
               <label className="form-label" htmlFor="name">Full Name *</label>
               <div className="input-group-icon">
-                <span className="icon">👤</span>
+                <span className="icon"><UserIcon size={18} /></span>
                 <input
                   id="name" name="name" type="text"
                   className={`form-control${errors.name ? ' is-invalid' : ''}`}
@@ -107,7 +108,7 @@ const SignupAuthority = () => {
             <div className="col-md-6">
               <label className="form-label" htmlFor="email">Email Address *</label>
               <div className="input-group-icon">
-                <span className="icon">✉️</span>
+                <span className="icon"><MailIcon size={18} /></span>
                 <input
                   id="email" name="email" type="email"
                   className={`form-control${errors.email ? ' is-invalid' : ''}`}
@@ -120,7 +121,7 @@ const SignupAuthority = () => {
             <div className="col-md-6">
               <label className="form-label" htmlFor="auth-phone">Phone <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
               <div className="input-group-icon">
-                <span className="icon">📱</span>
+                <span className="icon"><PhoneIcon size={18} /></span>
                 <input id="auth-phone" name="phone" type="tel"
                   className="form-control" placeholder="+91 98765 43210"
                   value={form.phone} onChange={handleChange} />
@@ -133,7 +134,7 @@ const SignupAuthority = () => {
             <div className="col-md-6">
               <label className="form-label" htmlFor="auth-password">Password *</label>
               <div className="input-group-icon">
-                <span className="icon">🔒</span>
+                <span className="icon"><LockIcon size={18} /></span>
                 <input
                   id="auth-password" name="password"
                   type={showPw ? 'text' : 'password'}
@@ -142,7 +143,7 @@ const SignupAuthority = () => {
                   value={form.password} onChange={handleChange}
                 />
                 <button type="button" className="toggle-password" onClick={() => setShowPw(v => !v)}>
-                  {showPw ? '🙈' : '👁️'}
+                  {showPw ? <EyeOffIcon size={18}/> : <EyeIcon size={18}/>}
                 </button>
               </div>
               {errors.password && <div className="invalid-feedback d-block">{errors.password}</div>}
@@ -150,7 +151,7 @@ const SignupAuthority = () => {
             <div className="col-md-6">
               <label className="form-label" htmlFor="confirmPassword">Confirm Password *</label>
               <div className="input-group-icon">
-                <span className="icon">🔒</span>
+                <span className="icon"><LockIcon size={18} /></span>
                 <input
                   id="confirmPassword" name="confirmPassword"
                   type={showCp ? 'text' : 'password'}
@@ -159,7 +160,7 @@ const SignupAuthority = () => {
                   value={form.confirmPassword} onChange={handleChange}
                 />
                 <button type="button" className="toggle-password" onClick={() => setShowCp(v => !v)}>
-                  {showCp ? '🙈' : '👁️'}
+                  {showCp ? <EyeOffIcon size={18}/> : <EyeIcon size={18}/>}
                 </button>
               </div>
               {errors.confirmPassword && <div className="invalid-feedback d-block">{errors.confirmPassword}</div>}
@@ -174,7 +175,7 @@ const SignupAuthority = () => {
             <div className="col-md-6">
               <label className="form-label" htmlFor="organizationName">Organisation Name *</label>
               <div className="input-group-icon">
-                <span className="icon">🏢</span>
+                <span className="icon"><BuildingIcon size={18} /></span>
                 <input
                   id="organizationName" name="organizationName" type="text"
                   className={`form-control${errors.organizationName ? ' is-invalid' : ''}`}
@@ -187,7 +188,7 @@ const SignupAuthority = () => {
             <div className="col-md-6">
               <label className="form-label" htmlFor="authorityCode">Authority Code *</label>
               <div className="input-group-icon">
-                <span className="icon">🆔</span>
+                <span className="icon"><IdCardIcon size={18} /></span>
                 <input
                   id="authorityCode" name="authorityCode" type="text"
                   className={`form-control${errors.authorityCode ? ' is-invalid' : ''}`}
@@ -200,7 +201,7 @@ const SignupAuthority = () => {
             <div className="col-md-6">
               <label className="form-label" htmlFor="region">Region *</label>
               <div className="input-group-icon">
-                <span className="icon">📍</span>
+                <span className="icon"><LocationIcon size={18} /></span>
                 <input
                   id="region" name="region" type="text"
                   className={`form-control${errors.region ? ' is-invalid' : ''}`}
@@ -215,7 +216,7 @@ const SignupAuthority = () => {
                 Covered Districts <span style={{ color: '#94a3b8', fontWeight: 400 }}>(comma-separated)</span>
               </label>
               <div className="input-group-icon">
-                <span className="icon">🗺️</span>
+                <span className="icon"><MapIcon size={18} /></span>
                 <input
                   id="coveredDistricts" name="coveredDistricts" type="text"
                   className="form-control"
@@ -227,7 +228,7 @@ const SignupAuthority = () => {
             <div className="col-md-6">
               <label className="form-label" htmlFor="contactEmail">Contact Email</label>
               <div className="input-group-icon">
-                <span className="icon">✉️</span>
+                <span className="icon"><MailIcon size={18} /></span>
                 <input id="contactEmail" name="contactEmail" type="email"
                   className="form-control" placeholder="contact@authority.gov"
                   value={form.contactEmail} onChange={handleChange} />
@@ -236,7 +237,7 @@ const SignupAuthority = () => {
             <div className="col-md-6">
               <label className="form-label" htmlFor="contactPhone">Contact Phone</label>
               <div className="input-group-icon">
-                <span className="icon">📞</span>
+                <span className="icon"><PhoneIcon size={18} /></span>
                 <input id="contactPhone" name="contactPhone" type="tel"
                   className="form-control" placeholder="+91 44 2222 0000"
                   value={form.contactPhone} onChange={handleChange} />
@@ -245,7 +246,7 @@ const SignupAuthority = () => {
             <div className="col-12">
               <label className="form-label" htmlFor="officeAddress">Office Address</label>
               <div className="input-group-icon">
-                <span className="icon">🏛️</span>
+                <span className="icon"><BuildingIcon size={18} /></span>
                 <input id="officeAddress" name="officeAddress" type="text"
                   className="form-control" placeholder="123 Transport Bhavan, Salem"
                   value={form.officeAddress} onChange={handleChange} />
@@ -253,10 +254,10 @@ const SignupAuthority = () => {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary-custom" disabled={loading}>
+          <button type="submit" className="btn-primary-custom d-flex align-items-center justify-content-center" disabled={loading}>
             {loading
               ? <><span className="spinner" /> Registering…</>
-              : '🏛️ Register Authority Account'
+              : <><BuildingIcon size={18} className="me-2"/> Register Authority Account</>
             }
           </button>
         </form>

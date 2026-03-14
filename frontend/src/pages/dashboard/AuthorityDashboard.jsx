@@ -6,6 +6,7 @@ import {
   getManagedTransports,
   getAllIncidentsForAuthority,
 } from '../../api/adminApi';
+import { BusIcon, TrainIcon, BuildingIcon, EditIcon, CheckCircleIcon, WrenchIcon, AlertIcon, ClockIcon, UsersIcon, ClipboardIcon, SearchIcon, UserIcon, ZapIcon } from '../../components/icons';
 
 /* ── Helpers ─────────────────────────────────────────────── */
 const severityColors = {
@@ -86,11 +87,11 @@ const AuthorityDashboard = () => {
       <div className="page-header">
         <div className="container d-flex align-items-center justify-content-between flex-wrap gap-3">
           <div>
-            <h1>🏛️ Authority Dashboard</h1>
+            <h1 className="d-flex align-items-center"><BuildingIcon size={32} className="me-2"/> Authority Dashboard</h1>
             <p>Manage your transport fleet, monitor incidents, and track crowd levels</p>
           </div>
-          <button className="btn btn-light fw-semibold" onClick={() => navigate('/authority/manage')}>
-            🛠️ Manage Transports
+          <button className="btn btn-light fw-semibold d-flex align-items-center" onClick={() => navigate('/authority/manage')}>
+            <WrenchIcon size={18} className="me-2"/> Manage Transports
           </button>
         </div>
       </div>
@@ -122,8 +123,8 @@ const AuthorityDashboard = () => {
             {profile && (
               <div className="detail-section">
                 <div className="detail-section-title d-flex justify-content-between align-items-center">
-                  <span>🏛️ Authority Profile</span>
-                  <Link to="/profile" className="btn btn-sm btn-outline-primary">✏️ Edit Profile</Link>
+                  <span className="d-flex align-items-center"><BuildingIcon size={20} className="me-2"/> Authority Profile</span>
+                  <Link to="/profile" className="btn btn-sm btn-outline-primary d-flex align-items-center"><EditIcon size={14} className="me-1"/> Edit Profile</Link>
                 </div>
                 <div className="info-grid">
                   <div className="info-item"><label>Name</label><span>{profile.name || user.name || '—'}</span></div>
@@ -152,7 +153,7 @@ const AuthorityDashboard = () => {
               <div className="col-lg-7">
                 <div className="detail-section h-100" style={{ marginBottom: 0 }}>
                   <div className="detail-section-title d-flex justify-content-between align-items-center">
-                    <span>🚌 Managed Transports</span>
+                    <span className="d-flex align-items-center"><BusIcon size={20} className="me-2"/> Managed Transports</span>
                     <button
                       className="btn btn-sm btn-outline-primary"
                       onClick={() => navigate('/authority/manage')}
@@ -163,13 +164,13 @@ const AuthorityDashboard = () => {
 
                   {transports.length === 0 ? (
                     <div className="empty-state" style={{ padding: '1.5rem' }}>
-                      <div className="empty-state-icon" style={{ fontSize: '2rem' }}>🚌</div>
+                      <div className="empty-state-icon" style={{ color: '#3b82f6' }}><BusIcon size={48} /></div>
                       <p style={{ color: '#64748b', margin: 0 }}>No transports yet.</p>
                       <button
                         className="btn btn-primary btn-sm mt-3"
                         onClick={() => navigate('/authority/manage')}
                       >
-                        ➕ Add First Transport
+                        Add First Transport
                       </button>
                     </div>
                   ) : (
@@ -198,7 +199,7 @@ const AuthorityDashboard = () => {
                               </td>
                               <td>
                                 <span className={`meta-chip ${t.type}`}>
-                                  {t.type === 'bus' ? '🚌' : '🚂'} {t.type}
+                                  {t.type === 'bus' ? <BusIcon size={16} className="me-1"/> : <TrainIcon size={16} className="me-1"/>} {t.type}
                                 </span>
                               </td>
                               <td>
@@ -241,28 +242,28 @@ const AuthorityDashboard = () => {
               {/* Recent Incidents */}
               <div className="col-lg-5">
                 <div className="detail-section h-100" style={{ marginBottom: 0 }}>
-                  <div className="detail-section-title">🚨 Recent Incidents</div>
+                  <div className="detail-section-title d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Recent Incidents</div>
 
                   {incidents.length === 0 ? (
                     <div className="empty-state" style={{ padding: '1.5rem' }}>
-                      <div className="empty-state-icon" style={{ fontSize: '2rem' }}>✅</div>
+                      <div className="empty-state-icon text-success"><CheckCircleIcon size={48} /></div>
                       <p style={{ color: '#64748b', margin: 0 }}>No incidents reported.</p>
                     </div>
                   ) : (
                     incidents.map((inc) => (
                       <div className="incident-item" key={inc._id}>
                         <div
-                          className="incident-icon"
+                          className="incident-icon d-flex align-items-center justify-content-center"
                           style={{
                             background: severityColors[inc.severity]?.bg || '#f1f5f9',
                             color: severityColors[inc.severity]?.color || '#64748b',
                           }}
                         >
-                          {inc.incidentType === 'breakdown' ? '🔧'
-                            : inc.incidentType === 'accident' ? '⚠️'
-                            : inc.incidentType === 'delay' ? '⏱️'
-                            : inc.incidentType === 'overcrowding' ? '👥'
-                            : '📋'}
+                          {inc.incidentType === 'breakdown' ? <WrenchIcon size={16}/>
+                            : inc.incidentType === 'accident' ? <AlertIcon size={16}/>
+                            : inc.incidentType === 'delay' ? <ClockIcon size={16}/>
+                            : inc.incidentType === 'overcrowding' ? <UsersIcon size={16}/>
+                            : <ClipboardIcon size={16}/>}
                         </div>
                         <div className="flex-grow-1" style={{ minWidth: 0 }}>
                           <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -289,11 +290,11 @@ const AuthorityDashboard = () => {
 
             {/* Quick Actions */}
             <div className="detail-section mt-4">
-              <div className="detail-section-title">⚡ Quick Actions</div>
+              <div className="detail-section-title d-flex align-items-center"><ZapIcon size={20} className="me-2"/> Quick Actions</div>
               <div className="d-flex flex-wrap gap-2">
-                <button className="btn btn-primary"         onClick={() => navigate('/authority/manage')}>🛠️ Manage Transports</button>
-                <button className="btn btn-outline-primary" onClick={() => navigate('/search')}>🔍 Search Routes</button>
-                <button className="btn btn-outline-secondary" onClick={() => navigate('/profile')}>👤 View Profile</button>
+                <button className="btn btn-primary d-flex align-items-center" onClick={() => navigate('/authority/manage')}><WrenchIcon size={18} className="me-2"/> Manage Transports</button>
+                <button className="btn btn-outline-primary d-flex align-items-center" onClick={() => navigate('/search')}><SearchIcon size={18} className="me-2"/> Search Routes</button>
+                <button className="btn btn-outline-secondary d-flex align-items-center" onClick={() => navigate('/profile')}><UserIcon size={18} className="me-2"/> View Profile</button>
               </div>
             </div>
           </>

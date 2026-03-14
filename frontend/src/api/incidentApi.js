@@ -46,3 +46,9 @@ export const getIncidentsByTransport = (transportId, params = {}) =>
  */
 export const resolveIncident = (incidentId, data) => api.put(`/incidents/${incidentId}/resolve`, data);
 
+/**
+ * Delete an incident (Authority only).
+ * @param {string} incidentId
+ */
+export const deleteIncident = (incidentId) => api.delete(`/incidents/${incidentId}`);
+

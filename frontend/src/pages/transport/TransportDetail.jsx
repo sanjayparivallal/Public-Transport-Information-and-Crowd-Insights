@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTransportById } from '../../api/transportApi';
-import { getCrowd } from '../../api/crowdApi';
-import { getIncidentsByTransport } from '../../api/incidentApi';
+import { getCrowd, submitCrowdReport } from '../../api/crowdApi';
+import { getIncidentsByTransport, deleteIncident, reportIncident } from '../../api/incidentApi';
 import { addFavourite, removeFavourite } from '../../api/userApi';
 import { useAuth } from '../../context/AuthContext';
 import CrowdBadge from '../../components/CrowdBadge';
 import StopsTimeline from '../../components/StopsTimeline';
 import IncidentList from '../../components/IncidentList';
+import { BusIcon, TrainIcon, UserIcon, WrenchIcon, AlertIcon, EditIcon, StarIcon, CheckCircleIcon, SearchIcon, ClockIcon, LocationIcon, ArrowRightIcon, ArrowLeftIcon } from '../../components/icons';
 
 const TransportDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   const [transport, setTransport]   = useState(null);
   const [crowd, setCrowd]           = useState(null);
@@ -28,6 +29,13 @@ const TransportDetail = () => {
   const [fareTo, setFareTo]         = useState('');
   const [fareResult, setFareResult] = useState(null);
   const [fareClass, setFareClass]   = useState('general');
+
+  // Report Modals State
+  const [showCrowdModal, setShowCrowdModal] = useState(false);
+  const [showIncidentModal, setShowIncidentModal] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [crowdForm, setCrowdForm] = useState({ crowdLevel: 'average', boardingStop: '' });
+  const [incidentForm, setIncidentForm] = useState({ incidentType: 'delay', severity: 'low', description: '', location: '' });
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -81,10 +89,22 @@ const TransportDetail = () => {
       if (isFav) {
         await removeFavourite(id);
         setIsFav(false);
+        if (user) {
+          const updatedFavs = (user.favouriteTransports || []).filter(x => x !== id);
+          const updatedUser = { ...user, favouriteTransports: updatedFavs };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
         setFavMsg('Removed from favourites.');
       } else {
         await addFavourite(id);
         setIsFav(true);
+        if (user) {
+          const updatedFavs = [...(user.favouriteTransports || []), id];
+          const updatedUser = { ...user, favouriteTransports: updatedFavs };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
         setFavMsg('Added to favourites!');
       }
     } catch (err) {
@@ -95,13 +115,62 @@ const TransportDetail = () => {
     }
   };
 
+  const handleDeleteIncident = async (incidentId) => {
+    if (!window.confirm("Are you sure you want to delete this incident?")) return;
+    try {
+      await deleteIncident(incidentId);
+      const iRes = await getIncidentsByTransport(id, { status: 'open', limit: 10 });
+      const iPayload = iRes.data?.data || iRes.data;
+      setIncidents(iPayload?.incidents || []);
+    } catch (err) {
+      alert(err.message || 'Failed to delete incident.');
+    }
+  };
+
+  const handleCrowdSubmit = async (e) => {
+    e.preventDefault();
+    setReportLoading(true);
+    try {
+      const route = transport?.routes?.[0];
+      await submitCrowdReport({ transportId: id, routeId: route?._id, ...crowdForm });
+      setShowCrowdModal(false);
+      alert('Crowd reported successfully!');
+      const cRes = await getCrowd(id);
+      setCrowd(cRes.data?.data || cRes.data);
+    } catch (err) {
+      alert(err.message || 'Failed to report crowd');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleIncidentSubmit = async (e) => {
+    e.preventDefault();
+    setReportLoading(true);
+    try {
+      const route = transport?.routes?.[0];
+      await reportIncident({ transportId: id, routeId: route?._id, ...incidentForm });
+      setShowIncidentModal(false);
+      alert('Incident reported successfully!');
+      const iRes = await getIncidentsByTransport(id, { status: 'open', limit: 10 });
+      const iPayload = iRes.data?.data || iRes.data;
+      setIncidents(iPayload?.incidents || []);
+    } catch (err) {
+      alert(err.message || 'Failed to report incident');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   const handleFareCalc = () => {
     if (!fareFrom || !fareTo) return;
     const route = transport?.routes?.[0];
     if (!route?.fareTable?.length) { setFareResult('No fare data available.'); return; }
     const entry = route.fareTable.find(
-      f => f.fromStop.toLowerCase() === fareFrom.toLowerCase() &&
-           f.toStop.toLowerCase()   === fareTo.toLowerCase() &&
+      f => ((f.fromStop.toLowerCase() === fareFrom.toLowerCase() &&
+             f.toStop.toLowerCase()   === fareTo.toLowerCase()) || 
+            (f.fromStop.toLowerCase() === fareTo.toLowerCase() &&
+             f.toStop.toLowerCase()   === fareFrom.toLowerCase())) &&
            (f.fareClass || 'general') === fareClass
     );
     if (entry) {
@@ -125,8 +194,8 @@ const TransportDetail = () => {
   if (error) {
     return (
       <div className="container py-5">
-        <div className="alert-custom alert-error mb-3">⚠️ {error}</div>
-        <button className="btn btn-outline-primary" onClick={() => navigate(-1)}>← Go Back</button>
+        <div className="alert-custom alert-error mb-3 d-flex align-items-center"><AlertIcon size={18} className="me-2"/> {error}</div>
+        <button className="btn btn-outline-primary d-flex align-items-center" onClick={() => navigate(-1)}><ArrowLeftIcon size={16} className="me-2"/> Go Back</button>
       </div>
     );
   }
@@ -138,7 +207,7 @@ const TransportDetail = () => {
   const schedule      = primaryRoute?.schedule || [];
   const fareTable     = primaryRoute?.fareTable || [];
   const livePosition  = transport.livePosition || crowd?.livePosition || null;
-  const crowdLevel    = transport.crowdLevel || crowd?.crowdLevel?.crowdLevel || null;
+  const crowdLevel    = transport.crowdLevel || crowd?.officialCrowdLevel?.crowdLevel || crowd?.crowdLevel?.crowdLevel || null;
 
   return (
     <>
@@ -156,39 +225,52 @@ const TransportDetail = () => {
                 </span>
                 <span
                   style={{ background: 'rgba(255,255,255,.15)', padding: '.2rem .6rem', borderRadius: 6, fontSize: '.8rem', textTransform: 'capitalize' }}
+                  className="d-flex align-items-center"
                 >
-                  {transport.type === 'bus' ? '🚌' : '🚂'} {transport.type}
+                  {transport.type === 'bus' ? <BusIcon size={14} className="me-1"/> : <TrainIcon size={14} className="me-1"/>} {transport.type}
                 </span>
                 <CrowdBadge level={crowdLevel} />
               </div>
               <h1 style={{ fontSize: '1.75rem' }}>{transport.name}</h1>
               {primaryRoute && (
                 <p>
-                  {primaryRoute.origin} → {primaryRoute.destination}
+                  {primaryRoute.origin} <ArrowRightIcon size={14} className="mx-1"/> {primaryRoute.destination}
                   {primaryRoute.totalDistance && ` · ${primaryRoute.totalDistance} km`}
                   {primaryRoute.estimatedDuration && ` · ~${primaryRoute.estimatedDuration} min`}
                 </p>
               )}
             </div>
-            <div className="d-flex gap-2 flex-wrap">
-              <button
-                className="btn btn-sm fw-semibold"
-                style={{ background: isFav ? '#fbbf24' : 'rgba(255,255,255,.2)', color: isFav ? '#1e293b' : 'white', border: 'none', borderRadius: 8, padding: '.4rem 1rem' }}
-                onClick={handleFavourite}
-                disabled={favLoading || !user || user.role === 'authority'}
-              >
-                {isFav ? '⭐ Saved' : '☆ Save'}
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{ background: 'rgba(255,255,255,.15)', color: 'white', border: '1px solid rgba(255,255,255,.3)', borderRadius: 8 }}
-                onClick={() => navigate(-1)}
-              >
-                ← Back
-              </button>
+            <div className="d-flex flex-column align-items-end gap-2">
+              <div className="d-flex gap-2 flex-wrap">
+                <button
+                  className="btn btn-sm fw-semibold d-flex align-items-center"
+                  style={{ background: isFav ? '#fbbf24' : 'rgba(255,255,255,.2)', color: isFav ? '#1e293b' : 'white', border: 'none', borderRadius: 8, padding: '.4rem 1rem' }}
+                  onClick={handleFavourite}
+                  disabled={favLoading || !user || user.role === 'authority'}
+                >
+                  <StarIcon size={16} className="me-2" filled={isFav}/> {isFav ? 'Saved' : 'Save'}
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{ background: 'rgba(255,255,255,.15)', color: 'white', border: '1px solid rgba(255,255,255,.3)', borderRadius: 8 }}
+                  onClick={() => navigate(-1)}
+                >
+                  <ArrowLeftIcon size={16} className="me-2"/> Back
+                </button>
+              </div>
+              {user && user.role !== 'authority' && (
+                <div className="d-flex gap-2 flex-wrap mt-1">
+                  <button className="btn btn-sm d-flex align-items-center" style={{ background: 'white', color: '#0f172a', fontWeight: 600, border: 'none', borderRadius: 8 }} onClick={() => setShowCrowdModal(true)}>
+                    <UserIcon size={16} className="me-1"/> Report Crowd
+                  </button>
+                  <button className="btn btn-sm d-flex align-items-center" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: 600, border: 'none', borderRadius: 8 }} onClick={() => setShowIncidentModal(true)}>
+                    <AlertIcon size={16} className="me-1"/> Report Incident
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-          {favMsg && <div className="mt-2" style={{ fontSize: '.85rem', color: '#fbbf24' }}>{favMsg}</div>}
+          {favMsg && <div className="mt-2 text-end" style={{ fontSize: '.85rem', color: '#fbbf24' }}>{favMsg}</div>}
         </div>
       </div>
 
@@ -197,7 +279,7 @@ const TransportDetail = () => {
           <div className="col-lg-8">
             {/* Basic Info */}
             <div className="detail-section">
-              <div className="detail-section-title">ℹ️ Transport Information</div>
+              <div className="detail-section-title d-flex align-items-center"><LocationIcon size={20} className="me-2"/> Transport Information</div>
               <div className="info-grid">
                 <div className="info-item">
                   <label>Transport No.</label>
@@ -237,7 +319,7 @@ const TransportDetail = () => {
             {/* Live Position */}
             {livePosition && (
               <div className="detail-section">
-                <div className="detail-section-title">📍 Live Position</div>
+                <div className="detail-section-title d-flex align-items-center"><LocationIcon size={20} className="me-2"/> Live Position</div>
                 <div className="info-grid">
                   <div className="info-item">
                     <label>Current Stop</label>
@@ -264,7 +346,7 @@ const TransportDetail = () => {
             {/* Route & Stops */}
             {stops.length > 0 && (
               <div className="detail-section">
-                <div className="detail-section-title">🛤️ Stops Timeline</div>
+                <div className="detail-section-title d-flex align-items-center"><ClockIcon size={20} className="me-2"/> Stops Timeline</div>
                 {primaryRoute && (
                   <div className="mb-3" style={{ fontSize: '.85rem', color: '#64748b' }}>
                     {primaryRoute.routeName}
@@ -277,19 +359,19 @@ const TransportDetail = () => {
 
             {/* Incidents */}
             <div className="detail-section">
-              <div className="detail-section-title">⚠️ Active Incidents ({incidents.length})</div>
-              <IncidentList incidents={incidents} />
+              <div className="detail-section-title d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Active Incidents ({incidents.length})</div>
+              <IncidentList 
+                incidents={incidents}
+                onDelete={user?.role === 'authority' ? handleDeleteIncident : undefined}
+              />
             </div>
           </div>
 
           <div className="col-lg-4">
             {/* Crowd Level */}
             <div className="detail-section">
-              <div className="detail-section-title">👥 Crowd Level</div>
+              <div className="detail-section-title d-flex align-items-center"><UserIcon size={20} className="me-2"/> Crowd Level</div>
               <div className="text-center py-2">
-                <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>
-                  {crowdLevel === 'empty' ? '😊' : crowdLevel === 'crowded' ? '😰' : crowdLevel === 'average' ? '😐' : '❓'}
-                </div>
                 <CrowdBadge level={crowdLevel || 'unknown'} />
                 {crowd?.crowdLevel?.updatedAt && (
                   <div className="mt-2" style={{ fontSize: '.78rem', color: '#94a3b8' }}>
@@ -307,7 +389,7 @@ const TransportDetail = () => {
             {/* Schedule */}
             {schedule.length > 0 && (
               <div className="detail-section">
-                <div className="detail-section-title">🕐 Schedule</div>
+                <div className="detail-section-title d-flex align-items-center"><ClockIcon size={20} className="me-2"/> Schedule</div>
                 <div style={{ maxHeight: 260, overflowY: 'auto' }}>
                   {schedule.map((trip, idx) => (
                     <div
@@ -343,7 +425,7 @@ const TransportDetail = () => {
 
             {/* Fare Calculator */}
             <div className="detail-section">
-              <div className="detail-section-title">💰 Fare Calculator</div>
+              <div className="detail-section-title d-flex align-items-center"><SearchIcon size={20} className="me-2"/> Fare Calculator</div>
               {fareTable.length > 0 ? (
                 <>
                   <div className="mb-2">
@@ -394,6 +476,93 @@ const TransportDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Crowd Modal */}
+      {showCrowdModal && (
+        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title d-flex align-items-center"><UserIcon size={20} className="me-2"/> Report Crowd Level</h5>
+                <button type="button" className="btn-close" onClick={() => setShowCrowdModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <form id="crowdForm" onSubmit={handleCrowdSubmit}>
+                  <div className="mb-3">
+                    <label className="form-label">How crowded is it?</label>
+                    <select className="form-select" value={crowdForm.crowdLevel} onChange={e => setCrowdForm({...crowdForm, crowdLevel: e.target.value})}>
+                      <option value="empty">Empty / Seats Available</option>
+                      <option value="average">Average / Standing Room</option>
+                      <option value="crowded">Crowded / Full</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Boarding Stop (Optional)</label>
+                    <input type="text" className="form-control" placeholder="Where are you boarding?" value={crowdForm.boardingStop} onChange={e => setCrowdForm({...crowdForm, boardingStop: e.target.value})} />
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer d-flex justify-content-between">
+                <button type="button" className="btn btn-light" onClick={() => setShowCrowdModal(false)}>Cancel</button>
+                <button type="submit" form="crowdForm" className="btn btn-primary" disabled={reportLoading}>
+                  {reportLoading ? 'Submitting...' : 'Submit Report'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Incident Modal */}
+      {showIncidentModal && (
+        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Report Incident</h5>
+                <button type="button" className="btn-close" onClick={() => setShowIncidentModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <form id="incidentForm" onSubmit={handleIncidentSubmit}>
+                  <div className="mb-3">
+                    <label className="form-label">Incident Type *</label>
+                    <select className="form-select" value={incidentForm.incidentType} onChange={e => setIncidentForm({...incidentForm, incidentType: e.target.value})}>
+                      <option value="delay">Delay</option>
+                      <option value="breakdown">Breakdown</option>
+                      <option value="accident">Accident</option>
+                      <option value="overcrowding">Overcrowding</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Severity</label>
+                    <select className="form-select" value={incidentForm.severity} onChange={e => setIncidentForm({...incidentForm, severity: e.target.value})}>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Location (Optional)</label>
+                    <input type="text" className="form-control" placeholder="E.g. near Main St" value={incidentForm.location} onChange={e => setIncidentForm({...incidentForm, location: e.target.value})} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Description (Optional)</label>
+                    <textarea className="form-control" rows="2" placeholder="More details..." value={incidentForm.description} onChange={e => setIncidentForm({...incidentForm, description: e.target.value})}></textarea>
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer d-flex justify-content-between">
+                <button type="button" className="btn btn-light" onClick={() => setShowIncidentModal(false)}>Cancel</button>
+                <button type="submit" form="incidentForm" className="btn btn-danger" disabled={reportLoading}>
+                  {reportLoading ? 'Submitting...' : 'Submit Report'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

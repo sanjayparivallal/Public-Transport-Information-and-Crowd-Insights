@@ -99,4 +99,15 @@ const assignStaff = async (req, res, next) => {
   }
 };
 
-module.exports = { searchTransports, getTransportById, getMyTransports, createTransport, updateTransport, deleteTransport, assignStaff };
+// DELETE /api/transport/:id/unassign/:role
+const unassignStaff = async (req, res, next) => {
+  try {
+    const { role } = req.params;
+    const result = await transportService.unassignStaff(req.user.id, req.params.id, role);
+    return sendSuccess(res, 200, result, result.message);
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { searchTransports, getTransportById, getMyTransports, createTransport, updateTransport, deleteTransport, assignStaff, unassignStaff };
