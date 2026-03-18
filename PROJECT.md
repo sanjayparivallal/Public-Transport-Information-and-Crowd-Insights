@@ -68,14 +68,13 @@ public-transport/
 #### 🧍 Commuter Dashboard (`/dashboard/commuter`)
 - Displays the commuter's **saved/favourite buses**
 - Shows real-time crowd level for each favourite bus
-- Quick links to search routes, report incident, view profile
 
 #### 🏛️ Authority Dashboard (`/dashboard/authority`)
 - Shows **all buses/trains** under the authority's control
 - Displays:
-  - Active incidents per route/line
-  - Crowd levels (crowded / average / empty) per bus
-  - Filter by: Line number, Time of day, Location, Delay status, Crowd density
+  - Active incidents per transport
+  - Crowd levels (crowded / average / empty) per transport
+  - Filter by: Transport number, Time of day, Location, Delay status, Crowd density
 - Incident alerts for critical reports
 
 ---
@@ -106,9 +105,8 @@ Opened when a user selects a result. Displays a **card** with:
 | **Stops Timeline** | Visual timeline showing current position of the bus |
 | **Fare Calculator** | Enter source & destination → shows estimated fare |
 | **Crowd Level** | Current crowd status (Crowded / Average / Empty) |
-| **Incidents** | List of reported incidents on this route |
-| **Incident Alert** | Button to subscribe to alerts for this route |
-| **Favourite** | Option to save this bus to dashboard |
+| **Incidents** | List of reported incidents on this transport done by users|
+| **Favourite** | Option to save this transport to dashboard |
 
 ---
 

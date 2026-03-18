@@ -8,7 +8,10 @@ import { useAuth } from '../../context/AuthContext';
 import CrowdBadge from '../../components/CrowdBadge';
 import StopsTimeline from '../../components/StopsTimeline';
 import IncidentList from '../../components/IncidentList';
-import { BusIcon, TrainIcon, UserIcon, WrenchIcon, AlertIcon, EditIcon, StarIcon, CheckCircleIcon, SearchIcon, ClockIcon, LocationIcon, ArrowRightIcon, ArrowLeftIcon } from '../../components/icons';
+import FareCalculator from './FareCalculator';
+import ScheduleSection from './ScheduleSection';
+import TransportInfo from './TransportInfo';
+import { BusIcon, TrainIcon, UserIcon, AlertIcon, StarIcon, SearchIcon, ClockIcon, LocationIcon, ArrowRightIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/icons';
 
 const TransportDetail = () => {
   const { id } = useParams();
@@ -18,54 +21,60 @@ const TransportDetail = () => {
   const [transport, setTransport]   = useState(null);
   const [crowd, setCrowd]           = useState(null);
   const [incidents, setIncidents]   = useState([]);
+  const [incidentsPage, setIncidentsPage] = useState(1);
+  const [incidentsPagination, setIncidentsPagination] = useState({ total: 0, pages: 1 });
+
+  const [crowdReports, setCrowdReports] = useState([]);
+  const [crowdPage, setCrowdPage] = useState(1);
+  const [crowdPagination, setCrowdPagination] = useState({ total: 0, pages: 1 });
+
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
   const [isFav, setIsFav]           = useState(false);
   const [favLoading, setFavLoading] = useState(false);
   const [favMsg, setFavMsg]         = useState('');
 
-  // Fare calculator state
-  const [fareFrom, setFareFrom]     = useState('');
-  const [fareTo, setFareTo]         = useState('');
-  const [fareResult, setFareResult] = useState(null);
-  const [fareClass, setFareClass]   = useState('general');
-
   // Report Modals State
   const [showCrowdModal, setShowCrowdModal] = useState(false);
   const [showIncidentModal, setShowIncidentModal] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [crowdForm, setCrowdForm] = useState({ crowdLevel: 'average', boardingStop: '' });
-  const [incidentForm, setIncidentForm] = useState({ incidentType: 'delay', severity: 'low', description: '', location: '' });
+  const [incidentForm, setIncidentForm] = useState({ incidentType: 'delay', severity: 'low', description: '', location: '', img: '' });
+
+  const fetchCrowdData = async (page) => {
+    try {
+      const cRes = await getCrowd(id, { page, limit: 10 });
+      const cPayload = cRes.data?.data || cRes.data;
+      setCrowd(cPayload);
+      setCrowdReports(cPayload?.reports || []);
+      if (cPayload?.pagination) setCrowdPagination(cPayload.pagination);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchIncidentsData = async (page) => {
+    try {
+      const iRes = await getIncidentsByTransport(id, { limit: 10, page });
+      const iPayload = iRes.data?.data || iRes.data;
+      setIncidents(iPayload?.incidents || []);
+      if (iPayload?.pagination) setIncidentsPagination(iPayload.pagination);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
       setError('');
       try {
-        const [tRes, cRes, iRes] = await Promise.allSettled([
-          getTransportById(id),
-          getCrowd(id),
-          getIncidentsByTransport(id, { status: 'open', limit: 10 }),
-        ]);
-
-        if (tRes.status === 'fulfilled') {
-          // Backend sendSuccess wraps in { success, data: ... }
-          const tPayload = tRes.value.data?.data || tRes.value.data;
-          setTransport(tPayload?.transport || tPayload);
-        } else {
-          setError('Transport not found or access denied.');
-          setLoading(false);
-          return;
-        }
-        if (cRes.status === 'fulfilled') {
-          // Crowd: { success, data: { crowdLevel, reports, livePosition } }
-          const cPayload = cRes.value.data?.data || cRes.value.data;
-          setCrowd(cPayload);
-        }
-        if (iRes.status === 'fulfilled') {
-          const iPayload = iRes.value.data?.data || iRes.value.data;
-          setIncidents(iPayload?.incidents || []);
-        }
+        const tRes = await getTransportById(id);
+        const tPayload = tRes.data?.data || tRes.data;
+        setTransport(tPayload?.transport || tPayload);
+        
+        await fetchCrowdData(crowdPage);
+        await fetchIncidentsData(incidentsPage);
       } catch (err) {
         setError(err.message || 'Failed to load transport details.');
       } finally {
@@ -74,6 +83,14 @@ const TransportDetail = () => {
     };
     fetchAll();
   }, [id]);
+
+  useEffect(() => {
+    if (transport) fetchIncidentsData(incidentsPage);
+  }, [incidentsPage]);
+
+  useEffect(() => {
+    if (transport) fetchCrowdData(crowdPage);
+  }, [crowdPage]);
 
   // Check if already favourite
   useEffect(() => {
@@ -135,13 +152,27 @@ const TransportDetail = () => {
       await submitCrowdReport({ transportId: id, routeId: route?._id, ...crowdForm });
       setShowCrowdModal(false);
       alert('Crowd reported successfully!');
-      const cRes = await getCrowd(id);
-      setCrowd(cRes.data?.data || cRes.data);
+      fetchCrowdData(1);
+      setCrowdPage(1);
     } catch (err) {
       alert(err.message || 'Failed to report crowd');
     } finally {
       setReportLoading(false);
     }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setIncidentForm(prev => ({ ...prev, img: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleIncidentSubmit = async (e) => {
@@ -152,31 +183,12 @@ const TransportDetail = () => {
       await reportIncident({ transportId: id, routeId: route?._id, ...incidentForm });
       setShowIncidentModal(false);
       alert('Incident reported successfully!');
-      const iRes = await getIncidentsByTransport(id, { status: 'open', limit: 10 });
-      const iPayload = iRes.data?.data || iRes.data;
-      setIncidents(iPayload?.incidents || []);
+      fetchIncidentsData(1);
+      setIncidentsPage(1);
     } catch (err) {
       alert(err.message || 'Failed to report incident');
     } finally {
       setReportLoading(false);
-    }
-  };
-
-  const handleFareCalc = () => {
-    if (!fareFrom || !fareTo) return;
-    const route = transport?.routes?.[0];
-    if (!route?.fareTable?.length) { setFareResult('No fare data available.'); return; }
-    const entry = route.fareTable.find(
-      f => ((f.fromStop.toLowerCase() === fareFrom.toLowerCase() &&
-             f.toStop.toLowerCase()   === fareTo.toLowerCase()) || 
-            (f.fromStop.toLowerCase() === fareTo.toLowerCase() &&
-             f.toStop.toLowerCase()   === fareFrom.toLowerCase())) &&
-           (f.fareClass || 'general') === fareClass
-    );
-    if (entry) {
-      setFareResult(`₹${entry.fare} (${entry.fareClass})`);
-    } else {
-      setFareResult('Fare not found for this stop pair / class.');
     }
   };
 
@@ -240,35 +252,25 @@ const TransportDetail = () => {
                 </p>
               )}
             </div>
-            <div className="d-flex flex-column align-items-end gap-2">
-              <div className="d-flex gap-2 flex-wrap">
-                <button
-                  className="btn btn-sm fw-semibold d-flex align-items-center"
-                  style={{ background: isFav ? '#fbbf24' : 'rgba(255,255,255,.2)', color: isFav ? '#1e293b' : 'white', border: 'none', borderRadius: 8, padding: '.4rem 1rem' }}
-                  onClick={handleFavourite}
-                  disabled={favLoading || !user || user.role === 'authority'}
-                >
-                  <StarIcon size={16} className="me-2" filled={isFav}/> {isFav ? 'Saved' : 'Save'}
-                </button>
-                <button
-                  className="btn btn-sm"
-                  style={{ background: 'rgba(255,255,255,.15)', color: 'white', border: '1px solid rgba(255,255,255,.3)', borderRadius: 8 }}
-                  onClick={() => navigate(-1)}
-                >
-                  <ArrowLeftIcon size={16} className="me-2"/> Back
-                </button>
-              </div>
-              {user && user.role !== 'authority' && (
-                <div className="d-flex gap-2 flex-wrap mt-1">
-                  <button className="btn btn-sm d-flex align-items-center" style={{ background: 'white', color: '#0f172a', fontWeight: 600, border: 'none', borderRadius: 8 }} onClick={() => setShowCrowdModal(true)}>
-                    <UserIcon size={16} className="me-1"/> Report Crowd
+              <div className="d-flex flex-column align-items-end gap-2">
+                <div className="d-flex gap-2 flex-wrap">
+                  <button
+                    className="btn btn-sm fw-semibold d-flex align-items-center shadow-sm"
+                    style={{ background: isFav ? '#fbbf24' : 'rgba(255,255,255,.2)', color: isFav ? '#1e293b' : 'white', border: 'none', borderRadius: 8, padding: '.5rem 1rem' }}
+                    onClick={handleFavourite}
+                    disabled={favLoading || !user || user.role === 'authority'}
+                  >
+                    <StarIcon size={16} className="me-2" filled={isFav}/> {isFav ? 'Saved' : 'Save'}
                   </button>
-                  <button className="btn btn-sm d-flex align-items-center" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: 600, border: 'none', borderRadius: 8 }} onClick={() => setShowIncidentModal(true)}>
-                    <AlertIcon size={16} className="me-1"/> Report Incident
+                  <button
+                    className="btn btn-sm shadow-sm"
+                    style={{ background: 'rgba(255,255,255,.15)', color: 'white', border: '1px solid rgba(255,255,255,.3)', borderRadius: 8, padding: '.5rem 1rem' }}
+                    onClick={() => navigate(-1)}
+                  >
+                    <ArrowLeftIcon size={16} className="me-2"/> Back
                   </button>
                 </div>
-              )}
-            </div>
+              </div>
           </div>
           {favMsg && <div className="mt-2 text-end" style={{ fontSize: '.85rem', color: '#fbbf24' }}>{favMsg}</div>}
         </div>
@@ -278,43 +280,7 @@ const TransportDetail = () => {
         <div className="row g-4">
           <div className="col-lg-8">
             {/* Basic Info */}
-            <div className="detail-section">
-              <div className="detail-section-title d-flex align-items-center"><LocationIcon size={20} className="me-2"/> Transport Information</div>
-              <div className="info-grid">
-                <div className="info-item">
-                  <label>Transport No.</label>
-                  <span>{transport.transportNumber}</span>
-                </div>
-                <div className="info-item">
-                  <label>Type</label>
-                  <span style={{ textTransform: 'capitalize' }}>{transport.type}</span>
-                </div>
-                {transport.operator && (
-                  <div className="info-item">
-                    <label>Operator</label>
-                    <span>{transport.operator}</span>
-                  </div>
-                )}
-                {transport.vehicleNumber && (
-                  <div className="info-item">
-                    <label>Vehicle No.</label>
-                    <span>{transport.vehicleNumber}</span>
-                  </div>
-                )}
-                {transport.totalSeats && (
-                  <div className="info-item">
-                    <label>Total Seats</label>
-                    <span>{transport.totalSeats}</span>
-                  </div>
-                )}
-                {transport.amenities?.length > 0 && (
-                  <div className="info-item" style={{ gridColumn: 'span 2' }}>
-                    <label>Amenities</label>
-                    <span>{transport.amenities.join(', ')}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+            <TransportInfo transport={transport} />
 
             {/* Live Position */}
             {livePosition && (
@@ -339,6 +305,14 @@ const TransportDetail = () => {
                       <span style={{ color: '#ef4444' }}>+{livePosition.delayMinutes} min</span>
                     </div>
                   )}
+                  {livePosition.availableSeats !== null && livePosition.availableSeats !== undefined && (
+                    <div className="info-item">
+                      <label>Available Seats</label>
+                      <span className="fw-bold" style={{ color: livePosition.availableSeats > 10 ? 'var(--success)' : '#ef4444' }}>
+                        {livePosition.availableSeats}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -358,12 +332,91 @@ const TransportDetail = () => {
             )}
 
             {/* Incidents */}
-            <div className="detail-section">
-              <div className="detail-section-title d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Active Incidents ({incidents.length})</div>
+            <div className="detail-section p-4 bg-white rounded-4 shadow-sm">
+              <div className="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4 flex-wrap gap-3">
+                <h4 className="d-flex align-items-center fw-bold text-dark m-0">
+                  <AlertIcon size={24} className="me-2 text-danger"/> All Incidents <span className="badge bg-light text-secondary ms-2 rounded-pill border">{incidentsPagination.total}</span>
+                </h4>
+                {user && user.role !== 'authority' && (
+                  <button className="btn btn-danger btn-sm fw-medium rounded-pill px-3 shadow-sm d-flex align-items-center" onClick={() => setShowIncidentModal(true)}>
+                    <AlertIcon size={16} className="me-2"/> Report Incident
+                  </button>
+                )}
+              </div>
               <IncidentList 
                 incidents={incidents}
                 onDelete={user?.role === 'authority' ? handleDeleteIncident : undefined}
               />
+              {incidentsPagination.pages > 1 && (
+                <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                  <button className="btn btn-sm btn-outline-secondary d-flex align-items-center" disabled={incidentsPage === 1} onClick={() => setIncidentsPage(p => p - 1)}>
+                    <ChevronLeftIcon size={16}/> Prev
+                  </button>
+                  <span style={{ fontSize: '.85rem', color: '#64748b' }}>Page {incidentsPage} of {incidentsPagination.pages}</span>
+                  <button className="btn btn-sm btn-outline-secondary d-flex align-items-center" disabled={incidentsPage === incidentsPagination.pages} onClick={() => setIncidentsPage(p => p + 1)}>
+                    Next <ChevronRightIcon size={16}/>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Crowd Reports by Users */}
+            <div className="detail-section p-4 bg-white rounded-4 shadow-sm">
+              <div className="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4 flex-wrap gap-3">
+                <h4 className="d-flex align-items-center fw-bold text-dark m-0">
+                  <UserIcon size={24} className="me-2 text-primary"/> Commuter Crowd Reports <span className="badge bg-light text-secondary ms-2 rounded-pill border">{crowdPagination.total}</span>
+                </h4>
+                {user && user.role !== 'authority' && (
+                  <button className="btn btn-primary btn-sm fw-medium rounded-pill px-3 shadow-sm d-flex align-items-center" onClick={() => setShowCrowdModal(true)}>
+                    <UserIcon size={16} className="me-2"/> Report Crowd
+                  </button>
+                )}
+              </div>
+              
+              {crowdReports.length === 0 ? (
+                <div className="text-center py-5 bg-light rounded-4 border-dashed">
+                  <UserIcon size={40} className="text-muted mb-2"/>
+                  <h6 className="text-muted fw-normal m-0" style={{ fontSize: '.95rem' }}>No recent commuter reports.</h6>
+                </div>
+              ) : (
+                <div className="row g-3">
+                  {crowdReports.map(report => (
+                    <div key={report._id} className="col-md-6">
+                      <div className="card h-100 shadow-sm border-0 bg-light" style={{ borderRadius: '12px' }}>
+                        <div className="card-body">
+                          <div className="d-flex align-items-start justify-content-between mb-3">
+                             <CrowdBadge level={report.crowdLevel} />
+                             <span className="badge bg-white text-secondary border d-flex align-items-center" style={{ fontSize: '.75rem' }}>
+                               <CalendarIcon size={12} className="me-1"/> {new Date(report.reportedAt).toLocaleDateString()}
+                             </span>
+                          </div>
+                          <div>
+                            <div className="fw-bold text-dark d-flex align-items-center mb-1">
+                              <UserIcon size={16} className="me-2 text-primary"/>  {report.reportedBy?.name || 'Commuter'}
+                            </div>
+                            {report.boardingStop && (
+                              <div className="text-secondary d-flex align-items-center" style={{ fontSize: '.85rem' }}>
+                                <LocationIcon size={14} className="me-1"/> Boarded at <strong className="ms-1">{report.boardingStop}</strong>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {crowdPagination.pages > 1 && (
+                <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                  <button className="btn btn-sm btn-outline-secondary d-flex align-items-center" disabled={crowdPage === 1} onClick={() => setCrowdPage(p => p - 1)}>
+                    <ChevronLeftIcon size={16}/> Prev
+                  </button>
+                  <span style={{ fontSize: '.85rem', color: '#64748b' }}>Page {crowdPage} of {crowdPagination.pages}</span>
+                  <button className="btn btn-sm btn-outline-secondary d-flex align-items-center" disabled={crowdPage === crowdPagination.pages} onClick={() => setCrowdPage(p => p + 1)}>
+                    Next <ChevronRightIcon size={16}/>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -387,106 +440,24 @@ const TransportDetail = () => {
             </div>
 
             {/* Schedule */}
-            {schedule.length > 0 && (
-              <div className="detail-section">
-                <div className="detail-section-title d-flex align-items-center"><ClockIcon size={20} className="me-2"/> Schedule</div>
-                <div style={{ maxHeight: 260, overflowY: 'auto' }}>
-                  {schedule.map((trip, idx) => (
-                    <div
-                      key={trip.tripId || idx}
-                      style={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '.5rem 0', borderBottom: '1px solid #f1f5f9', fontSize: '.86rem'
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 600 }}>
-                          {trip.departureTime} → {trip.arrivalTime}
-                        </div>
-                        <div style={{ color: '#94a3b8', fontSize: '.76rem' }}>
-                          {trip.daysOfOperation?.join(', ')}
-                        </div>
-                      </div>
-                      <span
-                        style={{
-                          fontSize: '.72rem', padding: '.15rem .5rem', borderRadius: 5,
-                          background: trip.isActive ? '#d1fae5' : '#f1f5f9',
-                          color: trip.isActive ? '#065f46' : '#94a3b8',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {trip.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <ScheduleSection schedule={schedule} />
 
             {/* Fare Calculator */}
-            <div className="detail-section">
-              <div className="detail-section-title d-flex align-items-center"><SearchIcon size={20} className="me-2"/> Fare Calculator</div>
-              {fareTable.length > 0 ? (
-                <>
-                  <div className="mb-2">
-                    <label className="form-label">From Stop</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="e.g. Salem"
-                      value={fareFrom}
-                      onChange={e => { setFareFrom(e.target.value); setFareResult(null); }}
-                    />
-                  </div>
-                  <div className="mb-2">
-                    <label className="form-label">To Stop</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="e.g. Chennai"
-                      value={fareTo}
-                      onChange={e => { setFareTo(e.target.value); setFareResult(null); }}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Class</label>
-                    <select className="form-select" value={fareClass} onChange={e => setFareClass(e.target.value)}>
-                      <option value="general">General</option>
-                      <option value="AC">AC</option>
-                      <option value="sleeper">Sleeper</option>
-                    </select>
-                  </div>
-                  <button className="btn btn-primary btn-sm w-100" onClick={handleFareCalc}>
-                    Calculate Fare
-                  </button>
-                  {fareResult && (
-                    <div className="mt-3 text-center">
-                      <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#2563eb' }}>
-                        {fareResult}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className="text-muted" style={{ fontSize: '.85rem' }}>
-                  No fare table available for this transport.
-                </p>
-              )}
-            </div>
+            <FareCalculator fareTable={fareTable} />
           </div>
         </div>
       </div>
 
       {/* Crowd Modal */}
       {showCrowdModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal show d-block" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)' }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title d-flex align-items-center"><UserIcon size={20} className="me-2"/> Report Crowd Level</h5>
-                <button type="button" className="btn-close" onClick={() => setShowCrowdModal(false)}></button>
+            <div className="modal-content shadow-lg border-0" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+              <div className="modal-header bg-primary text-white border-0 py-3">
+                <h5 className="modal-title d-flex align-items-center fw-bold"><UserIcon size={22} className="me-2 text-white-50"/> Report Crowd Level</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowCrowdModal(false)}></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body p-4 bg-light">
                 <form id="crowdForm" onSubmit={handleCrowdSubmit}>
                   <div className="mb-3">
                     <label className="form-label">How crowded is it?</label>
@@ -502,9 +473,9 @@ const TransportDetail = () => {
                   </div>
                 </form>
               </div>
-              <div className="modal-footer d-flex justify-content-between">
-                <button type="button" className="btn btn-light" onClick={() => setShowCrowdModal(false)}>Cancel</button>
-                <button type="submit" form="crowdForm" className="btn btn-primary" disabled={reportLoading}>
+              <div className="modal-footer border-0 bg-white p-3 d-flex gap-2">
+                <button type="button" className="btn btn-light rounded-pill px-4 fw-medium" onClick={() => setShowCrowdModal(false)}>Cancel</button>
+                <button type="submit" form="crowdForm" className="btn btn-primary rounded-pill px-4 fw-medium flex-grow-1 shadow-sm" disabled={reportLoading}>
                   {reportLoading ? 'Submitting...' : 'Submit Report'}
                 </button>
               </div>
@@ -515,14 +486,14 @@ const TransportDetail = () => {
 
       {/* Incident Modal */}
       {showIncidentModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal show d-block" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)' }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Report Incident</h5>
-                <button type="button" className="btn-close" onClick={() => setShowIncidentModal(false)}></button>
+            <div className="modal-content shadow-lg border-0" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+              <div className="modal-header bg-danger text-white border-0 py-3">
+                <h5 className="modal-title d-flex align-items-center fw-bold"><AlertIcon size={22} className="me-2 text-white-50"/> Report Incident</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowIncidentModal(false)}></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body p-4 bg-light">
                 <form id="incidentForm" onSubmit={handleIncidentSubmit}>
                   <div className="mb-3">
                     <label className="form-label">Incident Type *</label>
@@ -551,11 +522,21 @@ const TransportDetail = () => {
                     <label className="form-label">Description (Optional)</label>
                     <textarea className="form-control" rows="2" placeholder="More details..." value={incidentForm.description} onChange={e => setIncidentForm({...incidentForm, description: e.target.value})}></textarea>
                   </div>
+                  <div className="mb-3">
+                    <label className="form-label">Photo Evidence (Optional)</label>
+                    <input type="file" className="form-control" accept="image/*" onChange={handleImageChange} />
+                    {incidentForm.img && (
+                      <div className="mt-2">
+                        <img src={incidentForm.img} alt="Preview" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px' }} />
+                        <button type="button" className="btn btn-sm btn-link text-danger mt-1 p-0" onClick={() => setIncidentForm(prev => ({ ...prev, img: '' }))}>Remove image</button>
+                      </div>
+                    )}
+                  </div>
                 </form>
               </div>
-              <div className="modal-footer d-flex justify-content-between">
-                <button type="button" className="btn btn-light" onClick={() => setShowIncidentModal(false)}>Cancel</button>
-                <button type="submit" form="incidentForm" className="btn btn-danger" disabled={reportLoading}>
+              <div className="modal-footer border-0 bg-white p-3 d-flex gap-2">
+                <button type="button" className="btn btn-light rounded-pill px-4 fw-medium" onClick={() => setShowIncidentModal(false)}>Cancel</button>
+                <button type="submit" form="incidentForm" className="btn btn-danger rounded-pill px-4 fw-medium flex-grow-1 shadow-sm" disabled={reportLoading}>
                   {reportLoading ? 'Submitting...' : 'Submit Report'}
                 </button>
               </div>

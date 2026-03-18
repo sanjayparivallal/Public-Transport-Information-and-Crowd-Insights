@@ -17,6 +17,7 @@ const livePositionSchema = new mongoose.Schema(
     currentStop: { type: String, default: null },
     nextStop:    { type: String, default: null },
     stopIndex:   { type: Number, default: 0 },
+    availableSeats: { type: Number, default: null },
 
     delayMinutes: { type: Number, default: 0 },
     status: {

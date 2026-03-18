@@ -21,8 +21,8 @@ router.get('/', getAllIncidents);
 // PUT /api/incidents/:incidentId/resolve  — authority only
 router.put('/:incidentId/resolve', requireRole('authority'), resolveIncident);
 
-// DELETE /api/incidents/:id — authority only
-router.delete('/:id', requireRole('authority'), deleteIncident);
+// DELETE /api/incidents/:id — authority or the reporter
+router.delete('/:id', deleteIncident);
 
 // GET /api/incidents/:transportId  — incidents for a transport
 router.get('/:transportId', getIncidentsByTransport);

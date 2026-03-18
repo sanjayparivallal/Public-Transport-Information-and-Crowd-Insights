@@ -2,16 +2,14 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { registerAuthority } from '../../api/authApi';
-import { BusIcon, MailIcon, LockIcon, EyeIcon, EyeOffIcon, PhoneIcon, UserIcon, BuildingIcon, LocationIcon, MapIcon, IdCardIcon } from '../../components/icons';
+import { BusIcon, MailIcon, LockIcon, EyeIcon, EyeOffIcon, UserIcon, BuildingIcon, LocationIcon, IdCardIcon } from '../../components/icons';
 
 const SignupAuthority = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    name: '', email: '', phone: '', password: '', confirmPassword: '',
+    name: '', email: '', password: '', confirmPassword: '',
     organizationName: '', authorityCode: '', region: '',
-    contactEmail: '', contactPhone: '', officeAddress: '',
-    coveredDistricts: '',
   });
   const [errors, setErrors]    = useState({});
   const [showPw, setShowPw]    = useState(false);
@@ -47,10 +45,6 @@ const SignupAuthority = () => {
 
     setLoading(true);
     try {
-      const coveredDistricts = form.coveredDistricts
-        ? form.coveredDistricts.split(',').map(d => d.trim()).filter(Boolean)
-        : [];
-
       const payload = {
         name: form.name.trim(),
         email: form.email.trim(),
@@ -58,12 +52,7 @@ const SignupAuthority = () => {
         organizationName: form.organizationName.trim(),
         authorityCode: form.authorityCode.trim(),
         region: form.region.trim(),
-        coveredDistricts,
       };
-      if (form.phone.trim())         payload.phone         = form.phone.trim();
-      if (form.contactEmail.trim())  payload.contactEmail  = form.contactEmail.trim();
-      if (form.contactPhone.trim())  payload.contactPhone  = form.contactPhone.trim();
-      if (form.officeAddress.trim()) payload.officeAddress = form.officeAddress.trim();
 
       await registerAuthority(payload);
       toast.success('Authority account created! Redirecting to login…');
@@ -118,15 +107,7 @@ const SignupAuthority = () => {
               </div>
               {errors.email && <div className="invalid-feedback d-block">{errors.email}</div>}
             </div>
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="auth-phone">Phone <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
-              <div className="input-group-icon">
-                <span className="icon"><PhoneIcon size={18} /></span>
-                <input id="auth-phone" name="phone" type="tel"
-                  className="form-control" placeholder="+91 98765 43210"
-                  value={form.phone} onChange={handleChange} />
-              </div>
-            </div>
+
           </div>
 
           {/* Passwords */}
@@ -211,47 +192,7 @@ const SignupAuthority = () => {
               </div>
               {errors.region && <div className="invalid-feedback d-block">{errors.region}</div>}
             </div>
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="coveredDistricts">
-                Covered Districts <span style={{ color: '#94a3b8', fontWeight: 400 }}>(comma-separated)</span>
-              </label>
-              <div className="input-group-icon">
-                <span className="icon"><MapIcon size={18} /></span>
-                <input
-                  id="coveredDistricts" name="coveredDistricts" type="text"
-                  className="form-control"
-                  placeholder="Salem, Namakkal, Dharmapuri"
-                  value={form.coveredDistricts} onChange={handleChange}
-                />
-              </div>
-            </div>
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="contactEmail">Contact Email</label>
-              <div className="input-group-icon">
-                <span className="icon"><MailIcon size={18} /></span>
-                <input id="contactEmail" name="contactEmail" type="email"
-                  className="form-control" placeholder="contact@authority.gov"
-                  value={form.contactEmail} onChange={handleChange} />
-              </div>
-            </div>
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="contactPhone">Contact Phone</label>
-              <div className="input-group-icon">
-                <span className="icon"><PhoneIcon size={18} /></span>
-                <input id="contactPhone" name="contactPhone" type="tel"
-                  className="form-control" placeholder="+91 44 2222 0000"
-                  value={form.contactPhone} onChange={handleChange} />
-              </div>
-            </div>
-            <div className="col-12">
-              <label className="form-label" htmlFor="officeAddress">Office Address</label>
-              <div className="input-group-icon">
-                <span className="icon"><BuildingIcon size={18} /></span>
-                <input id="officeAddress" name="officeAddress" type="text"
-                  className="form-control" placeholder="123 Transport Bhavan, Salem"
-                  value={form.officeAddress} onChange={handleChange} />
-              </div>
-            </div>
+
           </div>
 
           <button type="submit" className="btn-primary-custom d-flex align-items-center justify-content-center" disabled={loading}>

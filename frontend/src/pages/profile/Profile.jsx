@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getProfile, updateProfile } from '../../api/userApi';
 import { useAuth } from '../../context/AuthContext';
-import { UserIcon, CheckCircleIcon, AlertIcon, EditIcon, KeyIcon, SaveIcon, LogOutIcon } from '../../components/icons';
+import { UserIcon, CheckCircleIcon, AlertIcon, EditIcon, LogOutIcon } from '../../components/icons';
+import ProfileViewInfo from './ProfileViewInfo';
+import ProfileEditForm from './ProfileEditForm';
 
 const Profile = () => {
   const { user, logout } = useAuth();
@@ -12,7 +14,10 @@ const Profile = () => {
   const [loading, setLoading]   = useState(true);
   const [editing, setEditing]   = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [form, setForm]         = useState({ name: '', phone: '', password: '' });
+  const [form, setForm]         = useState({ 
+    name: '', phone: '', password: '', 
+    contactEmail: '', contactPhone: '', officeAddress: '', coveredDistricts: '' 
+  });
   const [saving, setSaving]     = useState(false);
   const [msg, setMsg]           = useState('');
   const [error, setError]       = useState('');
@@ -24,7 +29,15 @@ const Profile = () => {
         const raw = res.data?.data || res.data;
         const data = raw?.user || raw?.authorityProfile || raw;
         setProfile(data);
-        setForm({ name: data?.name || '', phone: data?.phone || '', password: '' });
+        setForm({ 
+          name: data?.name || '', 
+          phone: data?.phone || '', 
+          password: '',
+          contactEmail: data?.contactEmail || '',
+          contactPhone: data?.contactPhone || '',
+          officeAddress: data?.officeAddress || '',
+          coveredDistricts: data?.coveredDistricts?.join(', ') || ''
+        });
       } catch (err) {
         setError('Failed to load profile.');
       } finally { setLoading(false); }
@@ -40,6 +53,13 @@ const Profile = () => {
       if (form.name.trim())     payload.name     = form.name.trim();
       if (form.phone.trim())    payload.phone    = form.phone.trim();
       if (form.password.trim() && showPasswordModal) payload.password = form.password.trim();
+      
+      if (form.contactEmail?.trim()) payload.contactEmail = form.contactEmail.trim();
+      if (form.contactPhone?.trim()) payload.contactPhone = form.contactPhone.trim();
+      if (form.officeAddress?.trim()) payload.officeAddress = form.officeAddress.trim();
+      if (form.coveredDistricts?.trim()) {
+        payload.coveredDistricts = form.coveredDistricts.split(',').map(d => d.trim()).filter(Boolean);
+      }
       
       await updateProfile(payload);
       setMsg(showPasswordModal ? 'Password updated successfully!' : 'Profile updated successfully!');
@@ -90,48 +110,21 @@ const Profile = () => {
                 </div>
 
                 {!editing ? (
-                  <div className="info-grid">
-                    <div className="info-item"><label>Name</label><span>{profile?.name || '—'}</span></div>
-                    <div className="info-item"><label>Email</label><span>{profile?.email || user.email}</span></div>
-                    <div className="info-item"><label>Role</label><span style={{ textTransform: 'capitalize' }}>{user.role}</span></div>
-                    <div className="info-item"><label>Phone</label><span>{profile?.phone || '—'}</span></div>
-                    {profile?.organizationName && (
-                      <div className="info-item"><label>Organisation</label><span>{profile.organizationName}</span></div>
-                    )}
-                    {profile?.region && (
-                      <div className="info-item"><label>Region</label><span>{profile.region}</span></div>
-                    )}
-                    {assignedTransportLabel && (
-                      <div className="info-item"><label>Assigned Transport</label><span>{assignedTransportLabel}</span></div>
-                    )}
-                    <div className="info-item mt-3 pt-3" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)' }}>
-                      <button
-                        className="btn btn-sm btn-outline-warning d-flex align-items-center"
-                        onClick={() => { setForm(p => ({ ...p, password: '' })); setShowPasswordModal(true); setMsg(''); setError(''); }}
-                      >
-                        <KeyIcon size={14} className="me-1"/> Change Password
-                      </button>
-                    </div>
-                  </div>
+                  <ProfileViewInfo 
+                    user={user} 
+                    profile={profile} 
+                    assignedTransportLabel={assignedTransportLabel} 
+                    onChangePassword={() => { setForm(p => ({ ...p, password: '' })); setShowPasswordModal(true); setMsg(''); setError(''); }} 
+                  />
                 ) : (
-                  <div>
-                    <div className="mb-3">
-                      <label className="form-label">Name</label>
-                      <input type="text" className="form-control" value={form.name}
-                        onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Phone</label>
-                      <input type="tel" className="form-control" value={form.phone}
-                        onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} />
-                    </div>
-                    <div className="d-flex gap-2">
-                      <button className="btn btn-primary flex-fill d-flex align-items-center justify-content-center" onClick={handleSave} disabled={saving}>
-                        {saving ? 'Saving…' : <><SaveIcon size={18} className="me-1"/> Save Profile</>}
-                      </button>
-                      <button className="btn btn-outline-secondary" onClick={() => setEditing(false)}>Cancel</button>
-                    </div>
-                  </div>
+                  <ProfileEditForm 
+                    user={user}
+                    form={form}
+                    setForm={setForm}
+                    onSave={handleSave}
+                    onCancel={() => setEditing(false)}
+                    saving={saving}
+                  />
                 )}
               </div>
             )}

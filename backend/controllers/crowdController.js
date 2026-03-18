@@ -19,7 +19,9 @@ const submitCrowdReport = async (req, res, next) => {
 // GET /api/crowd/:transportId  — aggregated crowd for a transport
 const getCrowd = async (req, res, next) => {
   try {
-    const data = await crowdService.getCrowdForTransport(req.params.transportId);
+    const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+    const data = await crowdService.getCrowdForTransport(req.params.transportId, page, limit);
     return sendSuccess(res, 200, data);
   } catch (err) {
     next(err);
@@ -43,7 +45,7 @@ const updateCrowdLevel = async (req, res, next) => {
 // PUT /api/crowd/live  — driver / conductor updates live position
 const updateLivePosition = async (req, res, next) => {
   try {
-    const { transportId, routeId, tripId, currentStop, nextStop, stopIndex, delayMinutes, status } = req.body;
+    const { transportId, routeId, tripId, currentStop, nextStop, stopIndex, delayMinutes, status, availableSeats } = req.body;
     if (!transportId || !routeId || !tripId) {
       return sendError(res, 400, 'transportId, routeId, and tripId are required');
     }
@@ -63,6 +65,7 @@ const updateLivePosition = async (req, res, next) => {
         stopIndex:    stopIndex    ?? 0,
         delayMinutes: delayMinutes ?? 0,
         status:       status       || 'on-time',
+        availableSeats: availableSeats !== undefined ? availableSeats : null,
         updatedBy:     req.user.id,
         updatedByRole: req.user.role,
       },
@@ -87,4 +90,16 @@ const getLivePosition = async (req, res, next) => {
   }
 };
 
-module.exports = { submitCrowdReport, getCrowd, updateCrowdLevel, updateLivePosition, getLivePosition };
+// DELETE /api/crowd/report/:id  — authority only
+const deleteCrowdReport = async (req, res, next) => {
+  try {
+    const CrowdReport = require('../models/CrowdReport');
+    const report = await CrowdReport.findByIdAndDelete(req.params.id);
+    if (!report) return sendError(res, 404, 'Crowd report not found');
+    return sendSuccess(res, 200, null, 'Crowd report deleted successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { submitCrowdReport, getCrowd, updateCrowdLevel, updateLivePosition, getLivePosition, deleteCrowdReport };

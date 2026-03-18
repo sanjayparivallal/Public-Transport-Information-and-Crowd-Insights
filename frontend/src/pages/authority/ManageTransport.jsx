@@ -9,7 +9,8 @@ import {
   assignStaff,
   removeStaff,
 } from '../../api/adminApi';
-import { BusIcon, TrainIcon, EditIcon, CheckCircleIcon, UserIcon, WrenchIcon, AlertIcon, SearchIcon, ClipboardIcon, BuildingIcon, TrashIcon } from '../../components/icons';
+import { BusIcon, TrainIcon, EditIcon, CheckCircleIcon, UserIcon, WrenchIcon, AlertIcon, SearchIcon, ClipboardIcon, BuildingIcon, TrashIcon, MapIcon } from '../../components/icons';
+import TransportRoutesModal from './TransportRoutesModal';
 
 /* ── Helpers ─────────────────────────────────────────────── */
 const EMPTY_FORM = {
@@ -372,6 +373,7 @@ const ManageTransport = () => {
   const [selectedTransport, setSelectedTransport] = useState(null);
   const [assignTarget,      setAssignTarget]       = useState(null);
   const [deleteTarget,      setDeleteTarget]       = useState(null);
+  const [routeTarget,       setRouteTarget]        = useState(null);
 
   const fetchTransports = useCallback(async () => {
     setLoading(true);
@@ -423,6 +425,16 @@ const ManageTransport = () => {
     setAssignTarget(t);
     setTimeout(() => {
       const modalEl = document.getElementById('assignStaffModal');
+      if (modalEl && window.bootstrap) {
+        new window.bootstrap.Modal(modalEl).show();
+      }
+    }, 50);
+  };
+
+  const openRoutesModal = (t) => {
+    setRouteTarget(t);
+    setTimeout(() => {
+      const modalEl = document.getElementById('transportRoutesModal');
       if (modalEl && window.bootstrap) {
         new window.bootstrap.Modal(modalEl).show();
       }
@@ -666,6 +678,13 @@ const ManageTransport = () => {
                             <UserIcon size={14} className="me-1"/> Staff
                           </button>
                           <button
+                            className="btn btn-sm btn-outline-info d-flex align-items-center"
+                            onClick={() => openRoutesModal(t)}
+                            title="Manage Routes & Fares"
+                          >
+                            <MapIcon size={14} className="me-1"/> Routes
+                          </button>
+                          <button
                             className="btn btn-sm btn-outline-danger d-flex align-items-center"
                             onClick={() => openDeleteModal(t)}
                             title="Delete Transport"
@@ -693,6 +712,9 @@ const ManageTransport = () => {
       <AssignStaffModal
         transport={assignTarget}
         onSaved={fetchTransports}
+      />
+      <TransportRoutesModal
+        transport={routeTarget}
       />
       <DeleteModal
         transport={deleteTarget}

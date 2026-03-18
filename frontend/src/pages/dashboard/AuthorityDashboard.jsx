@@ -6,7 +6,8 @@ import {
   getManagedTransports,
   getAllIncidentsForAuthority,
 } from '../../api/adminApi';
-import { BusIcon, TrainIcon, BuildingIcon, EditIcon, CheckCircleIcon, WrenchIcon, AlertIcon, ClockIcon, UsersIcon, ClipboardIcon, SearchIcon, UserIcon, ZapIcon } from '../../components/icons';
+import { deleteIncident } from '../../api/incidentApi';
+import { BusIcon, TrainIcon, BuildingIcon, EditIcon, CheckCircleIcon, WrenchIcon, AlertIcon, ClockIcon, UsersIcon, ClipboardIcon, SearchIcon, UserIcon, ZapIcon, TrashIcon } from '../../components/icons';
 
 /* ── Helpers ─────────────────────────────────────────────── */
 const severityColors = {
@@ -45,7 +46,7 @@ const AuthorityDashboard = () => {
       const [profileRes, transportsRes, incidentsRes] = await Promise.all([
         getAuthorityProfile().catch(() => null),
         getManagedTransports().catch(() => null),
-        getAllIncidentsForAuthority({ limit: 8 }).catch(() => null),
+        getAllIncidentsForAuthority({ limit: 100 }).catch(() => null),
       ]);
 
       if (profileRes) {
@@ -239,49 +240,75 @@ const AuthorityDashboard = () => {
                 </div>
               </div>
 
-              {/* Recent Incidents */}
+              {/* Categorized Incidents */}
               <div className="col-lg-5">
                 <div className="detail-section h-100" style={{ marginBottom: 0 }}>
-                  <div className="detail-section-title d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Recent Incidents</div>
+                  <div className="detail-section-title d-flex align-items-center justify-content-between">
+                    <span className="d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Incidents by Transport</span>
+                  </div>
 
                   {incidents.length === 0 ? (
                     <div className="empty-state" style={{ padding: '1.5rem' }}>
                       <div className="empty-state-icon text-success"><CheckCircleIcon size={48} /></div>
-                      <p style={{ color: '#64748b', margin: 0 }}>No incidents reported.</p>
+                      <p style={{ color: '#64748b', margin: 0 }}>No active incidents reported.</p>
                     </div>
                   ) : (
-                    incidents.map((inc) => (
-                      <div className="incident-item" key={inc._id}>
-                        <div
-                          className="incident-icon d-flex align-items-center justify-content-center"
-                          style={{
-                            background: severityColors[inc.severity]?.bg || '#f1f5f9',
-                            color: severityColors[inc.severity]?.color || '#64748b',
-                          }}
-                        >
-                          {inc.incidentType === 'breakdown' ? <WrenchIcon size={16}/>
-                            : inc.incidentType === 'accident' ? <AlertIcon size={16}/>
-                            : inc.incidentType === 'delay' ? <ClockIcon size={16}/>
-                            : inc.incidentType === 'overcrowding' ? <UsersIcon size={16}/>
-                            : <ClipboardIcon size={16}/>}
+                    <div className="d-flex flex-column gap-3">
+                      {Object.entries(
+                        incidents.reduce((acc, inc) => {
+                          const tName = inc.transportId?.name || 'Unknown Transport';
+                          if (!acc[tName]) acc[tName] = [];
+                          acc[tName].push(inc);
+                          return acc;
+                        }, {})
+                      ).map(([transportName, groupIncidents]) => (
+                        <div key={transportName} className="border rounded p-3 bg-white shadow-sm">
+                          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center text-primary">
+                            <BusIcon size={16} className="me-2"/> {transportName}
+                          </h6>
+                          <div className="d-flex flex-column gap-2">
+                            {groupIncidents.map((inc) => (
+                              <div className="p-2 border rounded" key={inc._id} style={{ background: '#f8fafc' }}>
+                                <div className="d-flex align-items-start justify-content-between">
+                                  <div className="d-flex align-items-center gap-2 flex-wrap">
+                                    <span style={{ fontWeight: 600, textTransform: 'capitalize', fontSize: '.85rem' }}>
+                                      {inc.incidentType}
+                                    </span>
+                                    <SeverityBadge severity={inc.severity} />
+                                    <StatusBadge status={inc.status} />
+                                  </div>
+                                  <button
+                                    className="btn btn-link text-danger p-0"
+                                    title="Delete Incident"
+                                    onClick={async () => {
+                                      if (window.confirm('Delete this incident?')) {
+                                        try {
+                                          await deleteIncident(inc._id);
+                                          fetchAll();
+                                        } catch (e) { alert('Failed to delete'); }
+                                      }
+                                    }}
+                                  >
+                                    <TrashIcon size={14} />
+                                  </button>
+                                </div>
+                                <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: '.25rem' }}>
+                                  {inc.description || inc.location ? (inc.description || inc.location) : 'No details provided'}
+                                </div>
+                                <div className="d-flex justify-content-between mt-1">
+                                  <span style={{ fontSize: '.72rem', color: '#94a3b8' }}>
+                                    {inc.reportedAt ? new Date(inc.reportedAt).toLocaleDateString('en-IN') : ''}
+                                  </span>
+                                  <span style={{ fontSize: '.72rem', color: '#64748b', fontWeight: 600 }}>
+                                    By: {inc.reportedBy?.name || inc.reporterRole}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                          <div className="d-flex align-items-center gap-2 flex-wrap">
-                            <span style={{ fontWeight: 600, textTransform: 'capitalize', fontSize: '.9rem' }}>
-                              {inc.incidentType}
-                            </span>
-                            <SeverityBadge severity={inc.severity} />
-                            <StatusBadge status={inc.status} />
-                          </div>
-                          <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: '.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {inc.location || inc.description || 'No details provided'}
-                          </div>
-                          <div style={{ fontSize: '.72rem', color: '#94a3b8', marginTop: '.1rem' }}>
-                            {inc.reportedAt ? new Date(inc.reportedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) : ''}
-                          </div>
-                        </div>
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>

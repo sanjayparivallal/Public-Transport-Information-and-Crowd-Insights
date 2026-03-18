@@ -50,19 +50,25 @@ const submitCrowdReport = async (userId, userRole, { transportId, routeId, crowd
  * - Latest official CrowdLevel
  * - Last 50 crowd reports (for authority analysis)
  */
-const getCrowdForTransport = async (transportId) => {
+const getCrowdForTransport = async (transportId, page = 1, limit = 20) => {
+  const skip = (page - 1) * limit;
+
   const official = await CrowdLevel.findOne({ transportId })
     .sort({ updatedAt: -1 })
     .populate('updatedBy', 'name role')
     .lean();
 
-  const reports = await CrowdReport.find({ transportId })
-    .sort({ reportedAt: -1 })
-    .limit(50)
-    .populate('reportedBy', 'name')
-    .lean();
+  const [reports, total] = await Promise.all([
+    CrowdReport.find({ transportId })
+      .sort({ reportedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('reportedBy', 'name')
+      .lean(),
+    CrowdReport.countDocuments({ transportId })
+  ]);
 
-  return { official, reports };
+  return { official, reports, pagination: { total, page, limit, pages: Math.ceil(total / limit) } };
 };
 
 module.exports = { updateCrowdLevel, submitCrowdReport, getCrowdForTransport };

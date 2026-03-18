@@ -118,6 +118,13 @@ const searchTransports = async ({
  * GET /api/transport/:id  — full details
  */
 const getTransportById = async (id) => {
+  const mongoose = require('mongoose');
+  if (!mongoose.isValidObjectId(id)) {
+    const err = new Error('Invalid Transport ID');
+    err.statusCode = 400;
+    throw err;
+  }
+
   const transport = await Transport.findById(id)
     .populate('authorityId', 'organizationName region authorityCode')
     .populate('assignedDriver', 'name email phone')
@@ -160,10 +167,11 @@ const createTransport = async (userId, { transportNumber, name, type, operator, 
     authorityId: authority._id,
   });
 
-  // Add to authority's managed list
-  await Authority.findByIdAndUpdate(authority._id, {
-    $addToSet: { managedTransports: transport._id },
-  });
+  await Authority.findByIdAndUpdate(
+    authority._id,
+    { $addToSet: { managedTransports: transport._id } },
+    { returnDocument: 'after' }
+  );
 
   return transport;
 };
@@ -222,9 +230,11 @@ const deleteTransport = async (userId, transportId) => {
       { assignedTransport: transport._id },
       { $set: { assignedTransport: null, assignedBy: null, assignedAt: null } }
     ),
-    Authority.findByIdAndUpdate(authority._id, {
-      $pull: { managedTransports: transport._id },
-    }),
+    Authority.findByIdAndUpdate(
+      authority._id,
+      { $pull: { managedTransports: transport._id } },
+      { returnDocument: 'after' }
+    ),
   ]);
 
   return transport;
@@ -270,9 +280,11 @@ const assignStaff = async (authorityUserId, transportId, { email, assignRole }) 
   }
 
   // Remove from previous managed lists (in case of re-assignment)
-  await Authority.findByIdAndUpdate(authority._id, {
-    $pull: { managedDrivers: staffUser._id, managedConductors: staffUser._id },
-  });
+  await Authority.findByIdAndUpdate(
+    authority._id,
+    { $pull: { managedDrivers: staffUser._id, managedConductors: staffUser._id } },
+    { returnDocument: 'after' }
+  );
 
   // Update user
   staffUser.role             = assignRole;
@@ -283,13 +295,19 @@ const assignStaff = async (authorityUserId, transportId, { email, assignRole }) 
 
   // Update authority managed lists
   const listField = assignRole === 'driver' ? 'managedDrivers' : 'managedConductors';
-  await Authority.findByIdAndUpdate(authority._id, {
-    $addToSet: { [listField]: staffUser._id },
-  });
+  await Authority.findByIdAndUpdate(
+    authority._id,
+    { $addToSet: { [listField]: staffUser._id } },
+    { returnDocument: 'after' }
+  );
 
   // Mirror assignment on the transport document
   const transportField = assignRole === 'driver' ? 'assignedDriver' : 'assignedConductor';
-  await Transport.findByIdAndUpdate(transport._id, { [transportField]: staffUser._id });
+  await Transport.findByIdAndUpdate(
+    transport._id,
+    { [transportField]: staffUser._id },
+    { returnDocument: 'after' }
+  );
 
   return {
     assignedUser: { id: staffUser._id, name: staffUser.name, email: staffUser.email, role: staffUser.role },
@@ -352,13 +370,19 @@ const unassignStaff = async (authorityUserId, transportId, assignRole) => {
   const staffUser = await User.findById(staffUserId);
 
   // 1. Remove from transport document
-  await Transport.findByIdAndUpdate(transport._id, { $unset: { [transportField]: "" } });
+  await Transport.findByIdAndUpdate(
+    transport._id,
+    { $unset: { [transportField]: "" } },
+    { returnDocument: 'after' }
+  );
 
   // 2. Remove from authority managed list
   const listField = assignRole === 'driver' ? 'managedDrivers' : 'managedConductors';
-  await Authority.findByIdAndUpdate(authority._id, {
-    $pull: { [listField]: staffUserId },
-  });
+  await Authority.findByIdAndUpdate(
+    authority._id,
+    { $pull: { [listField]: staffUserId } },
+    { returnDocument: 'after' }
+  );
 
   // 3. Reset user profile
   if (staffUser) {

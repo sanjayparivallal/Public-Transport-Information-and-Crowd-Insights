@@ -189,9 +189,17 @@ const refreshAccessToken = async (incomingRefreshToken) => {
  */
 const logout = async (entityId, role) => {
   if (role === 'authority') {
-    await Authority.findByIdAndUpdate(entityId, { $set: { refreshTokenHash: null } });
+    await Authority.findByIdAndUpdate(
+      entityId,
+      { $set: { refreshTokenHash: null } },
+      { returnDocument: 'after' }
+    );
   } else {
-    await User.findByIdAndUpdate(entityId, { $set: { refreshTokenHash: null } });
+    await User.findByIdAndUpdate(
+      entityId,
+      { $set: { refreshTokenHash: null } },
+      { returnDocument: 'after' }
+    );
   }
 };
 

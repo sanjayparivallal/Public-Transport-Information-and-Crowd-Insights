@@ -134,11 +134,17 @@ const resolveIncident = async (req, res, next) => {
   }
 };
 
-// DELETE /api/incidents/:id  — authority only
+// DELETE /api/incidents/:id  — authority or the reporter
 const deleteIncident = async (req, res, next) => {
   try {
-    const incident = await Incident.findByIdAndDelete(req.params.id);
+    const incident = await Incident.findById(req.params.id);
     if (!incident) return sendError(res, 404, 'Incident not found');
+    
+    if (req.user.role !== 'authority' && incident.reportedBy.toString() !== req.user.id.toString()) {
+      return sendError(res, 403, 'You do not have permission to delete this incident');
+    }
+
+    await Incident.findByIdAndDelete(req.params.id);
     return sendSuccess(res, 200, null, 'Incident deleted successfully');
   } catch (err) {
     next(err);

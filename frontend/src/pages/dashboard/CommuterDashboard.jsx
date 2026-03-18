@@ -4,8 +4,13 @@ import { useAuth } from '../../context/AuthContext';
 import { getProfile } from '../../api/userApi';
 import { getTransportById } from '../../api/transportApi';
 import { getCrowd } from '../../api/crowdApi';
-import CrowdBadge from '../../components/CrowdBadge';
-import { BusIcon, TrainIcon, UserIcon, CheckCircleIcon, ZapIcon, SearchIcon, EditIcon, StarIcon, BuildingIcon, LightbulbIcon, PauseIcon } from '../../components/icons';
+import DashboardAccountInfo from './DashboardAccountInfo';
+import DashboardQuickActions from './DashboardQuickActions';
+import DashboardAssignedTransport from './DashboardAssignedTransport';
+import DashboardFavouriteTransports from './DashboardFavouriteTransports';
+import DashboardGettingStarted from './DashboardGettingStarted';
+import DashboardMyIncidents from './DashboardMyIncidents';
+import DashboardLiveTracking from './DashboardLiveTracking';
 
 const CommuterDashboard = () => {
   const { user } = useAuth();
@@ -31,7 +36,10 @@ const CommuterDashboard = () => {
         if (favIds.length > 0) {
           setFavLoading(true);
           const results = await Promise.all(
-            favIds.map((id) => getTransportById(id).catch(() => null))
+            favIds.map((item) => {
+              const id = typeof item === 'object' ? item._id : item;
+              return id ? getTransportById(id).catch(() => null) : null;
+            })
           );
           const valid = results
             .filter(Boolean)
@@ -104,189 +112,42 @@ const CommuterDashboard = () => {
           <>
             {/* Top row: Account Info + Quick Actions */}
             <div className="row g-4 mb-2">
-              {/* Account Info */}
               <div className="col-md-8">
-                <div className="detail-section">
-                  <div className="detail-section-title d-flex align-items-center"><UserIcon size={20} className="me-2"/> Your Account</div>
-                  <div className="info-grid">
-                    <div className="info-item"><label>Name</label><span>{profile?.name || '—'}</span></div>
-                    <div className="info-item"><label>Email</label><span>{profile?.email || user.email}</span></div>
-                    <div className="info-item">
-                      <label>Role</label>
-                      <span>
-                        <span className={`role-pill ${user.role}`}>{user.role}</span>
-                      </span>
-                    </div>
-                    <div className="info-item"><label>Phone</label><span>{profile?.phone || '—'}</span></div>
-                    <div className="info-item">
-                      <label>Account Status</label>
-                      <span style={{ color: profile?.isActive !== false ? 'var(--success)' : '#94a3b8', fontWeight: 700 }}>
-                        {profile?.isActive !== false ? <span className="d-flex align-items-center"><CheckCircleIcon size={14} className="me-1"/> Active</span> : <span className="d-flex align-items-center"><PauseIcon size={14} className="me-1"/> Inactive</span>}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <label>Member Since</label>
-                      <span>{profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</span>
-                    </div>
-                  </div>
-                </div>
+                <DashboardAccountInfo profile={profile} user={user} />
               </div>
-
-              {/* Quick Actions */}
               <div className="col-md-4">
-                <div className="detail-section h-100">
-                  <div className="detail-section-title d-flex align-items-center"><ZapIcon size={20} className="me-2"/> Quick Actions</div>
-                  <div className="d-flex flex-column gap-2">
-                    <button className="btn btn-primary w-100 text-start d-flex align-items-center" onClick={() => navigate('/search')}>
-                      <SearchIcon size={18} className="me-2"/> Search Routes
-                    </button>
-                    <button className="btn btn-outline-primary w-100 text-start d-flex align-items-center" onClick={() => navigate('/profile')}>
-                      <EditIcon size={18} className="me-2"/> Edit Profile
-                    </button>
-                    {isStaff && assignedDetail?._id && (
-                      <button
-                        className="btn btn-outline-warning w-100 text-start d-flex align-items-center"
-                        onClick={() => navigate(`/transport/${assignedDetail._id}`)}
-                      >
-                        <BusIcon size={18} className="me-2"/> View My Transport
-                      </button>
-                    )}
-                  </div>
-                </div>
+                <DashboardQuickActions isStaff={isStaff} assignedDetail={assignedDetail} />
               </div>
             </div>
 
             {/* Assigned Transport (Driver / Conductor) */}
             {isStaff && (
-              <div className="detail-section">
-                <div className="detail-section-title d-flex align-items-center"><BusIcon size={20} className="me-2"/> Assigned Transport</div>
-                {assignedDetail ? (
-                  <div className="row g-3 align-items-center">
-                    <div className="col-md-8">
-                      <div className="info-grid">
-                        <div className="info-item">
-                          <label>Transport Number</label>
-                          <span><span className="transport-number">{assignedDetail.transportNumber}</span></span>
-                        </div>
-                        <div className="info-item">
-                          <label>Name</label>
-                          <span>{assignedDetail.name || '—'}</span>
-                        </div>
-                        <div className="info-item">
-                          <label>Type</label>
-                          <span className={`meta-chip ${assignedDetail.type}`}>
-                            {assignedDetail.type === 'bus' ? <BusIcon size={16} className="me-1"/> : <TrainIcon size={16} className="me-1"/>} {assignedDetail.type}
-                          </span>
-                        </div>
-                        <div className="info-item">
-                          <label>Operator</label>
-                          <span>{assignedDetail.operator || '—'}</span>
-                        </div>
-                        <div className="info-item">
-                          <label>Vehicle No.</label>
-                          <span>{assignedDetail.vehicleNumber || '—'}</span>
-                        </div>
-                        <div className="info-item">
-                          <label>Assigned By</label>
-                          <span>{profile?.assignedAt ? `Assigned ${new Date(profile.assignedAt).toLocaleDateString('en-IN')}` : '—'}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4 text-end">
-                      <Link
-                        to={`/transport/${assignedDetail._id}`}
-                        className="btn btn-outline-primary"
-                      >
-                        View Full Details →
-                      </Link>
-                    </div>
-                  </div>
-                ) : assignedTransportFallback ? (
-                  <p style={{ color: '#64748b', margin: 0 }}>
-                    Transport ID: <code>{assignedTransportFallback}</code> — details unavailable.
-                  </p>
-                ) : (
-                  <div className="empty-state" style={{ padding: '1.5rem' }}>
-                    <div className="empty-state-icon" style={{ color: '#3b82f6' }}><BusIcon size={48} /></div>
-                    <p style={{ color: '#64748b', margin: 0 }}>No transport assigned yet. Contact your authority.</p>
-                  </div>
-                )}
-              </div>
+              <>
+                <DashboardAssignedTransport 
+                  assignedDetail={assignedDetail} 
+                  profile={profile} 
+                  assignedTransportFallback={assignedTransportFallback} 
+                />
+                <DashboardLiveTracking transport={assignedDetail} />
+              </>
             )}
 
             {/* Favourite Transports (Commuter) */}
             {!isStaff && (
-              <div className="detail-section">
-                <div className="detail-section-title d-flex justify-content-between align-items-center">
-                  <span className="d-flex align-items-center"><StarIcon size={20} className="me-2" filled/> Favourite Transports</span>
-                  <Link to="/search" className="btn btn-sm btn-outline-primary">+ Add Favourite</Link>
-                </div>
-
-                {favLoading ? (
-                  <div className="loading-state" style={{ padding: '1.5rem' }}>
-                    <div className="spinner-large" />
-                  </div>
-                ) : favTransports.length === 0 ? (
-                  <div className="empty-state" style={{ padding: '1.5rem' }}>
-                    <div className="empty-state-icon text-warning"><StarIcon size={48} filled /></div>
-                    <h5>No favourites yet</h5>
-                    <p style={{ color: '#64748b', fontSize: '.9rem' }}>
-                      Search for a route and click the <StarIcon size={16} className="mx-1" style={{verticalAlign: 'text-bottom'}} filled/> Favourite button to save it here.
-                    </p>
-                    <button className="btn btn-primary btn-sm mt-2 d-flex align-items-center justify-content-center mx-auto" onClick={() => navigate('/search')}>
-                      <SearchIcon size={16} className="me-2"/> Search Routes
-                    </button>
-                  </div>
-                ) : (
-                  <div className="row g-3">
-                    {favTransports.map((t) => (
-                      <div className="col-md-6 col-lg-4" key={t._id}>
-                        <div
-                          className="transport-card"
-                          onClick={() => navigate(`/transport/${t._id}`)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => e.key === 'Enter' && navigate(`/transport/${t._id}`)}
-                        >
-                          <div className="d-flex align-items-start justify-content-between">
-                            <div>
-                              <span className="transport-number">{t.transportNumber}</span>
-                              <div className="transport-name mt-1">{t.name || '—'}</div>
-                            </div>
-                            <span className={`meta-chip ${t.type}`}>
-                              {t.type === 'bus' ? <BusIcon size={16} className="me-1"/> : <TrainIcon size={16} className="me-1"/>} {t.type}
-                            </span>
-                          </div>
-                          <div className="d-flex align-items-center justify-content-between mt-3">
-                            <CrowdBadge level={crowdMap[t._id] || null} />
-                            <span className="text-primary fw-semibold" style={{ fontSize: '.84rem' }}>
-                              View →
-                            </span>
-                          </div>
-                          {t.operator && (
-                            <div className="mt-2">
-                              <span className="meta-chip"><BuildingIcon size={14} className="me-1"/> {t.operator}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <DashboardFavouriteTransports 
+                favLoading={favLoading} 
+                favTransports={favTransports} 
+                crowdMap={crowdMap} 
+              />
             )}
 
             {/* Getting Started tip (shown only when no favourites) */}
             {!isStaff && favTransports.length === 0 && (
-              <div className="detail-section">
-                <div className="detail-section-title d-flex align-items-center"><LightbulbIcon size={20} className="me-2"/> Getting Started</div>
-                <p style={{ color: '#64748b', fontSize: '.9rem', margin: 0 }}>
-                  Use the <strong>Search Routes</strong> page to find buses and trains between districts.
-                  Click any transport to view its stops, crowd level, schedule, and fare — then save it
-                  as a favourite for quick access here.
-                </p>
-              </div>
+              <DashboardGettingStarted />
             )}
+
+            {/* My Incidents */}
+            <DashboardMyIncidents />
           </>
         )}
       </div>

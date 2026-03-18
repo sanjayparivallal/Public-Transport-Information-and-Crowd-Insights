@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { registerCommuter } from '../../api/authApi';
-import { BusIcon, MailIcon, LockIcon, EyeIcon, EyeOffIcon, PhoneIcon, UserIcon } from '../../components/icons';
+import { BusIcon, MailIcon, LockIcon, EyeIcon, EyeOffIcon, UserIcon } from '../../components/icons';
 
 const SignupCommuter = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    name: '', email: '', phone: '', password: '', confirmPassword: '',
+    name: '', email: '', password: '', confirmPassword: '',
   });
   const [errors, setErrors]   = useState({});
   const [showPw, setShowPw]   = useState(false);
@@ -42,7 +42,6 @@ const SignupCommuter = () => {
     setLoading(true);
     try {
       const payload = { name: form.name.trim(), email: form.email.trim(), password: form.password };
-      if (form.phone.trim()) payload.phone = form.phone.trim();
       await registerCommuter(payload);
       toast.success('Account created! Redirecting to login…');
       setTimeout(() => navigate('/login'), 1800);
@@ -97,22 +96,7 @@ const SignupCommuter = () => {
             {errors.email && <div className="invalid-feedback d-block">{errors.email}</div>}
           </div>
 
-          {/* Phone (optional) */}
-          <div className="mb-3">
-            <label className="form-label" htmlFor="phone">
-              Phone <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span>
-            </label>
-            <div className="input-group-icon">
-              <span className="icon"><PhoneIcon size={18} /></span>
-              <input
-                id="phone" name="phone" type="tel"
-                className="form-control"
-                placeholder="+91 98765 43210"
-                value={form.phone}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
+
 
           {/* Password */}
           <div className="mb-3">

@@ -39,7 +39,10 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Skip 401 intercept for login endpoints to avoid unmounting page and hiding toasts
+    const isLoginEndpoint = originalRequest.url.includes('/auth/login');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginEndpoint) {
       if (isRefreshing) {
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject });

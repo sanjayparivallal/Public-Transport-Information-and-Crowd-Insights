@@ -8,6 +8,7 @@ const {
   updateCrowdLevel,
   updateLivePosition,
   getLivePosition,
+  deleteCrowdReport,
 } = require('../controllers/crowdController');
 
 router.use(protect);
@@ -26,5 +27,8 @@ router.get('/live/:transportId', getLivePosition);
 
 // Get aggregated crowd data for a transport (all authenticated)
 router.get('/:transportId', getCrowd);
+
+// Delete outdated crowd report (authority only)
+router.delete('/report/:id', requireRole('authority'), deleteCrowdReport);
 
 module.exports = router;

@@ -2,6 +2,7 @@ const express   = require('express');
 const cors      = require('cors');
 const rateLimit = require('express-rate-limit');
 const dotenv    = require('dotenv');
+const morgan    = require('morgan');
 
 dotenv.config();
 
@@ -19,11 +20,13 @@ const incidentRoutes      = require('./routes/incidents');
 const app = express();
 
 // ── Core middleware ──────────────────────────────────────────────────
+app.use(morgan('dev')); // Logger added here 📝
 app.use(cors({
   origin: '*',
   credentials: false,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // ── Rate limiting ────────────────────────────────────────────────────
 const apiLimiter = rateLimit({
