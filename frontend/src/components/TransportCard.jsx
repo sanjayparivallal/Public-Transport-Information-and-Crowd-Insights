@@ -9,6 +9,7 @@ const TransportCard = ({ transport }) => {
   // The /transport/:id route expects a Transport _id, not a Route _id.
   const t = transport.transportId || transport; // nested transport doc, or flat doc
   const transportId = t._id || transport._id;  // actual transport's MongoDB _id
+  const routeId = transport._id; // The query returns Route models basically.
 
   const origin      = transport.origin      || '—';
   const destination = transport.destination || '—';
@@ -24,10 +25,10 @@ const TransportCard = ({ transport }) => {
   return (
     <div
       className="group relative bg-white rounded-[1.9rem] p-6 mb-4 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-primary-100/30 transition-all duration-500 cursor-pointer overflow-hidden active:scale-[0.995] border-l-0"
-      onClick={() => navigate(`/transport/${transportId}`)}
+      onClick={() => navigate(`/transport/${transportId}?routeId=${routeId}`)}
       role="button"
       tabIndex={0}
-      onKeyDown={e => e.key === 'Enter' && navigate(`/transport/${transportId}`)}
+      onKeyDown={e => e.key === 'Enter' && navigate(`/transport/${transportId}?routeId=${routeId}`)}
     >
       {/* Decorative accent */}
       <div className={`absolute left-0 top-0 bottom-0 w-2 transition-all duration-500 group-hover:w-3 ${displayType === 'bus' ? 'bg-primary-500' : 'bg-indigo-600'}`}></div>

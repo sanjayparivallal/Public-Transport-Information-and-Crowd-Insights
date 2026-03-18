@@ -97,10 +97,10 @@ const searchTransports = async ({
 
   const routes = await Route.aggregate(pipeline);
 
-  // Attach latest crowd level (small result set after pagination)
+  // Attach latest crowd level for the SPECIFIC route
   const results = await Promise.all(
     routes.map(async (route) => {
-      const crowd = await CrowdLevel.findOne({ transportId: route.transportId._id })
+      const crowd = await CrowdLevel.findOne({ routeId: route._id })
         .sort({ updatedAt: -1 })
         .select('crowdLevel updatedAt')
         .lean();
@@ -137,18 +137,39 @@ const getTransportById = async (id) => {
   }
 
   const routes     = await Route.find({ transportId: id }).lean();
-  const crowdLevel = await CrowdLevel.findOne({ transportId: id })
-    .sort({ updatedAt: -1 })
-    .select('crowdLevel tripId updatedAt')
+  
+  const crowdLevels = await CrowdLevel.find({ transportId: id })
+    .select('routeId crowdLevel updatedAt')
+    .lean();
+  const livePositions = await LivePosition.find({ transportId: id })
+    .select('routeId currentStop nextStop stopIndex delayMinutes status updatedAt')
     .lean();
 
-  return { ...transport, routes, crowdLevel: crowdLevel?.crowdLevel || null };
+  const enrichedRoutes = routes.map(route => {
+    const c = crowdLevels.find(cl => String(cl.routeId) === String(route._id));
+    const lp = livePositions.find(l => String(l.routeId) === String(route._id));
+    return {
+      ...route,
+      crowdLevel: c?.crowdLevel || null,
+      livePosition: lp || null,
+    };
+  });
+
+  // the first route is typically forward, but maintaining null if undefined
+  const firstRoute = enrichedRoutes[0];
+
+  return {
+    ...transport,
+    routes: enrichedRoutes,
+    crowdLevel: firstRoute?.crowdLevel || null,
+    livePosition: firstRoute?.livePosition || null,
+  };
 };
 
 /**
  * POST /api/transport — Authority creates a transport
  */
-const createTransport = async (userId, { transportNumber, name, type, operator, amenities, totalSeats, vehicleNumber }) => {
+const createTransport = async (userId, { transportNumber, name, type, operator, amenities, totalSeats, availableSeats, vehicleNumber }) => {
   const authority = await Authority.findById(userId);
   if (!authority) {
     const err = new Error('Authority profile not found');
@@ -163,6 +184,7 @@ const createTransport = async (userId, { transportNumber, name, type, operator, 
     operator:      operator      || undefined,
     amenities:     amenities     || [],
     totalSeats:    totalSeats    || undefined,
+    availableSeats: availableSeats ?? null,
     vehicleNumber: vehicleNumber || undefined,
     authorityId: authority._id,
   });
@@ -194,7 +216,7 @@ const updateTransport = async (userId, transportId, updates) => {
     throw err;
   }
 
-  const allowed = ['transportNumber', 'name', 'type', 'operator', 'amenities', 'totalSeats', 'vehicleNumber', 'isActive'];
+  const allowed = ['transportNumber', 'name', 'type', 'operator', 'amenities', 'totalSeats', 'availableSeats', 'vehicleNumber', 'isActive'];
   allowed.forEach((f) => {
     if (updates[f] !== undefined) transport[f] = updates[f];
   });
@@ -221,11 +243,13 @@ const deleteTransport = async (userId, transportId) => {
   }
 
   // Cascade delete all related documents
+  const routeIds = (await Route.find({ transportId: transport._id }).select('_id').lean()).map(r => r._id);
+  
   await Promise.all([
     Route.deleteMany({ transportId: transport._id }),
-    CrowdLevel.deleteMany({ transportId: transport._id }),
-    CrowdReport.deleteMany({ transportId: transport._id }),
-    LivePosition.deleteMany({ transportId: transport._id }),
+    CrowdLevel.deleteMany({ routeId: { $in: routeIds } }),
+    CrowdReport.deleteMany({ routeId: { $in: routeIds } }),
+    LivePosition.deleteMany({ routeId: { $in: routeIds } }),
     User.updateMany(
       { assignedTransport: transport._id },
       { $set: { assignedTransport: null, assignedBy: null, assignedAt: null } }

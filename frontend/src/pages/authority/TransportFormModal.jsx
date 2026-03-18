@@ -10,6 +10,7 @@ const EMPTY_FORM = {
   operator: '',
   vehicleNumber: '',
   totalSeats: '',
+  availableSeats: '',
   amenities: '',
 };
 
@@ -20,6 +21,7 @@ const formFromTransport = (t) => ({
   operator: t.operator || '',
   vehicleNumber: t.vehicleNumber || '',
   totalSeats: t.totalSeats != null ? String(t.totalSeats) : '',
+  availableSeats: t.availableSeats != null ? String(t.availableSeats) : '',
   amenities: (t.amenities || []).join(', '),
 });
 
@@ -32,6 +34,7 @@ const toPayload = (form) => {
   if (form.operator.trim())     p.operator      = form.operator.trim();
   if (form.vehicleNumber.trim()) p.vehicleNumber = form.vehicleNumber.trim();
   if (form.totalSeats.trim())   p.totalSeats    = Number(form.totalSeats);
+  if (form.availableSeats.trim()) p.availableSeats = Number(form.availableSeats);
   if (form.amenities.trim()) {
     p.amenities = form.amenities.split(',').map((s) => s.trim()).filter(Boolean);
   }
@@ -166,6 +169,18 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
                   onChange={set('totalSeats')}
                 />
               </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Available Seats</label>
+                <input
+                  type="number"
+                  className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700"
+                  placeholder="e.g. 40"
+                  min="0"
+                  value={form.availableSeats}
+                  onChange={set('availableSeats')}
+                />
+              </div>
               
               <div className="md:col-span-2 space-y-2">
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Amenities (comma-separated)</label>
@@ -180,11 +195,11 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
             </div>
           </div>
           
-          <div className="p-8 bg-white border-t border-slate-100 flex gap-4">
-            <button type="button" className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-colors flex-1" onClick={onClose}>
+          <div className="p-6 bg-white border-t border-slate-100 flex gap-3">
+            <button type="button" className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition-colors flex-1" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 transition-all active:scale-95 flex-[2] flex items-center justify-center gap-2" disabled={saving}>
+            <button type="submit" className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg shadow-sm transition-all active:scale-95 flex-[2] flex items-center justify-center gap-2" disabled={saving}>
               {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : (transport ? 'Save Changes' : 'Add Transport')}
             </button>
           </div>

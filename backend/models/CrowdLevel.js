@@ -13,7 +13,6 @@ const crowdLevelSchema = new mongoose.Schema(
       ref: 'Route',
       required: true,
     },
-    tripId: { type: String, required: true },
 
     crowdLevel: {
       type: String,
@@ -41,7 +40,7 @@ const crowdLevelSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// One crowd-level record per trip (upsert on transportId + tripId)
-crowdLevelSchema.index({ transportId: 1, tripId: 1 }, { unique: true });
+// One crowd-level record per route (upsert on transportId + routeId)
+crowdLevelSchema.index({ transportId: 1, routeId: 1 }, { unique: true });
 
 module.exports = mongoose.model('CrowdLevel', crowdLevelSchema);

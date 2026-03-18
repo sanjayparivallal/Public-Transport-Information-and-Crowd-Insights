@@ -39,6 +39,12 @@ const userSchema = new mongoose.Schema(
         ref: 'Transport',
       },
     ],
+    favouriteRoutes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Route',
+      },
+    ],
 
     // Driver / Conductor only — set by Authority
     assignedTransport: {

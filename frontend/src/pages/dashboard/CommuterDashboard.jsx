@@ -35,30 +35,22 @@ const CommuterDashboard = () => {
         const data = res.data?.data?.user || res.data?.user || res.data?.data || res.data;
         setProfile(data);
 
-        // Favourite transports
-        const favIds = data?.favouriteTransports || [];
-        if (favIds.length > 0) {
+        // Favourite routes
+        const favRoutes = data?.favouriteRoutes || [];
+        if (favRoutes.length > 0) {
           setFavLoading(true);
-          const results = await Promise.all(
-            favIds.map(item => {
-              const id = typeof item === 'object' ? item._id : item;
-              return id ? getTransportById(id).catch(() => null) : null;
-            })
-          );
-          const valid = results
-            .filter(Boolean)
-            .map(r => r.data?.data?.transport || r.data?.data || r.data)
-            .filter(Boolean);
+          const valid = favRoutes.filter(r => r && r._id);
           setFavTransports(valid);
 
           const crowdResults = await Promise.all(
-            valid.map(t => t._id ? getCrowd(t._id).catch(() => null) : null)
+            valid.map(r => r.transportId?._id ? getCrowd(r.transportId._id).catch(() => null) : null)
           );
           const map = {};
           crowdResults.forEach((cr, i) => {
             if (valid[i]?._id && cr) {
               const d = cr.data?.data;
-              map[valid[i]._id] = d?.officialCrowdLevel?.crowdLevel || d?.crowdLevel || null;
+              const routeOff = d?.official?.find(o => String(o.routeId) === String(valid[i]._id));
+              map[valid[i]._id] = routeOff?.crowdLevel || valid[i]?.crowdLevel || 'average';
             }
           });
           setCrowdMap(map);
@@ -147,7 +139,7 @@ const CommuterDashboard = () => {
             {!isStaff && (
               <DashboardFavouriteTransports
                 favLoading={favLoading}
-                favTransports={favTransports}
+                favRoutes={favTransports}
                 crowdMap={crowdMap}
               />
             )}

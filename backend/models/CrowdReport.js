@@ -2,11 +2,6 @@ const mongoose = require('mongoose');
 
 const crowdReportSchema = new mongoose.Schema(
   {
-    transportId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Transport',
-      required: true,
-    },
     routeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Route',
@@ -28,6 +23,6 @@ const crowdReportSchema = new mongoose.Schema(
   { timestamps: false }
 );
 
-crowdReportSchema.index({ transportId: 1, reportedAt: -1 });
+crowdReportSchema.index({ routeId: 1, reportedAt: -1 });
 
 module.exports = mongoose.model('CrowdReport', crowdReportSchema);

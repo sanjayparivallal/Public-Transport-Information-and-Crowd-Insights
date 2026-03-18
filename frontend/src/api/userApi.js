@@ -12,13 +12,13 @@ export const getProfile = () => api.get('/users/profile');
 export const updateProfile = (data) => api.put('/users/profile', data);
 
 /**
- * Add a transport to the commuter's favourites.
- * @param {string} transportId
+ * Add a transport route to the commuter's favourites.
+ * @param {string} routeId
  */
-export const addFavourite = (transportId) => api.post(`/users/favourites/${transportId}`);
+export const addFavourite = (routeId) => api.post(`/users/favourites/${routeId}`);
 
 /**
- * Remove a transport from the commuter's favourites.
- * @param {string} transportId
+ * Remove a transport route from the commuter's favourites.
+ * @param {string} routeId
  */
-export const removeFavourite = (transportId) => api.delete(`/users/favourites/${transportId}`);
+export const removeFavourite = (routeId) => api.delete(`/users/favourites/${routeId}`);

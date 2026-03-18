@@ -154,18 +154,18 @@ const SearchRoutes = () => {
                   <div className="flex items-end gap-3 lg:col-span-1">
                     <button 
                       type="submit" 
-                      className="grow py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-2xl shadow-xl shadow-slate-300/40 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 group" 
+                      className="grow py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2" 
                       disabled={loading}
                     >
                       {loading ? (
-                        <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       ) : (
-                        <><SearchIcon size={20} className="group-hover:rotate-12 transition-transform" /> Search Routes</>
+                        <><SearchIcon size={18} className="group-hover:rotate-12 transition-transform" /> Search</>
                       )}
                     </button>
                     <button 
                       type="button" 
-                      className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-all active:scale-95 whitespace-nowrap" 
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition-all active:scale-95 whitespace-nowrap" 
                       onClick={handleClear}
                     >
                       Reset
@@ -217,10 +217,10 @@ const SearchRoutes = () => {
                     We couldn't find any fleets currently servicing this operational sector. Try broadening your geographic parameters.
                   </p>
                   <button 
-                    className="px-10 py-4 bg-slate-900 border-2 border-slate-800 text-white font-black rounded-2xl hover:bg-slate-800 transition-all shadow-2xl shadow-slate-300 transform active:scale-95"
+                    className="px-4 py-2 bg-slate-900 border border-slate-800 text-white font-bold rounded-lg hover:bg-slate-800 transition-all shadow-sm active:scale-95"
                     onClick={handleClear}
                   >
-                    Reset Grid Systems
+                    Reset
                   </button>
                 </div>
               ) : (

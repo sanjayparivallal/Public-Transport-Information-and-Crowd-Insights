@@ -50,6 +50,7 @@
 | `role` | String | enum → [see §10](#10-enum-reference) |
 | `phone` | String | Optional contact |
 | `favouriteTransports` | [ObjectId] | ref: `Transport` — **commuter only** |
+| `favouriteRoutes` | [ObjectId] | ref: `Route` — **commuter only** |
 | `assignedTransport` | ObjectId | ref: `Transport` — **driver / conductor only** |
 | `assignedBy` | ObjectId | ref: `authorities` (Authority who assigned) |
 | `assignedAt` | Date | When assignment was made |
@@ -130,6 +131,7 @@
 | `direction` | String | enum: `forward` · `return` |
 | `totalDistance` | Number | kilometres |
 | `estimatedDuration` | Number | minutes |
+| `availableSeats` | Number | Current available seats (computed or manual) |
 | `createdAt` | Date | |
 | `updatedAt` | Date | |
 
@@ -193,8 +195,9 @@ fareTable:
 | `stopIndex` | Number | Index into `stops[]` |
 | `delayMinutes` | Number | `0` = on time |
 | `status` | String | enum: `on-time` · `delayed` · `cancelled` · `completed` |
-| `updatedBy` | ObjectId | ref: `users` (**driver / conductor only**) |
-| `updatedByRole` | String | enum: `driver` · `conductor` |
+| `updatedByModel`| String | enum: `User` · `Authority` |
+| `updatedBy` | ObjectId | ref: `updatedByModel` |
+| `updatedByRole` | String | enum: `driver` · `conductor` · `authority` |
 | `updatedAt` | Date | Timestamp of last update |
 
 ---
@@ -212,7 +215,8 @@ fareTable:
 | `tripId` | String | Running trip identifier |
 | `crowdLevel` | String | enum: **`empty`** · **`average`** · **`crowded`** |
 | `currentStop` | String | Stop at the time of update |
-| `updatedBy` | ObjectId | ref: `users` |
+| `updatedByModel`| String | enum: `User` · `Authority` |
+| `updatedBy` | ObjectId | ref: `updatedByModel` |
 | `updatedByRole` | String | enum: `driver` · `conductor` · `authority` |
 | `updatedAt` | Date | Timestamp |
 
@@ -225,7 +229,6 @@ fareTable:
 | Field | Type | Notes |
 |---|---|---|
 | `_id` | ObjectId | Primary key |
-| `transportId` | ObjectId | ref: `Transport` |
 | `routeId` | ObjectId | ref: `Route` |
 | `reportedBy` | ObjectId | ref: `users` (**commuter only**) |
 | `crowdLevel` | String | enum: `empty` · `average` · `crowded` |
@@ -417,7 +420,6 @@ erDiagram
 
     crowdReports {
         ObjectId _id PK
-        ObjectId transportId FK
         ObjectId routeId FK
         ObjectId reportedBy FK
     }
@@ -431,6 +433,7 @@ erDiagram
     }
 
     users }o--o{ Transport           : "favouriteTransports (commuter)"
+    users }o--o{ routes              : "favouriteRoutes (commuter)"
     users ||--o| Transport           : "assignedTransport (driver/conductor)"
     authorities }o--o{ Transport     : "managedTransports"
     authorities }o--o{ users         : "managedDrivers / managedConductors"
@@ -438,7 +441,6 @@ erDiagram
     Transport ||--o{ routes          : "has routes"
     Transport ||--o{ livePositions   : "tracked via"
     Transport ||--o{ crowdLevels     : "crowd status"
-    Transport ||--o{ crowdReports    : "commuter reports"
     Transport ||--o{ incidents       : "incidents"
     routes ||--o{ livePositions      : "position on route"
     routes ||--o{ crowdLevels        : "crowd on route"

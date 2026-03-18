@@ -99,7 +99,7 @@ const ManageTransport = () => {
             Only Transport Authorities can access this management portal.
           </p>
           <button 
-            className="px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-2xl transition-all shadow-lg shadow-primary-200 active:scale-95"
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg transition-all shadow-sm active:scale-95"
             onClick={() => navigate('/login')}
           >
             Login as Authority
@@ -252,7 +252,7 @@ const ManageTransport = () => {
                       </p>
                       <button 
                         onClick={() => { setSearch(''); setTypeFilter('all'); }}
-                        className="px-8 py-3 bg-slate-900 text-white font-black rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
+                        className="px-4 py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-all shadow-sm active:scale-95"
                       >
                         Reset Filters
                       </button>

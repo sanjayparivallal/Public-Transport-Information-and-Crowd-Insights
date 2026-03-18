@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getAllCrowdReports } from '../../api/crowdApi';
+import { getAllCrowdReports, deleteCrowdReport } from '../../api/crowdApi';
 import CrowdBadge from '../../components/CrowdBadge';
-import { UsersIcon, ClockIcon } from '../../components/icons';
+import { UsersIcon, ClockIcon, TrashIcon } from '../../components/icons';
 
 const DashboardMyCrowdReports = () => {
   const [reports, setReports]   = useState([]);
@@ -9,20 +9,31 @@ const DashboardMyCrowdReports = () => {
   const [error, setError]       = useState('');
 
   useEffect(() => {
-    const fetchMyReports = async () => {
-      setLoading(true);
-      try {
-        const res = await getAllCrowdReports();
-        const payload = res.data?.data || res.data;
-        setReports(payload?.crowdReports || payload?.reports || []);
-      } catch {
-        setError('Failed to load your crowd reports.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchMyReports();
   }, []);
+
+  const fetchMyReports = async () => {
+    setLoading(true);
+    try {
+      const res = await getAllCrowdReports();
+      const payload = res.data?.data || res.data;
+      setReports(payload?.crowdReports || payload?.reports || []);
+    } catch {
+      setError('Failed to load your crowd reports.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteReport = async (id) => {
+    if (!window.confirm("Delete this crowd report?")) return;
+    try {
+      await deleteCrowdReport(id);
+      await fetchMyReports();
+    } catch (err) {
+      alert(err.message || "Failed to delete report.");
+    }
+  };
 
   const fmtTime = (ts) => {
     if (!ts) return '—';
@@ -71,6 +82,13 @@ const DashboardMyCrowdReports = () => {
                   {fmtTime(r.createdAt || r.reportedAt)}
                 </p>
               </div>
+              <button 
+                onClick={() => handleDeleteReport(r._id)}
+                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                title="Delete Report"
+              >
+                <TrashIcon size={16} />
+              </button>
             </div>
           ))}
         </div>

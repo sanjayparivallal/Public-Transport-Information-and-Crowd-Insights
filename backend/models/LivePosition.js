@@ -12,12 +12,10 @@ const livePositionSchema = new mongoose.Schema(
       ref: 'Route',
       required: true,
     },
-    tripId: { type: String, required: true },
 
     currentStop: { type: String, default: null },
     nextStop:    { type: String, default: null },
     stopIndex:   { type: Number, default: 0 },
-    availableSeats: { type: Number, default: null },
 
     delayMinutes: { type: Number, default: 0 },
     status: {
@@ -26,21 +24,26 @@ const livePositionSchema = new mongoose.Schema(
       default: 'on-time',
     },
 
+    updatedByModel: {
+      type: String,
+      enum: ['User', 'Authority'],
+      required: true,
+    },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      refPath: 'updatedByModel',
       required: true,
     },
     updatedByRole: {
       type: String,
-      enum: ['driver', 'conductor'],
+      enum: ['driver', 'conductor', 'authority'],
       required: true,
     },
   },
   { timestamps: true }
 );
 
-// One live record per trip (upsert on transportId + tripId)
-livePositionSchema.index({ transportId: 1, tripId: 1 }, { unique: true });
+// One live record per route (upsert on transportId + routeId)
+livePositionSchema.index({ transportId: 1, routeId: 1 }, { unique: true });
 
 module.exports = mongoose.model('LivePosition', livePositionSchema);

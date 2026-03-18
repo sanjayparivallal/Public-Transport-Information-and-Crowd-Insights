@@ -211,7 +211,7 @@ async function testCrowdEndpoints() {
   if (routeId) {
     const { status: s3, data: d3 } = await req('POST', '/api/crowd/report', {
       token: commuterToken,
-      body: { transportId, routeId, crowdLevel: 'average', boardingStop: 'Salem' },
+      body: { routeId, crowdLevel: 'average', boardingStop: 'Salem' },
     });
     assert('POST /api/crowd/report (commuter) → 201', s3 === 201, `status=${s3} msg=${d3.message}`);
   }

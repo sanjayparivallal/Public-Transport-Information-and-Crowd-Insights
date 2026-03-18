@@ -13,7 +13,7 @@ router.use(protect);
 
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
-router.post('/favourites/:transportId', addFavourite);
-router.delete('/favourites/:transportId', removeFavourite);
+router.post('/favourites/:routeId', addFavourite);
+router.delete('/favourites/:routeId', removeFavourite);
 
 module.exports = router;

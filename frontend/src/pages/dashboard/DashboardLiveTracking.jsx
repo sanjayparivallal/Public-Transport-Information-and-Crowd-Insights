@@ -3,21 +3,42 @@ import { updateLivePosition } from '../../api/crowdApi';
 import { LocationIcon, ClockIcon, UserIcon, CheckCircleIcon, AlertIcon } from '../../components/icons';
 
 const DashboardLiveTracking = ({ transport }) => {
+  const primaryRoute = transport?.routes?.[0];
   const [form, setForm] = useState({
+    routeId: primaryRoute?._id || '',
     currentStop: transport?.livePosition?.currentStop || '',
     nextStop: transport?.livePosition?.nextStop || '',
     delayMinutes: transport?.livePosition?.delayMinutes || 0,
     status: transport?.livePosition?.status || 'on-time',
-    availableSeats: transport?.livePosition?.availableSeats || '',
+    availableSeats: primaryRoute?.availableSeats || '',
     crowdLevel: transport?.crowdLevel || 'average',
-    tripId: transport?.livePosition?.tripId || `TRIP-${new Date().toISOString().split('T')[0]}`
   });
+
+  const routeOptions = transport?.routes || [];
+  const selectedRoute = routeOptions.find((r) => String(r._id) === String(form.routeId)) || primaryRoute;
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'routeId') {
+      const newRoute = routeOptions.find(r => String(r._id) === value);
+      if (newRoute) {
+        setForm(prev => ({
+          ...prev,
+          routeId: value,
+          currentStop: newRoute.livePosition?.currentStop || '',
+          nextStop: newRoute.livePosition?.nextStop || '',
+          delayMinutes: newRoute.livePosition?.delayMinutes || 0,
+          status: newRoute.livePosition?.status || 'on-time',
+          availableSeats: newRoute.availableSeats || '',
+          crowdLevel: newRoute.crowdLevel || 'average',
+        }));
+        return;
+      }
+    }
+    setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -25,7 +46,7 @@ const DashboardLiveTracking = ({ transport }) => {
     setLoading(true);
     setMsg('');
 
-    const routeId = transport.routes?.[0]?._id;
+    const routeId = selectedRoute?._id;
     if (!routeId) {
       setMsg('No route assigned.');
       setLoading(false);
@@ -36,7 +57,6 @@ const DashboardLiveTracking = ({ transport }) => {
       await updateLivePosition({
         transportId: transport._id,
         routeId,
-        tripId: form.tripId,
         currentStop: form.currentStop,
         nextStop: form.nextStop,
         delayMinutes: Number(form.delayMinutes),
@@ -69,6 +89,21 @@ const DashboardLiveTracking = ({ transport }) => {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Route</label>
+            <select
+              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all font-bold text-slate-700"
+              name="routeId"
+              value={form.routeId}
+              onChange={handleChange}
+            >
+              {routeOptions.map((route) => (
+                <option key={route._id} value={route._id}>
+                  {(route.origin || 'Source')} -&gt; {(route.destination || 'Destination')}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Stop</label>
             <input 
@@ -159,13 +194,13 @@ const DashboardLiveTracking = ({ transport }) => {
           </div>
           <button 
             type="submit" 
-            className="w-full sm:w-auto px-10 py-4 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-2xl shadow-xl shadow-primary-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
+            className="w-full sm:w-auto px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
             disabled={loading}
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             ) : (
-              <><ClockIcon size={20} /> Broadcast Update</>
+              <><ClockIcon size={18} /> Update</>
             )}
           </button>
         </div>

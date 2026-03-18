@@ -102,7 +102,7 @@ const Profile = () => {
 
       {/* ── Page Header ── */}
       <div className="page-header">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto flex items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-bold">
               {initials}
@@ -112,14 +112,6 @@ const Profile = () => {
               <p className="mt-0.5 capitalize">{user.role} account</p>
             </div>
           </div>
-          {!editing && !loading && (
-            <button
-              className="btn-secondary"
-              onClick={() => { setEditing(true); setMsg(''); setError(''); }}
-            >
-              <EditIcon size={15} /> Edit Profile
-            </button>
-          )}
         </div>
       </div>
 
@@ -143,97 +135,53 @@ const Profile = () => {
             <p className="text-sm text-slate-400">Loading profile…</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
+          <div className="max-w-3xl mx-auto">
             {/* ── Main card ── */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="card card-body">
-                <div className="flex items-center justify-between mb-6">
-                  <h2>Account Information</h2>
+            <div className="card card-body">
+              <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-100">
+                <h2>Account Information</h2>
+                <div className="flex gap-3">
+                  {!editing && (
+                    <>
+                      <button
+                        className="btn-secondary"
+                        onClick={() => { setPwForm({ currentPassword: '', newPassword: '' }); setShowPasswordModal(true); setMsg(''); setError(''); }}
+                      >
+                        <KeyIcon size={15}/> Change Password
+                      </button>
+                      <button
+                        className="btn-primary"
+                        onClick={() => { setEditing(true); setMsg(''); setError(''); }}
+                      >
+                        <EditIcon size={15} /> Edit
+                      </button>
+                    </>
+                  )}
                   {editing && (
                     <button className="text-sm text-slate-400 hover:text-red-500 transition-colors" onClick={() => setEditing(false)}>
                       Cancel
                     </button>
                   )}
                 </div>
-
-                {!editing ? (
-                  <ProfileViewInfo
-                    user={user}
-                    profile={profile}
-                    assignedTransportLabel={assignedTransportLabel}
-                    onChangePassword={() => { setPwForm({ currentPassword: '', newPassword: '' }); setShowPasswordModal(true); setMsg(''); setError(''); }}
-                  />
-                ) : (
-                  <ProfileEditForm
-                    user={user}
-                    form={form}
-                    setForm={setForm}
-                    onSave={handleSave}
-                    onCancel={() => setEditing(false)}
-                    saving={saving}
-                  />
-                )}
               </div>
 
-              {/* Danger zone */}
-              <div className="card card-body border-red-200">
-                <h3 className="text-red-600 flex items-center gap-2 mb-4">
-                  <AlertIcon size={16} /> Danger Zone
-                </h3>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-red-50 rounded-lg border border-red-100">
-                  <div>
-                    <p className="font-semibold text-slate-800 text-sm">Sign out of your account</p>
-                    <p className="text-xs text-slate-500 mt-0.5">You will be redirected to the login page.</p>
-                  </div>
-                  <button
-                    className="btn-danger shrink-0"
-                    onClick={() => { logout(); navigate('/login'); }}
-                  >
-                    <LogOutIcon size={15}/> Logout
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Sidebar ── */}
-            <div className="space-y-4">
-              <div className="card card-body text-center">
-                <div className="w-20 h-20 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-3xl font-bold mx-auto mb-4">
-                  {initials}
-                </div>
-                <h3>{profile?.name || 'User'}</h3>
-                <span className={`badge mt-1 capitalize ${
-                  user.role === 'authority'  ? 'badge-amber'  :
-                  user.role === 'driver'     ? 'badge-blue'   :
-                  user.role === 'conductor'  ? 'badge-purple' :
-                  'badge-green'
-                }`}>{user.role}</span>
-
-                <div className="mt-5 pt-5 border-t border-slate-100 space-y-3 text-left">
-                  <div>
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Status</p>
-                    <p className="text-sm font-semibold text-green-600 flex items-center gap-1 mt-0.5">
-                      <CheckCircleIcon size={14}/> Active
-                    </p>
-                  </div>
-                  {profile?.createdAt && (
-                    <div>
-                      <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Member Since</p>
-                      <p className="text-sm font-semibold text-slate-700 mt-0.5">
-                        {new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  className="btn-secondary w-full mt-5 justify-center"
-                  onClick={() => { setPwForm({ currentPassword: '', newPassword: '' }); setShowPasswordModal(true); setMsg(''); setError(''); }}
-                >
-                  <KeyIcon size={15}/> Change Password
-                </button>
-              </div>
+              {!editing ? (
+                <ProfileViewInfo
+                  user={user}
+                  profile={profile}
+                  assignedTransportLabel={assignedTransportLabel}
+                  onChangePassword={() => { setPwForm({ currentPassword: '', newPassword: '' }); setShowPasswordModal(true); setMsg(''); setError(''); }}
+                />
+              ) : (
+                <ProfileEditForm
+                  user={user}
+                  form={form}
+                  setForm={setForm}
+                  onSave={handleSave}
+                  onCancel={() => setEditing(false)}
+                  saving={saving}
+                />
+              )}
             </div>
           </div>
         )}

@@ -17,7 +17,7 @@ const StopsTimeline = ({ stops = [], currentStop }) => {
       {stops.map((stop, idx) => {
         const isFirst    = idx === 0;
         const isLast     = idx === stops.length - 1;
-        const isCurrent  = currentStop && stop.stopName === currentStop;
+        const isCurrent  = currentStop && stop.stopName?.trim().toLowerCase() === currentStop?.trim().toLowerCase();
         const stopTime   = stop.scheduledDeparture || stop.scheduledArrival || null;
 
         return (
@@ -35,16 +35,16 @@ const StopsTimeline = ({ stops = [], currentStop }) => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="min-w-0 space-y-2">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h6 className={`font-black text-xl tracking-tight ${isCurrent ? 'text-primary-900' : 'text-slate-800'}`}>
+                  <h6 className={`font-black text-xl tracking-tight transition-colors duration-300 ${isCurrent ? 'text-primary-600' : 'text-slate-800'}`}>
                     {stop.stopName}
                   </h6>
                   {isCurrent && (
-                    <span className="flex items-center px-2.5 py-0.5 rounded-full bg-primary-600 text-white text-[8px] font-black uppercase tracking-widest shadow-sm">
+                    <span className="flex items-center px-2.5 py-0.5 rounded-full bg-primary-600 text-yellow-500 text-[8px] font-black uppercase tracking-widest shadow-sm animate-pulse">
                       Current
                     </span>
                   )}
-                  {isFirst && <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100 uppercase tracking-widest shadow-sm">Platform Origin</span>}
-                  {isLast  && <span className="text-[8px] font-black text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-100 uppercase tracking-widest shadow-sm">Terminal Stop</span>}
+                  {isFirst && <span className="text-[8px] font-black text-emerald-600 bg-emerald-50/80 px-2.5 py-0.5 rounded-full border border-emerald-100 uppercase tracking-widest shadow-sm">Origin Stop</span>}
+                  {isLast  && <span className="text-[8px] font-black text-rose-600 bg-rose-50/80 px-2.5 py-0.5 rounded-full border border-rose-100 uppercase tracking-widest shadow-sm">Terminal Stop</span>}
                 </div>
                 
                 <div className="flex flex-wrap gap-3 text-xs">

@@ -89,40 +89,21 @@ const AuthorityProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <>
+    <div className="min-h-screen bg-slate-50">
       {/* Page Header */}
-      <div className="relative overflow-hidden bg-slate-900 text-white pt-24 pb-16 md:pt-32 md:pb-24">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl"></div>
-        
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div className="space-y-4">
-              <div className="inline-flex p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
-                <BuildingIcon size={32} className="text-primary-400" />
-              </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight">
-                Authority Profile
-              </h1>
-              <p className="text-slate-400 text-lg max-w-2xl font-medium">
-                Manage your organisation details and administrative settings.
-              </p>
-            </div>
-            
-            {!editing && (
-              <button 
-                className="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-black rounded-2xl border border-white/20 transition-all active:scale-95 flex items-center gap-2"
-                onClick={() => { setEditing(true); setMsg(''); setError(''); }}
-              >
-                <EditIcon size={20} /> Edit Account
-              </button>
-            )}
-          </div>
+      <div className="bg-white border-b border-slate-200 pt-8 pb-6 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="flex items-center text-2xl sm:text-3xl font-bold text-slate-900">
+            <BuildingIcon size={30} className="mr-3 text-blue-600" /> Authority Profile
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Manage your organisation details and account settings
+          </p>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 -mt-8 relative z-20 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Notifications */}
           {msg && (
@@ -137,18 +118,18 @@ const AuthorityProfile = () => {
           )}
 
           {loading ? (
-            <div className="bg-white rounded-[2.5rem] p-24 shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col items-center justify-center">
+            <div className="bg-white rounded-xl p-16 shadow-sm border border-slate-200 flex flex-col items-center justify-center">
               <div className="w-12 h-12 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin mb-4"></div>
               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Syncing Authority Data...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="space-y-6">
                 {/* Personal / Account Info */}
-                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
-                  <div className="p-8 md:p-12">
-                    <div className="flex items-center justify-between mb-10">
-                      <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="p-6 md:p-8">
+                    <div className="flex items-center justify-between mb-8">
+                      <h2 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
                         <UserIcon size={24} className="text-primary-600" /> Account Information
                       </h2>
                       {editing && (
@@ -186,12 +167,12 @@ const AuthorityProfile = () => {
                             )}
                           </div>
                         ))}
-                        <div className="col-span-1 md:col-span-2 pt-8 border-t border-slate-100">
+                        <div className="col-span-1 md:col-span-2 pt-6 border-t border-slate-100">
                           <button
-                            className="flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-2xl transition-all shadow-lg shadow-slate-200 active:scale-95"
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg transition-all shadow-sm active:scale-95"
                             onClick={() => { setForm(p => ({ ...p, password: '' })); setShowPasswordModal(true); setMsg(''); setError(''); }}
                           >
-                            <KeyIcon size={18}/> Reset Security Password
+                            <KeyIcon size={16}/> Reset Password
                           </button>
                         </div>
                       </div>
@@ -242,9 +223,9 @@ const AuthorityProfile = () => {
                 </div>
 
                 {/* Organisation Details */}
-                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
-                  <div className="p-8 md:p-12">
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3 mb-10">
+                <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="p-6 md:p-8">
+                    <h2 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-3 mb-8">
                       <BuildingIcon size={24} className="text-primary-600" /> Organisation Details
                     </h2>
                     
@@ -288,107 +269,18 @@ const AuthorityProfile = () => {
                   </div>
                 </div>
 
-                {/* Account Actions */}
-                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 p-8 md:p-12">
-                  <h3 className="text-xl font-black text-slate-800 tracking-tight mb-8 flex items-center gap-3">
-                    <AlertIcon size={24} className="text-red-500" /> Administrative Actions
-                  </h3>
-                  <div className="flex flex-wrap gap-4">
-                    <button
-                      className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl transition-all shadow-lg shadow-red-200 active:scale-95"
-                      onClick={() => { logout(); navigate('/login'); }}
-                    >
-                      Logout Session
-                    </button>
-                    <Link to="/authority/manage" className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-2xl transition-all shadow-lg shadow-slate-200 active:scale-95 flex items-center gap-2">
-                      <WrenchIcon size={18} /> Manage Fleet
-                    </Link>
-                  </div>
-                </div>
-              </div>
 
-              {/* Sidebar Summaries */}
-              <div className="space-y-8">
-                {/* Fleet Summary */}
-                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
-                  <div className="p-8">
-                    <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-3 mb-8">
-                      <BusIcon size={24} className="text-primary-600" /> Fleet Summary
-                    </h3>
-                    
-                    {transports.length === 0 ? (
-                      <div className="text-center py-8 space-y-4">
-                        <div className="w-20 h-20 bg-primary-50 text-primary-400 rounded-full flex items-center justify-center mx-auto">
-                          <BusIcon size={40} />
-                        </div>
-                        <p className="text-sm font-bold text-slate-400">No managed transports yet.</p>
-                        <Link to="/authority/manage" className="inline-block px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-xl transition-all text-sm">Add Fleet</Link>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                          {[
-                            { label: 'Total', value: transports.length, color: 'text-primary-600', bg: 'bg-primary-50', border: 'border-primary-100' },
-                            { label: 'Active', value: transports.filter(t => t.isActive !== false).length, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-                          ].map(stat => (
-                            <div key={stat.label} className={`${stat.bg} ${stat.border} border rounded-3xl p-4 text-center`}>
-                              <div className={`text-2xl font-black ${stat.color}`}>{stat.value}</div>
-                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{stat.label}</div>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Recent Transport</p>
-                          {transports.slice(0, 3).map((t) => (
-                            <div key={t._id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between">
-                              <div>
-                                <p className="text-xs font-black text-slate-800">{t.transportNumber}</p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase">{t.type}</p>
-                              </div>
-                              <div className={`p-2 rounded-xl bg-white border border-slate-100 ${t.type === 'bus' ? 'text-blue-500' : 'text-purple-500'}`}>
-                                {t.type === 'bus' ? <BusIcon size={16}/> : <TrainIcon size={16}/>}
-                              </div>
-                            </div>
-                          ))}
-                          <Link to="/authority/manage" className="block text-center text-xs font-black text-primary-600 uppercase tracking-widest hover:text-primary-700 pt-2 transition-colors">View All Fleet →</Link>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Staff Overview */}
-                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 p-8">
-                  <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-3 mb-8">
-                    <UsersIcon size={24} className="text-primary-600" /> Staff Overview
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 gap-4">
-                    {[
-                      { label: 'Drivers', count: (profile?.managedDrivers || []).length, color: 'text-blue-600', bg: 'bg-blue-50' },
-                      { label: 'Conductors', count: (profile?.managedConductors || []).length, color: 'text-purple-600', bg: 'bg-purple-50' },
-                    ].map(staff => (
-                      <div key={staff.label} className={`${staff.bg} rounded-3xl p-5 flex items-center justify-between`}>
-                        <span className="font-black text-slate-700">{staff.label}</span>
-                        <span className={`text-2xl font-black ${staff.color}`}>{staff.count}</span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <Link to="/authority/manage" className="mt-8 w-full inline-flex justify-center items-center px-6 py-4 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-2xl transition-all shadow-lg shadow-slate-200">
-                    Assign Staff →
-                  </Link>
-                </div>
               </div>
             </div>
           )}
         </div>
       </div>
 
+    </div>
+
       {/* Password Change Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="bg-slate-900 p-6 text-white flex justify-between items-center">
               <h5 className="text-xl font-black tracking-tight flex items-center gap-2"><KeyIcon size={20}/> Security Setup</h5>
@@ -412,20 +304,20 @@ const AuthorityProfile = () => {
             </div>
             
             <div className="p-8 bg-white border-t border-slate-100 flex gap-4">
-              <button type="button" className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-colors flex-1" onClick={() => setShowPasswordModal(false)}>Cancel</button>
+              <button type="button" className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition-colors flex-1" onClick={() => setShowPasswordModal(false)}>Cancel</button>
               <button
                 type="button"
-                className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 transition-all active:scale-95 flex-[2] flex items-center justify-center gap-2"
+                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg shadow-sm transition-all active:scale-95 flex-2 flex items-center justify-center gap-2"
                 onClick={handleSave}
                 disabled={saving || !form.password}
               >
-                {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Update Security'}
+                {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Update'}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

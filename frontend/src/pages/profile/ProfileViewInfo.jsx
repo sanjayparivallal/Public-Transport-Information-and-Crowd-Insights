@@ -1,8 +1,6 @@
-import { KeyIcon } from '../../components/icons';
-
-const ProfileViewInfo = ({ user, profile, assignedTransportLabel, onChangePassword }) => {
+const ProfileViewInfo = ({ user, profile, assignedTransportLabel }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
       {[
         { label: 'Name', value: profile?.name || '—' },
         { label: 'Email', value: profile?.email || user.email },
@@ -19,7 +17,7 @@ const ProfileViewInfo = ({ user, profile, assignedTransportLabel, onChangePasswo
           <div key={idx} className={`flex flex-col space-y-1.5 ${item.fullWidth ? 'md:col-span-2' : ''}`}>
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{item.label}</label>
             {item.isBadge ? (
-              <span className="w-max px-3 py-1 rounded-full text-xs font-black bg-primary-50 text-blue-600 border border-primary-100 uppercase tracking-wider capitalize">
+              <span className="w-max px-3 py-1 rounded-full text-xs font-black bg-primary-50 text-blue-600 border border-primary-100 capitalize tracking-wider">
                 {item.value}
               </span>
             ) : (
@@ -42,14 +40,7 @@ const ProfileViewInfo = ({ user, profile, assignedTransportLabel, onChangePasswo
         </div>
       )}
 
-      <div className="md:col-span-2 mt-4 pt-8 border-t border-slate-100">
-        <button
-          className="flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-2xl transition-all shadow-lg shadow-slate-200 active:scale-95"
-          onClick={onChangePassword}
-        >
-          <KeyIcon size={18}/> Change Security Password
-        </button>
-      </div>
+      
     </div>
   );
 };

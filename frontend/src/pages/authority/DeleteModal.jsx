@@ -42,11 +42,11 @@ const DeleteModal = ({ transport, onDeleted, onClose }) => {
           )}
         </div>
         
-        <div className="p-8 bg-white border-t border-slate-100 flex gap-4">
-          <button type="button" className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-colors flex-1" onClick={onClose}>Cancel</button>
+        <div className="p-6 bg-white border-t border-slate-100 flex gap-3">
+          <button type="button" className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition-colors flex-1" onClick={onClose}>Cancel</button>
           <button
             type="button"
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg shadow-red-200 transition-all active:scale-95 flex-[2] flex items-center justify-center gap-2"
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-sm transition-all active:scale-95 flex-[2] flex items-center justify-center gap-2"
             onClick={handleDelete}
             disabled={deleting}
           >

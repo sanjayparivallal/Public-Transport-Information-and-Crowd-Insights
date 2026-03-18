@@ -13,6 +13,11 @@ const getProfile = async (req, res, next) => {
 
     const user = await User.findById(req.user.id)
       .populate('favouriteTransports', 'transportNumber name type')
+      .populate({
+        path: 'favouriteRoutes',
+        select: 'origin destination transportId direction',
+        populate: { path: 'transportId', select: 'name transportNumber type' }
+      })
       .populate('assignedTransport', 'transportNumber name type')
       .lean();
 
@@ -84,41 +89,49 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
-// POST /api/users/favourites/:transportId
+// POST /api/users/favourites/:routeId
 const addFavourite = async (req, res, next) => {
   try {
     if (req.user.role !== 'commuter') {
       return sendError(res, 403, 'Only commuters can save favourite transports');
     }
-    const { transportId } = req.params;
+    const { routeId } = req.params;
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { $addToSet: { favouriteTransports: transportId } },
+      { $addToSet: { favouriteRoutes: routeId } },
       { new: true }
-    ).populate('favouriteTransports', 'transportNumber name type');
+    ).populate({
+      path: 'favouriteRoutes',
+      select: 'origin destination transportId direction',
+      populate: { path: 'transportId', select: 'name transportNumber type' }
+    });
 
     if (!user) return sendError(res, 404, 'User not found');
-    return sendSuccess(res, 200, user.favouriteTransports, 'Added to favourites');
+    return sendSuccess(res, 200, user.favouriteRoutes, 'Added to favourites');
   } catch (err) {
     next(err);
   }
 };
 
-// DELETE /api/users/favourites/:transportId
+// DELETE /api/users/favourites/:routeId
 const removeFavourite = async (req, res, next) => {
   try {
     if (req.user.role !== 'commuter') {
       return sendError(res, 403, 'Only commuters can manage favourite transports');
     }
-    const { transportId } = req.params;
+    const { transportId: routeId } = req.params;
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { $pull: { favouriteTransports: transportId } },
+      { $pull: { favouriteRoutes: routeId } },
       { new: true }
-    ).populate('favouriteTransports', 'transportNumber name type');
+    ).populate({
+      path: 'favouriteRoutes',
+      select: 'origin destination transportId direction',
+      populate: { path: 'transportId', select: 'name transportNumber type' }
+    });
 
     if (!user) return sendError(res, 404, 'User not found');
-    return sendSuccess(res, 200, user.favouriteTransports, 'Removed from favourites');
+    return sendSuccess(res, 200, user.favouriteRoutes, 'Removed from favourites');
   } catch (err) {
     next(err);
   }

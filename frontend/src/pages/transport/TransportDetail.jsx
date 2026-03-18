@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getTransportById } from '../../api/transportApi';
-import { getCrowd, submitCrowdReport } from '../../api/crowdApi';
+import { getCrowd, submitCrowdReport, updateCrowdLevel, updateLivePosition, deleteCrowdReport } from '../../api/crowdApi';
 import { getIncidentsByTransport, deleteIncident, reportIncident } from '../../api/incidentApi';
 import { addFavourite, removeFavourite } from '../../api/userApi';
 import { useAuth } from '../../context/AuthContext';
@@ -11,14 +11,18 @@ import IncidentList from '../../components/IncidentList';
 import FareCalculator from './FareCalculator';
 import ScheduleSection from './ScheduleSection';
 import TransportInfo from './TransportInfo';
-import { BusIcon, TrainIcon, UserIcon, AlertIcon, StarIcon, SearchIcon, ClockIcon, LocationIcon, ArrowRightIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '../../components/icons';
+import { BusIcon, TrainIcon, UserIcon, AlertIcon, StarIcon, SearchIcon, ClockIcon, LocationIcon, ArrowRightIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, EditIcon, TrashIcon } from '../../components/icons';
 
 const TransportDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialRouteId = queryParams.get('routeId');
   const { user, setUser } = useAuth();
 
   const [transport, setTransport]   = useState(null);
+  const [selectedRouteId, setSelectedRouteId] = useState(initialRouteId);
   const [crowd, setCrowd]           = useState(null);
   const [incidents, setIncidents]   = useState([]);
   const [incidentsPage, setIncidentsPage] = useState(1);
@@ -37,9 +41,19 @@ const TransportDetail = () => {
   // Report Modals State
   const [showCrowdModal, setShowCrowdModal] = useState(false);
   const [showIncidentModal, setShowIncidentModal] = useState(false);
+  const [showLiveUpdateModal, setShowLiveUpdateModal] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [crowdForm, setCrowdForm] = useState({ crowdLevel: 'average', boardingStop: '' });
   const [incidentForm, setIncidentForm] = useState({ incidentType: 'delay', severity: 'low', description: '', location: '', img: '' });
+  const [liveForm, setLiveForm] = useState({
+    routeId: '',
+    currentStop: '',
+    nextStop: '',
+    delayMinutes: 0,
+    status: 'on-time',
+    availableSeats: '',
+    crowdLevel: 'average',
+  });
 
   const fetchCrowdData = async (page) => {
     try {
@@ -71,7 +85,11 @@ const TransportDetail = () => {
       try {
         const tRes = await getTransportById(id);
         const tPayload = tRes.data?.data || tRes.data;
-        setTransport(tPayload?.transport || tPayload);
+        const transportData = tPayload?.transport || tPayload;
+        setTransport(transportData);
+        if (!selectedRouteId && transportData?.routes?.[0]) {
+          setSelectedRouteId(transportData.routes[0]._id);
+        }
         
         await fetchCrowdData(crowdPage);
         await fetchIncidentsData(incidentsPage);
@@ -97,31 +115,58 @@ const TransportDetail = () => {
 
   // Check if already favourite
   useEffect(() => {
-    if (transport && user?.favouriteTransports) {
-      setIsFav(user.favouriteTransports.includes(id));
+    if (transport && selectedRouteId && user?.favouriteRoutes) {
+      const isRouteFav = user.favouriteRoutes.some(r => {
+         const rId = typeof r === 'object' ? r._id : r;
+         return String(rId) === String(selectedRouteId);
+      });
+      setIsFav(isRouteFav);
+    } else {
+      setIsFav(false);
     }
-  }, [transport, user, id]);
+  }, [transport, user, selectedRouteId]);
+
+  useEffect(() => {
+    if (!transport) return;
+    const route = transport.routes?.find(r => r._id === selectedRouteId) || transport.routes?.[0];
+    const current = route?.livePosition || transport.livePosition || null;
+    const off = crowd?.official?.find(o => o.routeId === route?._id || o.routeId?._id === route?._id);
+    setLiveForm((prev) => ({
+      ...prev,
+      routeId: route?._id || '',
+      currentStop: current?.currentStop || '',
+      nextStop: current?.nextStop || '',
+      delayMinutes: current?.delayMinutes || 0,
+      status: current?.status || 'on-time',
+      availableSeats: route?.availableSeats ?? '',
+      crowdLevel: off?.crowdLevel || route?.crowdLevel || 'average',
+    }));
+  }, [transport, crowd, selectedRouteId]);
 
   const handleFavourite = async () => {
+    if (!selectedRouteId) {
+      setFavMsg('No route selected.');
+      return;
+    }
     setFavLoading(true);
     setFavMsg('');
     try {
       if (isFav) {
-        await removeFavourite(id);
+        await removeFavourite(selectedRouteId);
         setIsFav(false);
         if (user) {
-          const updatedFavs = (user.favouriteTransports || []).filter(x => x !== id);
-          const updatedUser = { ...user, favouriteTransports: updatedFavs };
+          const updatedFavs = (user.favouriteRoutes || []).filter(x => String(typeof x === 'object' ? x._id : x) !== String(selectedRouteId));
+          const updatedUser = { ...user, favouriteRoutes: updatedFavs };
           setUser(updatedUser);
           localStorage.setItem('user', JSON.stringify(updatedUser));
         }
         setFavMsg('Removed from favourites.');
       } else {
-        await addFavourite(id);
+        await addFavourite(selectedRouteId);
         setIsFav(true);
         if (user) {
-          const updatedFavs = [...(user.favouriteTransports || []), id];
-          const updatedUser = { ...user, favouriteTransports: updatedFavs };
+          const updatedFavs = [...(user.favouriteRoutes || []), selectedRouteId];
+          const updatedUser = { ...user, favouriteRoutes: updatedFavs };
           setUser(updatedUser);
           localStorage.setItem('user', JSON.stringify(updatedUser));
         }
@@ -147,12 +192,22 @@ const TransportDetail = () => {
     }
   };
 
+  const handleDeleteCrowdReport = async (reportId) => {
+    if (!window.confirm("Delete your crowd report?")) return;
+    try {
+      await deleteCrowdReport(reportId);
+      await fetchCrowdData(crowdPage);
+    } catch (err) {
+      alert(err.message || 'Failed to delete report.');
+    }
+  };
+
   const handleCrowdSubmit = async (e) => {
     e.preventDefault();
     setReportLoading(true);
     try {
-      const route = transport?.routes?.[0];
-      await submitCrowdReport({ transportId: id, routeId: route?._id, ...crowdForm });
+      const route = transport?.routes?.find(r => r._id === selectedRouteId) || transport?.routes?.[0];
+      await submitCrowdReport({ routeId: route?._id, ...crowdForm });
       setShowCrowdModal(false);
       alert('Crowd reported successfully!');
       fetchCrowdData(1);
@@ -182,7 +237,7 @@ const TransportDetail = () => {
     e.preventDefault();
     setReportLoading(true);
     try {
-      const route = transport?.routes?.[0];
+      const route = transport?.routes?.find(r => r._id === selectedRouteId) || transport?.routes?.[0];
       await reportIncident({ transportId: id, routeId: route?._id, ...incidentForm });
       setShowIncidentModal(false);
       alert('Incident reported successfully!');
@@ -190,6 +245,46 @@ const TransportDetail = () => {
       setIncidentsPage(1);
     } catch (err) {
       alert(err.message || 'Failed to report incident');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleLiveUpdateSubmit = async (e) => {
+    e.preventDefault();
+    setReportLoading(true);
+    try {
+      const route = (transport?.routes || []).find((r) => String(r._id) === String(liveForm.routeId)) || transport?.routes?.[0];
+      const routeId = route?._id;
+      if (!routeId) throw new Error('No route assigned for this transport');
+
+      await updateLivePosition({
+        transportId: id,
+        routeId,
+        currentStop: liveForm.currentStop || null,
+        nextStop: liveForm.nextStop || null,
+        delayMinutes: Number(liveForm.delayMinutes || 0),
+        status: liveForm.status,
+        availableSeats: liveForm.availableSeats === '' ? null : Number(liveForm.availableSeats),
+      });
+
+      await updateCrowdLevel({
+        transportId: id,
+        routeId,
+        crowdLevel: liveForm.crowdLevel,
+        currentStop: liveForm.currentStop || null,
+      });
+
+      const tRes = await getTransportById(id);
+      const tPayload = tRes.data?.data || tRes.data;
+      setTransport(tPayload?.transport || tPayload);
+
+      setShowLiveUpdateModal(false);
+      alert('Live position and crowd level updated successfully!');
+      await fetchCrowdData(1);
+      setCrowdPage(1);
+    } catch (err) {
+      alert(err.message || 'Failed to update live details');
     } finally {
       setReportLoading(false);
     }
@@ -219,10 +314,10 @@ const TransportDetail = () => {
             {error}
           </div>
           <button 
-            className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-xl shadow-slate-300 transform active:scale-95" 
+            className="w-full py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95" 
             onClick={() => navigate(-1)}
           >
-            <ArrowLeftIcon size={20} /> Revert to Safety
+            <ArrowLeftIcon size={18} /> Revert to Safety
           </button>
         </div>
       </div>
@@ -231,14 +326,42 @@ const TransportDetail = () => {
 
   if (!transport) return null;
 
-  const primaryRoute  = transport.routes?.[0];
+  const primaryRoute  = transport.routes?.find(r => r._id === selectedRouteId) || transport.routes?.[0];
+  const selectedLiveRoute = (transport.routes || []).find((r) => String(r._id) === String(liveForm.routeId)) || primaryRoute;
   const stops         = primaryRoute?.stops || [];
   const schedule      = primaryRoute?.schedule || [];
   const fareTable     = primaryRoute?.fareTable || [];
-  const livePosition  = transport.livePosition || crowd?.livePosition || null;
-  const crowdLevel    = crowd?.official?.crowdLevel || transport.crowdLevel || null;
+  
+  // Look for the most recent live position across all routes of this transport
+  const allLivePositions = (transport.routes || [])
+    .map(r => r.livePosition)
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  
+  const livePosition = primaryRoute?.livePosition || allLivePositions[0] || transport.livePosition || null;
+  const displayAvailableSeats = primaryRoute?.availableSeats ?? null;
+  const officialCrowd = crowd?.official?.find(o => String(o.routeId?._id || o.routeId) === String(primaryRoute?._id));
+  const crowdLevel    = officialCrowd?.crowdLevel || primaryRoute?.crowdLevel || null;
+  
+  const filteredCrowdReports = crowdReports.filter(r => String(r.routeId?._id || r.routeId) === String(primaryRoute?._id));
   const role          = String(user?.role || '').toLowerCase();
-  const canReport     = !!user && role !== 'authority';
+  const canReportIncident = !!user && role !== 'authority';
+  const canReportCrowd = !!user && ['commuter', 'authority', 'driver', 'conductor'].includes(role);
+  const currentUserId = user?._id || user?.id || null;
+  const authorityId = transport?.authorityId?._id || transport?.authorityId?.id || transport?.authorityId || null;
+  const assignedDriverId = transport?.assignedDriver?._id || transport?.assignedDriver?.id || transport?.assignedDriver || null;
+  const assignedConductorId = transport?.assignedConductor?._id || transport?.assignedConductor?.id || transport?.assignedConductor || null;
+  const assignedTransportId = user?.assignedTransport?._id || user?.assignedTransport?.id || user?.assignedTransport || null;
+  const isAuthorityTransport = role === 'authority' && authorityId && currentUserId && String(authorityId) === String(currentUserId);
+  const isDriverTransport = role === 'driver' && currentUserId && (
+    (assignedDriverId && String(assignedDriverId) === String(currentUserId)) ||
+    (assignedTransportId && String(assignedTransportId) === String(transport?._id))
+  );
+  const isConductorTransport = role === 'conductor' && currentUserId && (
+    (assignedConductorId && String(assignedConductorId) === String(currentUserId)) ||
+    (assignedTransportId && String(assignedTransportId) === String(transport?._id))
+  );
+  const canOperateLive = !!user && (isAuthorityTransport || isDriverTransport || isConductorTransport);
 
   return (
     <div className="min-h-screen bg-slate-50/50">
@@ -260,7 +383,40 @@ const TransportDetail = () => {
                 {transport.name}
               </h1>
 
-              {primaryRoute && (
+              {transport.routes?.length > 1 ? (
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-wrap gap-2 p-1 bg-slate-100/80 rounded-xl w-fit border border-slate-200/50">
+                    {transport.routes.map((route) => (
+                      <button
+                        key={route._id}
+                        onClick={() => setSelectedRouteId(route._id)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                          selectedRouteId === route._id
+                            ? 'bg-white text-primary-600 shadow-sm border border-slate-200/50'
+                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                        }`}
+                      >
+                        <span>{route.origin}</span>
+                        <ArrowRightIcon size={14} className={selectedRouteId === route._id ? "text-primary-400" : "text-slate-400"} />
+                        <span>{route.destination}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {primaryRoute && (
+                    <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-slate-500 font-medium text-sm ml-1">
+                      {primaryRoute.totalDistance && (
+                        <span>{primaryRoute.totalDistance} km</span>
+                      )}
+                      {primaryRoute.totalDistance && primaryRoute.estimatedDuration && (
+                        <span className="w-1 h-1 rounded-full bg-slate-400 mx-1"></span>
+                      )}
+                      {primaryRoute.estimatedDuration && (
+                        <span>{primaryRoute.estimatedDuration} min</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : primaryRoute && (
                 <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-slate-500 font-medium">
                   <span className="text-slate-800">{primaryRoute.origin}</span>
                   <ArrowRightIcon size={16} className="text-slate-400" />
@@ -312,13 +468,13 @@ const TransportDetail = () => {
       </div>
 
       <div className="container mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-20 space-y-8">
-        <TransportInfo transport={transport} crowdLevel={crowdLevel} availableSeats={livePosition?.availableSeats} />
+        <TransportInfo transport={transport} crowdLevel={crowdLevel} availableSeats={displayAvailableSeats} />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Split */}
           <div className="lg:col-span-8 space-y-8">
 
-            {livePosition && (
+            {(livePosition || canOperateLive) && (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-4">
                   <div className="flex h-3 w-3 relative">
@@ -329,34 +485,43 @@ const TransportDetail = () => {
                 
                 <div className="flex items-center text-lg font-bold text-slate-800 mb-6 pb-4 border-b border-slate-50">
                   <LocationIcon size={24} className="mr-3 text-emerald-500" />
-                  Live Tracking
+                  <span className="flex-1">Live Tracking</span>
+                  {canOperateLive && (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => setShowLiveUpdateModal(true)}
+                    >
+                      <EditIcon size={16} /> Update Live Status
+                    </button>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="flex flex-col">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Current Stop</label>
-                    <span className="text-slate-800 font-bold leading-tight">{livePosition.currentStop || 'No data'}</span>
+                    <span className="text-slate-800 font-bold leading-tight">{livePosition?.currentStop || 'No data'}</span>
                   </div>
                   <div className="flex flex-col">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Next Stop</label>
-                    <span className="text-slate-800 font-bold leading-tight">{livePosition.nextStop || 'No data'}</span>
+                    <span className="text-slate-800 font-bold leading-tight">{livePosition?.nextStop || 'No data'}</span>
                   </div>
                   <div className="flex flex-col">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Status</label>
-                    <span className="text-emerald-600 font-bold capitalize bg-emerald-50 px-2 py-0.5 rounded-lg w-fit text-sm">{livePosition.status || 'On track'}</span>
+                    <span className="text-emerald-600 font-bold capitalize bg-emerald-50 px-2 py-0.5 rounded-lg w-fit text-sm">{livePosition?.status || 'On track'}</span>
                   </div>
-                  {livePosition.delayMinutes > 0 && (
+                  {(livePosition?.delayMinutes || 0) > 0 && (
                     <div className="flex flex-col">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Delay</label>
-                      <span className="text-red-500 font-black">+{livePosition.delayMinutes} min</span>
+                      <span className="text-red-500 font-black">+{livePosition?.delayMinutes} min</span>
                     </div>
                   )}
-                  {livePosition.availableSeats !== null && livePosition.availableSeats !== undefined && (
+                  {displayAvailableSeats !== null && displayAvailableSeats !== undefined && (
                     <div className="flex flex-col mt-2 lg:mt-0">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Availability</label>
                       <div className="flex items-center gap-2">
-                        <span className={`text-sm font-black px-2 py-0.5 rounded-lg ${livePosition.availableSeats > 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                          {livePosition.availableSeats} Seats
+                        <span className={`text-sm font-black px-2 py-0.5 rounded-lg ${displayAvailableSeats > 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                          {displayAvailableSeats} Seats
                         </span>
                       </div>
                     </div>
@@ -389,8 +554,6 @@ const TransportDetail = () => {
           </div>
         </div>
 
-        <ScheduleSection schedule={schedule} />
-
         {/* Row 2: Incidents Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50 flex-wrap gap-4">
@@ -404,7 +567,7 @@ const TransportDetail = () => {
                   </div>
                 </div>
                 
-                {canReport && (
+                {canReportIncident && (
                   <button 
                     className="btn-danger" 
                     onClick={() => setShowIncidentModal(true)}
@@ -441,7 +604,7 @@ const TransportDetail = () => {
               )}
             </div>
 
-            {/* Commuter Crowd Reports */}
+            {/* Crowd Reports */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50 flex-wrap gap-4">
                 <div className="flex items-center gap-3">
@@ -449,12 +612,12 @@ const TransportDetail = () => {
                     <UserIcon size={24} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-slate-800 m-0">Commuter Crowd Reports</h4>
+                    <h4 className="text-lg font-bold text-slate-800 m-0">Crowd Reports</h4>
                     <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{crowdPagination.total} recent updates</span>
                   </div>
                 </div>
                 
-                {canReport && (
+                {canReportCrowd && (
                   <button 
                     className="btn-primary" 
                     onClick={() => setShowCrowdModal(true)}
@@ -465,15 +628,15 @@ const TransportDetail = () => {
                 )}
               </div>
               
-              {crowdReports.length === 0 ? (
+              {filteredCrowdReports.length === 0 ? (
                 <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                   <UserIcon size={48} className="text-slate-300 mx-auto mb-4"/>
-                  <p className="text-slate-500 font-semibold">No crowd reports yet.</p>
+                  <p className="text-slate-500 font-semibold">No crowd reports yet for this route.</p>
                   <p className="text-xs text-slate-400 mt-1">Be the first to update others on the crowd level!</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {crowdReports.map(report => {
+                  {filteredCrowdReports.map(report => {
                     const reportedAt = report.reportedAt || report.createdAt || report.updatedAt;
                     const reporterName = report.reportedBy?.name || report.reportedBy?.email || report.reporterName || 'Unknown Commuter';
 
@@ -486,19 +649,31 @@ const TransportDetail = () => {
                          </span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors">
-                          <UserIcon size={20} />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-bold text-slate-800 truncate leading-none mb-1">
-                            {reporterName}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors">
+                            <UserIcon size={20} />
                           </div>
-                          {report.boardingStop && (
-                            <div className="text-xs text-slate-500 flex items-center truncate">
-                              <LocationIcon size={12} className="mr-1 shrink-0"/> Boarded at <span className="font-bold ml-1 text-slate-700">{report.boardingStop}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-slate-800 truncate leading-none mb-1">
+                              {reporterName}
                             </div>
-                          )}
+                            {report.boardingStop && (
+                              <div className="text-xs text-slate-500 flex items-center truncate">
+                                <LocationIcon size={12} className="mr-1 shrink-0"/> Boarded at <span className="font-bold ml-1 text-slate-700">{report.boardingStop}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
+
+                        {(String(report.reportedBy?._id || report.reportedBy) === String(currentUserId) || role === 'authority') && (
+                          <button
+                            onClick={() => handleDeleteCrowdReport(report._id)}
+                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                            title="Delete Report"
+                          >
+                            <TrashIcon size={16} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   )})}
@@ -600,6 +775,127 @@ const TransportDetail = () => {
                 {reportLoading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 ) : 'Post Report'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Live Update Modal */}
+      {showLiveUpdateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="flex items-center gap-2">
+                <LocationIcon size={18} className="text-blue-600" /> Update Live Status
+              </h3>
+              <button
+                onClick={() => setShowLiveUpdateModal(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <PlusIcon size={20} className="rotate-45" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <form id="liveUpdateForm" onSubmit={handleLiveUpdateSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Route</label>
+                    <select
+                      className="input"
+                      value={liveForm.routeId}
+                      onChange={(e) => setLiveForm((p) => ({ ...p, routeId: e.target.value }))}
+                    >
+                      {(transport?.routes || []).map((route) => (
+                        <option key={route._id} value={route._id}>
+                          {(route.origin || 'Source')} → {(route.destination || 'Destination')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Crowd Level</label>
+                    <select
+                      className="input"
+                      value={liveForm.crowdLevel}
+                      onChange={(e) => setLiveForm((p) => ({ ...p, crowdLevel: e.target.value }))}
+                    >
+                      <option value="empty">Empty</option>
+                      <option value="average">Average</option>
+                      <option value="crowded">Crowded</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Current Stop</label>
+                    <input
+                      className="input"
+                      value={liveForm.currentStop}
+                      onChange={(e) => setLiveForm((p) => ({ ...p, currentStop: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Next Stop</label>
+                    <input
+                      className="input"
+                      value={liveForm.nextStop}
+                      onChange={(e) => setLiveForm((p) => ({ ...p, nextStop: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Status</label>
+                    <select
+                      className="input"
+                      value={liveForm.status}
+                      onChange={(e) => setLiveForm((p) => ({ ...p, status: e.target.value }))}
+                    >
+                      <option value="on-time">On Time</option>
+                      <option value="delayed">Delayed</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Delay (Minutes)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className="input"
+                      value={liveForm.delayMinutes}
+                      onChange={(e) => setLiveForm((p) => ({ ...p, delayMinutes: e.target.value }))}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="label">Available Seats</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className="input"
+                      value={liveForm.availableSeats}
+                      onChange={(e) => setLiveForm((p) => ({ ...p, availableSeats: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
+              <button
+                type="button"
+                className="btn-secondary flex-1 justify-center"
+                onClick={() => setShowLiveUpdateModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="liveUpdateForm"
+                className="btn-primary flex-1 justify-center"
+                disabled={reportLoading}
+              >
+                {reportLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : 'Update Live'}
               </button>
             </div>
           </div>

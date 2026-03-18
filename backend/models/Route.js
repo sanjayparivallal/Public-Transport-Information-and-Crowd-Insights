@@ -73,6 +73,11 @@ const routeSchema = new mongoose.Schema(
 
     totalDistance:     { type: Number, default: 0 }, // km
     estimatedDuration: { type: Number, default: 0 }, // minutes
+    availableSeats:    {
+      type: Number,
+      min: [0, 'availableSeats cannot be negative'],
+      default: null,
+    },
   },
   { timestamps: true }
 );

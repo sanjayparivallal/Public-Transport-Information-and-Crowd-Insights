@@ -79,9 +79,9 @@ const AssignStaffModal = ({ transport, onSaved, onClose }) => {
             </div>
           </div>
           
-          <div className="p-8 bg-white border-t border-slate-100 flex gap-4">
-            <button type="button" className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-colors flex-1" onClick={onClose}>Close</button>
-            <button type="submit" className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 transition-all active:scale-95 flex-[2] flex items-center justify-center gap-2" disabled={saving}>
+          <div className="p-6 bg-white border-t border-slate-100 flex gap-3">
+            <button type="button" className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition-colors flex-1" onClick={onClose}>Close</button>
+            <button type="submit" className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg shadow-sm transition-all active:scale-95 flex-[2] flex items-center justify-center gap-2" disabled={saving}>
               {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Assign Staff'}
             </button>
           </div>
