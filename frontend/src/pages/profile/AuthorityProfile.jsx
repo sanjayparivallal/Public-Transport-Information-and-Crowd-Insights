@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getProfile, updateProfile } from '../../api/userApi';
 import { getManagedTransports } from '../../api/adminApi';
-import { BuildingIcon, UserIcon, EditIcon, CheckCircleIcon, AlertIcon, BusIcon, TrainIcon, WrenchIcon, UsersIcon, PauseIcon } from '../../components/icons';
+import { BuildingIcon, UserIcon, EditIcon, CheckCircleIcon, AlertIcon, BusIcon, TrainIcon, WrenchIcon, UsersIcon, PauseIcon, KeyIcon, PlusIcon } from '../../components/icons';
 
 /**
  * AuthorityProfile.jsx
@@ -47,7 +47,7 @@ const AuthorityProfile = () => {
           const d = transportsRes.data?.data;
           setTransports(d?.results || d?.transports || (Array.isArray(d) ? d : []));
         }
-      } catch (err) {
+      } catch {
         setError('Failed to load profile.');
       } finally {
         setLoading(false);
@@ -82,311 +82,350 @@ const AuthorityProfile = () => {
 
   if (!user) {
     return (
-      <div className="container py-5 text-center">
-        <Link to="/login">Please login to view your profile.</Link>
+      <div className="container py-24 text-center">
+        <Link to="/login" className="text-primary-600 font-bold hover:underline italic">Please login to view your profile.</Link>
       </div>
     );
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-slate-50/50">
       {/* Page Header */}
-      <div className="page-header">
-        <div className="container">
-          <h1 className="d-flex align-items-center"><BuildingIcon size={32} className="me-2"/> Authority Profile</h1>
-          <p>View and manage your authority account and organisation details</p>
+      <div className="relative overflow-hidden bg-slate-900 text-white pt-24 pb-16 md:pt-32 md:pb-24">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl"></div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div className="space-y-4">
+              <div className="inline-flex p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+                <BuildingIcon size={32} className="text-primary-400" />
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight">
+                Authority Profile
+              </h1>
+              <p className="text-slate-400 text-lg max-w-2xl font-medium">
+                Manage your organisation details and administrative settings.
+              </p>
+            </div>
+            
+            {!editing && (
+              <button 
+                className="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-black rounded-2xl border border-white/20 transition-all active:scale-95 flex items-center gap-2"
+                onClick={() => { setEditing(true); setMsg(''); setError(''); }}
+              >
+                <EditIcon size={20} /> Edit Account
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="container pb-5">
-        <div className="row g-4">
-          <div className="col-lg-8">
+      <div className="container mx-auto px-4 -mt-8 relative z-20 pb-20">
+        <div className="max-w-7xl mx-auto">
+          {/* Notifications */}
+          {msg && (
+            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-600 text-sm font-bold flex items-center gap-2 mb-8 animate-in fade-in slide-in-from-top-2 shadow-sm">
+              <CheckCircleIcon size={18}/> {msg}
+            </div>
+          )}
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-bold flex items-center gap-2 mb-8 animate-in fade-in slide-in-from-top-2 shadow-sm">
+              <AlertIcon size={18}/> {error}
+            </div>
+          )}
 
-            {msg   && <div className="alert-custom alert-success mb-3 d-flex align-items-center"><CheckCircleIcon size={18} className="me-2"/> {msg}</div>}
-            {error && <div className="alert-custom alert-error   mb-3 d-flex align-items-center"><AlertIcon size={18} className="me-2"/> {error}</div>}
-
-            {loading ? (
-              <div className="loading-state"><div className="spinner-large" /></div>
-            ) : (
-              <>
+          {loading ? (
+            <div className="bg-white rounded-[2.5rem] p-24 shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col items-center justify-center">
+              <div className="w-12 h-12 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin mb-4"></div>
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Syncing Authority Data...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-8">
                 {/* Personal / Account Info */}
-                <div className="detail-section">
-                  <div className="detail-section-title d-flex justify-content-between align-items-center">
-                    <span className="d-flex align-items-center"><UserIcon size={20} className="me-2"/> Account Information</span>
-                    {!editing && (
-                      <button
-                        className="btn btn-sm btn-outline-primary d-flex align-items-center"
-                        onClick={() => { setEditing(true); setMsg(''); setError(''); }}
-                      >
-                        <EditIcon size={14} className="me-2"/> Edit
-                      </button>
-                    )}
-                  </div>
-
-                  {!editing ? (
-                    <div className="info-grid">
-                      <div className="info-item"><label>Name</label><span>{profile?.name || '—'}</span></div>
-                      <div className="info-item"><label>Email</label><span>{profile?.email || user.email}</span></div>
-                      <div className="info-item">
-                        <label>Role</label>
-                        <span><span className="role-pill authority">authority</span></span>
-                      </div>
-                      <div className="info-item"><label>Phone</label><span>{profile?.phone || '—'}</span></div>
-                      <div className="info-item">
-                        <label>Account Status</label>
-                        <span style={{ color: profile?.isActive !== false ? 'var(--success)' : '#94a3b8', fontWeight: 700 }}>
-                          {profile?.isActive !== false ? <span className="d-flex align-items-center"><CheckCircleIcon size={14} className="me-1"/> Active</span> : <span className="d-flex align-items-center"><PauseIcon size={14} className="me-1"/> Inactive</span>}
-                        </span>
-                      </div>
-                      <div className="info-item">
-                        <label>Member Since</label>
-                        <span>
-                          {profile?.createdAt
-                            ? new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
-                            : '—'}
-                        </span>
-                      </div>
-                      <div className="info-item mt-3 pt-3" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)' }}>
-                        <button
-                          className="btn btn-sm btn-outline-warning"
-                          onClick={() => { setForm(p => ({ ...p, password: '' })); setShowPasswordModal(true); setMsg(''); setError(''); }}
+                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
+                  <div className="p-8 md:p-12">
+                    <div className="flex items-center justify-between mb-10">
+                      <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                        <UserIcon size={24} className="text-primary-600" /> Account Information
+                      </h2>
+                      {editing && (
+                        <button 
+                          className="text-xs font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors"
+                          onClick={() => setEditing(false)}
                         >
-                          Change Password
+                          Cancel Editing
                         </button>
-                      </div>
+                      )}
                     </div>
-                  ) : (
-                    <div>
-                      <div className="mb-3">
-                        <label className="form-label">Name</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={form.name}
-                          onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label">Email</label>
-                        <input type="email" className="form-control" value={profile?.email || ''} disabled />
-                        <div className="form-text">Email cannot be changed.</div>
-                      </div>
-                      <div className="mb-4">
-                        <label className="form-label">Phone</label>
-                        <input
-                          type="tel"
-                          className="form-control"
-                          value={form.phone}
-                          onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-                        />
-                      </div>
-                      <div className="d-flex gap-2">
-                        <button className="btn btn-primary flex-fill" onClick={handleSave} disabled={saving}>
-                          {saving ? 'Saving…' : 'Save Profile'}
-                        </button>
-                        <button
-                          className="btn btn-outline-secondary"
-                          onClick={() => { setEditing(false); setMsg(''); setError(''); }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
 
-                {/* Password Change Modal */}
-                {showPasswordModal && (
-                  <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <div className="modal-dialog modal-dialog-centered">
-                      <div className="modal-content">
-                        <div className="modal-header">
-                          <h5 className="modal-title">Change Password</h5>
-                          <button type="button" className="btn-close" onClick={() => setShowPasswordModal(false)}></button>
-                        </div>
-                        <div className="modal-body">
-                          <div className="mb-3">
-                            <label className="form-label">New Password</label>
-                            <input
-                              type="password"
-                              className="form-control"
-                              value={form.password}
-                              onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-                              placeholder="Enter new password…"
-                              autoComplete="new-password"
-                            />
+                    {!editing ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {[
+                          { label: 'Name', value: profile?.name || '—' },
+                          { label: 'Email', value: profile?.email || user.email },
+                          { label: 'Role', value: 'Authority', isBadge: true, badgeColor: 'bg-purple-50 text-purple-600 border-purple-100' },
+                          { label: 'Phone', value: profile?.phone || '—' },
+                          { label: 'Account Status', value: profile?.isActive !== false ? 'Verified Active' : 'Inactive', isStatus: true, statusActive: profile?.isActive !== false },
+                          { label: 'Member Since', value: profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—' },
+                        ].map((item, idx) => (
+                          <div key={idx} className="flex flex-col space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{item.label}</label>
+                            {item.isBadge ? (
+                              <span className={`w-max px-3 py-1 rounded-full text-xs font-black border uppercase tracking-wider ${item.badgeColor}`}>
+                                {item.value}
+                              </span>
+                            ) : item.isStatus ? (
+                              <div className={`flex items-center gap-2 font-bold ${item.statusActive ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                {item.statusActive ? <CheckCircleIcon size={16} /> : <PauseIcon size={16} />} {item.value}
+                              </div>
+                            ) : (
+                              <span className="text-lg font-bold text-slate-700 ml-1">{item.value}</span>
+                            )}
                           </div>
-                        </div>
-                        <div className="modal-footer d-flex">
-                          <button type="button" className="btn btn-outline-secondary flex-fill" onClick={() => setShowPasswordModal(false)}>Cancel</button>
-                          <button type="button" className="btn btn-warning flex-fill" onClick={handleSave} disabled={saving || !form.password}>
-                            {saving ? 'Updating…' : 'Update Password'}
+                        ))}
+                        <div className="col-span-1 md:col-span-2 pt-8 border-t border-slate-100">
+                          <button
+                            className="flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-2xl transition-all shadow-lg shadow-slate-200 active:scale-95"
+                            onClick={() => { setForm(p => ({ ...p, password: '' })); setShowPasswordModal(true); setMsg(''); setError(''); }}
+                          >
+                            <KeyIcon size={18}/> Reset Security Password
                           </button>
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                            <input
+                              type="text"
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all placeholder-slate-400 font-bold text-slate-700"
+                              value={form.name}
+                              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Email (Registered)</label>
+                            <input type="email" className="w-full px-4 py-3 bg-slate-100 border border-slate-200 text-slate-400 rounded-2xl outline-none cursor-not-allowed font-bold" value={profile?.email || ''} disabled />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                            <input
+                              type="tel"
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all placeholder-slate-400 font-bold text-slate-700"
+                              value={form.phone}
+                              onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-4 pt-8 border-t border-slate-100">
+                          <button 
+                            className="flex-1 px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-2xl transition-all shadow-lg shadow-primary-200 active:scale-95 flex items-center justify-center gap-2"
+                            onClick={handleSave} 
+                            disabled={saving}
+                          >
+                            {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Save Changes'}
+                          </button>
+                          <button 
+                            className="px-8 py-3 border-2 border-slate-100 text-slate-400 hover:text-slate-600 font-black rounded-2xl transition-all active:scale-95"
+                            onClick={() => setEditing(false)}
+                          >
+                            Discard
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
                 {/* Organisation Details */}
-                <div className="detail-section">
-                  <div className="detail-section-title d-flex align-items-center"><BuildingIcon size={20} className="me-2"/> Organisation Details</div>
-                  <div className="info-grid">
-                    <div className="info-item">
-                      <label>Organisation Name</label>
-                      <span>{profile?.organizationName || '—'}</span>
+                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
+                  <div className="p-8 md:p-12">
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3 mb-10">
+                      <BuildingIcon size={24} className="text-primary-600" /> Organisation Details
+                    </h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {[
+                        { label: 'Organisation Name', value: profile?.organizationName || '—' },
+                        { label: 'Authority Code', value: profile?.authorityCode || '—', isCode: true },
+                        { label: 'Region', value: profile?.region || '—' },
+                        { label: 'Contact Email', value: profile?.contactEmail || '—' },
+                        { label: 'Contact Phone', value: profile?.contactPhone || '—' },
+                        { label: 'Office Address', value: profile?.officeAddress || '—', fullWidth: true },
+                      ].map((item, idx) => (
+                        <div key={idx} className={`flex flex-col space-y-1.5 ${item.fullWidth ? 'md:col-span-2' : ''}`}>
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{item.label}</label>
+                          {item.isCode ? (
+                            <span className="w-max px-3 py-1 rounded-xl font-mono font-black bg-slate-900 text-primary-400 border border-slate-800 tracking-widest text-sm uppercase">
+                              {item.value}
+                            </span>
+                          ) : (
+                            <span className="text-lg font-bold text-slate-700 ml-1">{item.value}</span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    <div className="info-item">
-                      <label>Authority Code</label>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--primary)' }}>
-                        {profile?.authorityCode || '—'}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <label>Region</label>
-                      <span>{profile?.region || '—'}</span>
-                    </div>
-                    <div className="info-item">
-                      <label>Contact Email</label>
-                      <span>{profile?.contactEmail || '—'}</span>
-                    </div>
-                    <div className="info-item">
-                      <label>Contact Phone</label>
-                      <span>{profile?.contactPhone || '—'}</span>
-                    </div>
-                    <div className="info-item">
-                      <label>Office Address</label>
-                      <span>{profile?.officeAddress || '—'}</span>
-                    </div>
-                  </div>
 
-                  {/* Covered Districts */}
-                  <div style={{ marginTop: '1rem' }}>
-                    <div style={{ fontSize: '.77rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '.5rem' }}>
-                      Covered Districts
-                    </div>
-                    {(profile?.coveredDistricts || []).length > 0 ? (
-                      <div className="d-flex flex-wrap gap-2">
-                        {profile.coveredDistricts.map((d, i) => (
-                          <span key={i} className="meta-chip">{d}</span>
-                        ))}
+                    {/* Covered Districts */}
+                    <div className="mt-10 pt-8 border-t border-slate-100">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-4 block">Covered Districts</label>
+                      <div className="flex flex-wrap gap-2">
+                        {(profile?.coveredDistricts || []).length > 0 ? (
+                          profile.coveredDistricts.map((d, i) => (
+                            <span key={i} className="px-4 py-2 rounded-2xl text-sm font-bold bg-slate-50 text-slate-600 border border-slate-200 shadow-sm">
+                              {d}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-sm font-medium text-slate-400 italic">No districts specified.</span>
+                        )}
                       </div>
-                    ) : (
-                      <span style={{ color: '#94a3b8', fontSize: '.9rem' }}>—</span>
-                    )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Account Actions */}
-                <div className="detail-section">
-                  <div className="detail-section-title d-flex align-items-center" style={{ color: '#ef4444' }}><AlertIcon size={20} className="me-2"/> Account Actions</div>
-                  <div className="d-flex gap-2 flex-wrap">
+                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 p-8 md:p-12">
+                  <h3 className="text-xl font-black text-slate-800 tracking-tight mb-8 flex items-center gap-3">
+                    <AlertIcon size={24} className="text-red-500" /> Administrative Actions
+                  </h3>
+                  <div className="flex flex-wrap gap-4">
                     <button
-                      className="btn btn-outline-danger btn-sm"
+                      className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl transition-all shadow-lg shadow-red-200 active:scale-95"
                       onClick={() => { logout(); navigate('/login'); }}
                     >
-                      Logout
+                      Logout Session
                     </button>
-                    <Link to="/dashboard/authority" className="btn btn-outline-secondary btn-sm">
-                      ← Back to Dashboard
-                    </Link>
-                    <Link to="/authority/manage" className="btn btn-outline-primary btn-sm d-flex align-items-center">
-                      <WrenchIcon size={14} className="me-2"/> Manage Transports
+                    <Link to="/authority/manage" className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-2xl transition-all shadow-lg shadow-slate-200 active:scale-95 flex items-center gap-2">
+                      <WrenchIcon size={18} /> Manage Fleet
                     </Link>
                   </div>
                 </div>
-              </>
-            )}
-          </div>
+              </div>
 
-          {/* Sidebar: Fleet Summary */}
-          <div className="col-lg-4">
-            <div className="detail-section">
-              <div className="detail-section-title d-flex align-items-center"><BusIcon size={20} className="me-2"/> Fleet Summary</div>
-              {loading ? (
-                <div className="loading-state" style={{ padding: '1rem' }}>
-                  <div className="spinner-large" />
-                </div>
-              ) : transports.length === 0 ? (
-                <div className="empty-state" style={{ padding: '1rem' }}>
-                  <div className="empty-state-icon" style={{ color: '#3b82f6' }}><BusIcon size={48} /></div>
-                  <p style={{ color: '#64748b', fontSize: '.85rem', margin: 0 }}>No transports yet.</p>
-                  <Link to="/authority/manage" className="btn btn-primary btn-sm mt-2">Add Transport</Link>
-                </div>
-              ) : (
-                <>
-                  <div className="row g-2 mb-3">
-                    {[
-                      { label: 'Total',    value: transports.length,                                     color: 'var(--primary)' },
-                      { label: 'Active',   value: transports.filter((t) => t.isActive !== false).length, color: 'var(--success)' },
-                      { label: 'Buses',    value: transports.filter((t) => t.type === 'bus').length,     color: '#1d4ed8' },
-                      { label: 'Trains',   value: transports.filter((t) => t.type === 'train').length,   color: '#7c3aed' },
-                    ].map(({ label, value, color }) => (
-                      <div className="col-6" key={label}>
-                        <div style={{ background: 'var(--bg)', borderRadius: 8, padding: '.75rem', textAlign: 'center' }}>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 800, color }}>{value}</div>
-                          <div style={{ fontSize: '.75rem', color: '#64748b' }}>{label}</div>
+              {/* Sidebar Summaries */}
+              <div className="space-y-8">
+                {/* Fleet Summary */}
+                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
+                  <div className="p-8">
+                    <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-3 mb-8">
+                      <BusIcon size={24} className="text-primary-600" /> Fleet Summary
+                    </h3>
+                    
+                    {transports.length === 0 ? (
+                      <div className="text-center py-8 space-y-4">
+                        <div className="w-20 h-20 bg-primary-50 text-primary-400 rounded-full flex items-center justify-center mx-auto">
+                          <BusIcon size={40} />
                         </div>
+                        <p className="text-sm font-bold text-slate-400">No managed transports yet.</p>
+                        <Link to="/authority/manage" className="inline-block px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-xl transition-all text-sm">Add Fleet</Link>
                       </div>
-                    ))}
-                  </div>
-                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: '.75rem' }}>
-                    {transports.slice(0, 5).map((t) => (
-                      <div
-                        key={t._id}
-                        className="d-flex align-items-center justify-content-between py-2"
-                        style={{ borderBottom: '1px solid var(--border)', gap: '.5rem' }}
-                      >
-                        <div>
-                          <span className="transport-number" style={{ fontSize: '.72rem' }}>{t.transportNumber}</span>
-                          <div style={{ fontSize: '.82rem', fontWeight: 600, marginTop: '.15rem', color: 'var(--text)' }}>
-                            {t.name || '—'}
-                          </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                          {[
+                            { label: 'Total', value: transports.length, color: 'text-primary-600', bg: 'bg-primary-50', border: 'border-primary-100' },
+                            { label: 'Active', value: transports.filter(t => t.isActive !== false).length, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+                          ].map(stat => (
+                            <div key={stat.label} className={`${stat.bg} ${stat.border} border rounded-3xl p-4 text-center`}>
+                              <div className={`text-2xl font-black ${stat.color}`}>{stat.value}</div>
+                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{stat.label}</div>
+                            </div>
+                          ))}
                         </div>
-                        <span className={`meta-chip ${t.type}`} style={{ fontSize: '.72rem', flexShrink: 0 }}>
-                          {t.type === 'bus' ? <BusIcon size={14}/> : <TrainIcon size={14}/>}
-                        </span>
-                      </div>
-                    ))}
-                    {transports.length > 5 && (
-                      <div className="text-center pt-2">
-                        <Link to="/authority/manage" style={{ fontSize: '.82rem', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>
-                          View all {transports.length} →
-                        </Link>
+                        
+                        <div className="space-y-3">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Recent Transport</p>
+                          {transports.slice(0, 3).map((t) => (
+                            <div key={t._id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between">
+                              <div>
+                                <p className="text-xs font-black text-slate-800">{t.transportNumber}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase">{t.type}</p>
+                              </div>
+                              <div className={`p-2 rounded-xl bg-white border border-slate-100 ${t.type === 'bus' ? 'text-blue-500' : 'text-purple-500'}`}>
+                                {t.type === 'bus' ? <BusIcon size={16}/> : <TrainIcon size={16}/>}
+                              </div>
+                            </div>
+                          ))}
+                          <Link to="/authority/manage" className="block text-center text-xs font-black text-primary-600 uppercase tracking-widest hover:text-primary-700 pt-2 transition-colors">View All Fleet →</Link>
+                        </div>
                       </div>
                     )}
                   </div>
-                </>
-              )}
-            </div>
+                </div>
 
-            {/* Staff Summary */}
-            <div className="detail-section">
-              <div className="detail-section-title d-flex align-items-center"><UsersIcon size={20} className="me-2"/> Staff Overview</div>
-              <div className="info-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                <div className="info-item">
-                  <label>Drivers</label>
-                  <span style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '1.2rem' }}>
-                    {(profile?.managedDrivers || []).length}
-                  </span>
-                </div>
-                <div className="info-item">
-                  <label>Conductors</label>
-                  <span style={{ color: '#7c3aed', fontWeight: 800, fontSize: '1.2rem' }}>
-                    {(profile?.managedConductors || []).length}
-                  </span>
+                {/* Staff Overview */}
+                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 p-8">
+                  <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-3 mb-8">
+                    <UsersIcon size={24} className="text-primary-600" /> Staff Overview
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    {[
+                      { label: 'Drivers', count: (profile?.managedDrivers || []).length, color: 'text-blue-600', bg: 'bg-blue-50' },
+                      { label: 'Conductors', count: (profile?.managedConductors || []).length, color: 'text-purple-600', bg: 'bg-purple-50' },
+                    ].map(staff => (
+                      <div key={staff.label} className={`${staff.bg} rounded-3xl p-5 flex items-center justify-between`}>
+                        <span className="font-black text-slate-700">{staff.label}</span>
+                        <span className={`text-2xl font-black ${staff.color}`}>{staff.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <Link to="/authority/manage" className="mt-8 w-full inline-flex justify-center items-center px-6 py-4 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-2xl transition-all shadow-lg shadow-slate-200">
+                    Assign Staff →
+                  </Link>
                 </div>
               </div>
-              <div className="mt-3">
-                <Link to="/authority/manage" className="btn btn-outline-primary btn-sm w-100">
-                  Assign Staff via Transport →
-                </Link>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-slate-900 p-6 text-white flex justify-between items-center">
+              <h5 className="text-xl font-black tracking-tight flex items-center gap-2"><KeyIcon size={20}/> Security Setup</h5>
+              <button type="button" className="p-2 hover:bg-white/10 rounded-full transition-colors" onClick={() => setShowPasswordModal(false)}>
+                <PlusIcon size={20} className="rotate-45" />
+              </button>
+            </div>
+            
+            <div className="p-8 bg-slate-50/50 space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700"
+                  placeholder="Enter new password…"
+                  value={form.password}
+                  onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                  autoComplete="new-password"
+                />
               </div>
+            </div>
+            
+            <div className="p-8 bg-white border-t border-slate-100 flex gap-4">
+              <button type="button" className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-colors flex-1" onClick={() => setShowPasswordModal(false)}>Cancel</button>
+              <button
+                type="button"
+                className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-2xl shadow-lg shadow-primary-200 transition-all active:scale-95 flex-[2] flex items-center justify-center gap-2"
+                onClick={handleSave}
+                disabled={saving || !form.password}
+              >
+                {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Update Security'}
+              </button>
             </div>
           </div>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 };
 

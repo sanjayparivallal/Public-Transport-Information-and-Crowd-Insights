@@ -3,15 +3,13 @@ import {
 } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
 import './index.css';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 
 import Login            from './pages/auth/Login';
-import LoginAuthority   from './pages/auth/LoginAuthority';
 import SignupCommuter   from './pages/auth/SignupCommuter';
 import SignupAuthority  from './pages/auth/SignupAuthority';
 import CommuterDashboard  from './pages/dashboard/CommuterDashboard';
@@ -24,7 +22,7 @@ import AuthorityProfile from './pages/profile/AuthorityProfile';
 import ManageTransport  from './pages/authority/ManageTransport';
 
 /* ── Auth pages (no Navbar) ─────────────────────────────── */
-const AUTH_ROUTES = ['/login', '/login/authority', '/signup/commuter', '/signup/authority'];
+const AUTH_ROUTES = ['/login', '/signup/commuter', '/signup/authority'];
 
 /* ── Protected Route wrapper ────────────────────────────── */
 const PrivateRoute = () => {
@@ -70,7 +68,6 @@ const App = () => {
       <Routes>
         {/* ── Public routes (no auth needed) ── */}
         <Route path="/login"            element={<Login />} />
-        <Route path="/login/authority"  element={<LoginAuthority />} />
         <Route path="/signup/commuter"  element={<SignupCommuter />} />
         <Route path="/signup/authority" element={<SignupAuthority />} />
 

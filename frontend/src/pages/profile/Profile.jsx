@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getProfile, updateProfile } from '../../api/userApi';
 import { useAuth } from '../../context/AuthContext';
-import { UserIcon, CheckCircleIcon, AlertIcon, EditIcon, LogOutIcon } from '../../components/icons';
+import { UserIcon, CheckCircleIcon, AlertIcon, EditIcon, LogOutIcon, KeyIcon, PlusIcon, SaveIcon } from '../../components/icons';
 import ProfileViewInfo from './ProfileViewInfo';
 import ProfileEditForm from './ProfileEditForm';
 
@@ -10,35 +10,36 @@ const Profile = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [profile, setProfile]   = useState(null);
-  const [loading, setLoading]   = useState(true);
-  const [editing, setEditing]   = useState(false);
+  const [profile, setProfile]               = useState(null);
+  const [loading, setLoading]               = useState(true);
+  const [editing, setEditing]               = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [form, setForm]         = useState({ 
-    name: '', phone: '', password: '', 
-    contactEmail: '', contactPhone: '', officeAddress: '', coveredDistricts: '' 
+
+  const [form, setForm] = useState({
+    name: '', phone: '', contactEmail: '', contactPhone: '',
+    officeAddress: '', coveredDistricts: '',
   });
-  const [saving, setSaving]     = useState(false);
-  const [msg, setMsg]           = useState('');
-  const [error, setError]       = useState('');
+  const [pwForm, setPwForm]   = useState({ currentPassword: '', newPassword: '' });
+  const [saving, setSaving]   = useState(false);
+  const [msg, setMsg]         = useState('');
+  const [error, setError]     = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await getProfile();
-        const raw = res.data?.data || res.data;
+        const res  = await getProfile();
+        const raw  = res.data?.data || res.data;
         const data = raw?.user || raw?.authorityProfile || raw;
         setProfile(data);
-        setForm({ 
-          name: data?.name || '', 
-          phone: data?.phone || '', 
-          password: '',
-          contactEmail: data?.contactEmail || '',
-          contactPhone: data?.contactPhone || '',
-          officeAddress: data?.officeAddress || '',
-          coveredDistricts: data?.coveredDistricts?.join(', ') || ''
+        setForm({
+          name:             data?.name            || '',
+          phone:            data?.phone           || '',
+          contactEmail:     data?.contactEmail    || '',
+          contactPhone:     data?.contactPhone    || '',
+          officeAddress:    data?.officeAddress   || '',
+          coveredDistricts: data?.coveredDistricts?.join(', ') || '',
         });
-      } catch (err) {
+      } catch {
         setError('Failed to load profile.');
       } finally { setLoading(false); }
     };
@@ -46,78 +47,125 @@ const Profile = () => {
   }, []);
 
   const handleSave = async () => {
-    setSaving(true);
-    setMsg(''); setError('');
+    setSaving(true); setMsg(''); setError('');
     try {
       const payload = {};
-      if (form.name.trim())     payload.name     = form.name.trim();
-      if (form.phone.trim())    payload.phone    = form.phone.trim();
-      if (form.password.trim() && showPasswordModal) payload.password = form.password.trim();
-      
-      if (form.contactEmail?.trim()) payload.contactEmail = form.contactEmail.trim();
-      if (form.contactPhone?.trim()) payload.contactPhone = form.contactPhone.trim();
-      if (form.officeAddress?.trim()) payload.officeAddress = form.officeAddress.trim();
+      if (form.name.trim())             payload.name = form.name.trim();
+      if (form.phone.trim())            payload.phone = form.phone.trim();
+      if (form.contactEmail?.trim())    payload.contactEmail = form.contactEmail.trim();
+      if (form.contactPhone?.trim())    payload.contactPhone = form.contactPhone.trim();
+      if (form.officeAddress?.trim())   payload.officeAddress = form.officeAddress.trim();
       if (form.coveredDistricts?.trim()) {
         payload.coveredDistricts = form.coveredDistricts.split(',').map(d => d.trim()).filter(Boolean);
       }
-      
       await updateProfile(payload);
-      setMsg(showPasswordModal ? 'Password updated successfully!' : 'Profile updated successfully!');
-      
+      setMsg('Profile updated successfully!');
       setEditing(false);
-      setShowPasswordModal(false);
-      setForm(prev => ({ ...prev, password: '' }));
     } catch (err) {
       setError(err.message || 'Update failed.');
     } finally { setSaving(false); }
   };
 
+  const handleChangePassword = async () => {
+    if (!pwForm.currentPassword.trim()) { setError('Current password is required.'); return; }
+    if (!pwForm.newPassword.trim())     { setError('New password is required.'); return; }
+    if (pwForm.newPassword.length < 6)  { setError('New password must be at least 6 characters.'); return; }
+    setSaving(true); setMsg(''); setError('');
+    try {
+      await updateProfile({ currentPassword: pwForm.currentPassword, password: pwForm.newPassword });
+      setMsg('Password changed successfully!');
+      setShowPasswordModal(false);
+      setPwForm({ currentPassword: '', newPassword: '' });
+    } catch (err) {
+      setError(err.message || 'Password change failed.');
+    } finally { setSaving(false); }
+  };
+
   if (!user) {
-    return <div className="container py-5 text-center"><Link to="/login">Please login</Link></div>;
+    return (
+      <div className="page-container text-center py-20">
+        <Link to="/login" className="text-blue-600 font-semibold">Please login to view your profile</Link>
+      </div>
+    );
   }
 
   const assignedTransportLabel = profile?.assignedTransport
     ? (typeof profile.assignedTransport === 'object'
-      ? `${profile.assignedTransport.transportNumber || '—'}${profile.assignedTransport.name ? ` - ${profile.assignedTransport.name}` : ''}`
+      ? `${profile.assignedTransport.transportNumber || '—'}${profile.assignedTransport.name ? ` – ${profile.assignedTransport.name}` : ''}`
       : String(profile.assignedTransport))
     : null;
 
+  const initials = (profile?.name || user.email || 'U').charAt(0).toUpperCase();
+
   return (
-    <>
+    <div className="min-h-screen bg-slate-50">
+
+      {/* ── Page Header ── */}
       <div className="page-header">
-        <div className="container">
-          <h1 className="d-flex align-items-center"><UserIcon size={32} className="me-2"/> My Profile</h1>
-          <p>View and update your account information</p>
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-bold">
+              {initials}
+            </div>
+            <div>
+              <h1>My Profile</h1>
+              <p className="mt-0.5 capitalize">{user.role} account</p>
+            </div>
+          </div>
+          {!editing && !loading && (
+            <button
+              className="btn-secondary"
+              onClick={() => { setEditing(true); setMsg(''); setError(''); }}
+            >
+              <EditIcon size={15} /> Edit Profile
+            </button>
+          )}
         </div>
       </div>
-      <div className="container pb-5">
-        <div className="row justify-content-center">
-          <div className="col-lg-7">
-            {msg   && <div className="alert-custom alert-success mb-3 d-flex align-items-center"><CheckCircleIcon size={18} className="me-2"/> {msg}</div>}
-            {error && <div className="alert-custom alert-error   mb-3 d-flex align-items-center"><AlertIcon size={18} className="me-2"/> {error}</div>}
 
-            {loading ? (
-              <div className="loading-state"><div className="spinner-large" /></div>
-            ) : (
-              <div className="detail-section">
-                <div className="detail-section-title d-flex justify-content-between align-items-center">
-                  <span>Account Information</span>
-                  {!editing && (
-                    <button className="btn btn-sm btn-outline-primary d-flex align-items-center" onClick={() => setEditing(true)}>
-                      <EditIcon size={14} className="me-1"/> Edit
+      <div className="page-container max-w-5xl mx-auto">
+
+        {/* Notifications */}
+        {msg && (
+          <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm mb-6">
+            <CheckCircleIcon size={16}/> {msg}
+          </div>
+        )}
+        {error && (
+          <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mb-6">
+            <AlertIcon size={16}/> {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex flex-col items-center py-24 gap-4">
+            <span className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <p className="text-sm text-slate-400">Loading profile…</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            {/* ── Main card ── */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="card card-body">
+                <div className="flex items-center justify-between mb-6">
+                  <h2>Account Information</h2>
+                  {editing && (
+                    <button className="text-sm text-slate-400 hover:text-red-500 transition-colors" onClick={() => setEditing(false)}>
+                      Cancel
                     </button>
                   )}
                 </div>
 
                 {!editing ? (
-                  <ProfileViewInfo 
-                    user={user} 
-                    profile={profile} 
-                    assignedTransportLabel={assignedTransportLabel} 
-                    onChangePassword={() => { setForm(p => ({ ...p, password: '' })); setShowPasswordModal(true); setMsg(''); setError(''); }} 
+                  <ProfileViewInfo
+                    user={user}
+                    profile={profile}
+                    assignedTransportLabel={assignedTransportLabel}
+                    onChangePassword={() => { setPwForm({ currentPassword: '', newPassword: '' }); setShowPasswordModal(true); setMsg(''); setError(''); }}
                   />
                 ) : (
-                  <ProfileEditForm 
+                  <ProfileEditForm
                     user={user}
                     form={form}
                     setForm={setForm}
@@ -127,54 +175,137 @@ const Profile = () => {
                   />
                 )}
               </div>
-            )}
 
-            {/* Password Change Modal */}
-            {showPasswordModal && (
-              <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                <div className="modal-dialog modal-dialog-centered">
-                  <div className="modal-content">
-                    <div className="modal-header">
-                      <h5 className="modal-title">Change Password</h5>
-                      <button type="button" className="btn-close" onClick={() => setShowPasswordModal(false)}></button>
-                    </div>
-                    <div className="modal-body">
-                      <div className="mb-3">
-                        <label className="form-label">New Password</label>
-                        <input
-                          type="password"
-                          className="form-control"
-                          value={form.password}
-                          onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-                          placeholder="Enter new password…"
-                          autoComplete="new-password"
-                        />
-                      </div>
-                    </div>
-                    <div className="modal-footer d-flex">
-                      <button type="button" className="btn btn-outline-secondary flex-fill" onClick={() => setShowPasswordModal(false)}>Cancel</button>
-                      <button type="button" className="btn btn-warning flex-fill" onClick={handleSave} disabled={saving || !form.password}>
-                        {saving ? 'Updating…' : 'Update Password'}
-                      </button>
-                    </div>
+              {/* Danger zone */}
+              <div className="card card-body border-red-200">
+                <h3 className="text-red-600 flex items-center gap-2 mb-4">
+                  <AlertIcon size={16} /> Danger Zone
+                </h3>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-red-50 rounded-lg border border-red-100">
+                  <div>
+                    <p className="font-semibold text-slate-800 text-sm">Sign out of your account</p>
+                    <p className="text-xs text-slate-500 mt-0.5">You will be redirected to the login page.</p>
                   </div>
+                  <button
+                    className="btn-danger shrink-0"
+                    onClick={() => { logout(); navigate('/login'); }}
+                  >
+                    <LogOutIcon size={15}/> Logout
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
 
-            <div className="detail-section mt-3">
-              <div className="detail-section-title text-danger d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Account Actions</div>
+            {/* ── Sidebar ── */}
+            <div className="space-y-4">
+              <div className="card card-body text-center">
+                <div className="w-20 h-20 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-3xl font-bold mx-auto mb-4">
+                  {initials}
+                </div>
+                <h3>{profile?.name || 'User'}</h3>
+                <span className={`badge mt-1 capitalize ${
+                  user.role === 'authority'  ? 'badge-amber'  :
+                  user.role === 'driver'     ? 'badge-blue'   :
+                  user.role === 'conductor'  ? 'badge-purple' :
+                  'badge-green'
+                }`}>{user.role}</span>
+
+                <div className="mt-5 pt-5 border-t border-slate-100 space-y-3 text-left">
+                  <div>
+                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Status</p>
+                    <p className="text-sm font-semibold text-green-600 flex items-center gap-1 mt-0.5">
+                      <CheckCircleIcon size={14}/> Active
+                    </p>
+                  </div>
+                  {profile?.createdAt && (
+                    <div>
+                      <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Member Since</p>
+                      <p className="text-sm font-semibold text-slate-700 mt-0.5">
+                        {new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  className="btn-secondary w-full mt-5 justify-center"
+                  onClick={() => { setPwForm({ currentPassword: '', newPassword: '' }); setShowPasswordModal(true); setMsg(''); setError(''); }}
+                >
+                  <KeyIcon size={15}/> Change Password
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Change Password Modal ── */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl border border-slate-200">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="flex items-center gap-2">
+                <KeyIcon size={18} className="text-blue-600" /> Change Password
+              </h3>
               <button
-                className="btn btn-outline-danger btn-sm d-flex align-items-center"
-                onClick={() => { logout(); navigate('/login'); }}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={() => setShowPasswordModal(false)}
               >
-                <LogOutIcon size={14} className="me-2"/> Logout
+                <PlusIcon size={18} className="rotate-45" />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="p-6 space-y-4">
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2.5 flex items-center gap-2">
+                  <AlertIcon size={14}/> {error}
+                </div>
+              )}
+              <div>
+                <label className="label">Current Password</label>
+                <input
+                  type="password"
+                  className="input"
+                  placeholder="Enter current password"
+                  value={pwForm.currentPassword}
+                  onChange={e => setPwForm(p => ({ ...p, currentPassword: e.target.value }))}
+                  autoComplete="current-password"
+                />
+              </div>
+              <div>
+                <label className="label">New Password</label>
+                <input
+                  type="password"
+                  className="input"
+                  placeholder="Min. 6 characters"
+                  value={pwForm.newPassword}
+                  onChange={e => setPwForm(p => ({ ...p, newPassword: e.target.value }))}
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+
+            {/* Modal footer */}
+            <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
+              <button className="btn-secondary flex-1 justify-center" onClick={() => setShowPasswordModal(false)}>
+                Cancel
+              </button>
+              <button
+                className="btn-primary flex-1 justify-center"
+                onClick={handleChangePassword}
+                disabled={saving || !pwForm.currentPassword || !pwForm.newPassword}
+              >
+                {saving
+                  ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  : <><SaveIcon size={15}/> Update Password</>}
               </button>
             </div>
           </div>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 };
 

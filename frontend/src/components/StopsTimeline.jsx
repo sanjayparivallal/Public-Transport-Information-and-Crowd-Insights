@@ -1,53 +1,68 @@
-import { LocationIcon } from './icons';
+import { LocationIcon, ClockIcon } from './icons';
 
 const StopsTimeline = ({ stops = [], currentStop }) => {
   if (!stops.length) {
     return (
-      <div className="text-muted" style={{ fontSize: '.88rem' }}>
-        No stops information available.
+      <div className="flex flex-col items-center justify-center p-12 bg-slate-50/50 rounded-[2.5rem] border border-dashed border-slate-200">
+        <div className="w-16 h-16 bg-white text-slate-300 rounded-3xl flex items-center justify-center mb-4 shadow-sm">
+           <LocationIcon size={32} />
+        </div>
+        <p className="text-slate-400 text-xs font-black uppercase tracking-widest">No stop markers defined</p>
       </div>
     );
   }
 
   return (
-    <div className="stops-timeline">
+    <div className="relative pl-7 space-y-4 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100 before:rounded-full">
       {stops.map((stop, idx) => {
         const isFirst    = idx === 0;
         const isLast     = idx === stops.length - 1;
         const isCurrent  = currentStop && stop.stopName === currentStop;
-
-        let dotClass = '';
-        if (isFirst)   dotClass = 'origin';
-        if (isLast)    dotClass = 'destination';
+        const stopTime   = stop.scheduledDeparture || stop.scheduledArrival || null;
 
         return (
           <div
             key={stop.stopOrder || idx}
-            className="stop-item"
-            style={isCurrent ? { background: '#eff6ff', borderRadius: 8, margin: '0 -8px' } : {}}
+            className={`group relative p-4 rounded-2xl transition-all duration-300 border ${isCurrent ? 'bg-primary-50/40 border-primary-200 shadow-sm shadow-primary-100/20' : 'bg-white border-slate-100 hover:shadow-sm'}`}
           >
-            <span className={`stop-dot ${dotClass}`} />
-            <div>
-              <div className="stop-name d-flex align-items-center gap-2">
-                {stop.stopName}
-                {isCurrent && (
-                  <span
-                    className="badge"
-                    style={{ background: '#2563eb', color: 'white', fontSize: '.68rem' }}
-                  >
-                    <LocationIcon size={12} className="me-1"/> Now here
-                  </span>
-                )}
-                {isFirst   && <span style={{ fontSize: '.75rem', color: '#10b981', fontWeight: 700 }}>Origin</span>}
-                {isLast    && <span style={{ fontSize: '.75rem', color: '#ef4444', fontWeight: 700 }}>Destination</span>}
+            {/* Timeline Indicator */}
+            <div 
+              className={`absolute -left-5.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 rounded-full border-2 bg-white z-10 transition-all duration-300 shadow-sm flex items-center justify-center ${isCurrent ? 'scale-110 border-primary-500 ring-2 ring-primary-50' : isFirst ? 'border-emerald-500' : isLast ? 'border-rose-500' : 'border-slate-200 group-hover:border-primary-400'}`} 
+            >
+               <div className={`w-1.5 h-1.5 rounded-full ${isCurrent ? 'bg-primary-500' : isFirst ? 'bg-emerald-500' : isLast ? 'bg-rose-500' : 'bg-slate-200 group-hover:bg-primary-400'}`}></div>
+            </div>
+            
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="min-w-0 space-y-2">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h6 className={`font-black text-xl tracking-tight ${isCurrent ? 'text-primary-900' : 'text-slate-800'}`}>
+                    {stop.stopName}
+                  </h6>
+                  {isCurrent && (
+                    <span className="flex items-center px-2.5 py-0.5 rounded-full bg-primary-600 text-white text-[8px] font-black uppercase tracking-widest shadow-sm">
+                      Current
+                    </span>
+                  )}
+                  {isFirst && <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100 uppercase tracking-widest shadow-sm">Platform Origin</span>}
+                  {isLast  && <span className="text-[8px] font-black text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-100 uppercase tracking-widest shadow-sm">Terminal Stop</span>}
+                </div>
+                
+                <div className="flex flex-wrap gap-3 text-xs">
+                  {stop.platformNumber && (
+                    <div className="flex flex-col">
+                       <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Berth</span>
+                       <span className="font-black text-primary-600">Platform {stop.platformNumber}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="stop-time">
-                {stop.scheduledArrival && `Arr: ${stop.scheduledArrival}`}
-                {stop.scheduledArrival && stop.scheduledDeparture && ' · '}
-                {stop.scheduledDeparture && `Dep: ${stop.scheduledDeparture}`}
-                {stop.distanceFromOrigin != null && ` · ${stop.distanceFromOrigin} km`}
-                {stop.platformNumber && ` · Platform ${stop.platformNumber}`}
-              </div>
+
+              {stopTime && (
+                <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl shadow-inner group-hover:bg-white transition-colors duration-300 group-hover:shadow-sm">
+                  <ClockIcon size={12} className="text-primary-500" />
+                  <span className="text-sm font-black text-slate-800 tracking-tight">{stopTime}</span>
+                </div>
+              )}
             </div>
           </div>
         );

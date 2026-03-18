@@ -42,7 +42,7 @@ class ErrorBoundary extends React.Component {
             <RefreshIcon size={18} className="me-2"/> Reload Page
           </button>
           
-          {process.env.NODE_ENV === 'development' && this.state.error && (
+          {import.meta.env.MODE === 'development' && this.state.error && (
             <details style={{ whiteSpace: 'pre-wrap', marginTop: '2rem', textAlign: 'left', background: '#f1f5f9', padding: '1rem', borderRadius: 8 }}>
               {this.state.error.toString()}
             </details>

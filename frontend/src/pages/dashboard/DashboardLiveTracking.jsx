@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { updateLivePosition, updateCrowdLevel } from '../../api/crowdApi';
-import { LocationIcon, ClockIcon, UserIcon, CheckCircleIcon } from '../../components/icons';
+import { updateLivePosition } from '../../api/crowdApi';
+import { LocationIcon, ClockIcon, UserIcon, CheckCircleIcon, AlertIcon } from '../../components/icons';
 
 const DashboardLiveTracking = ({ transport }) => {
   const [form, setForm] = useState({
@@ -27,13 +27,12 @@ const DashboardLiveTracking = ({ transport }) => {
 
     const routeId = transport.routes?.[0]?._id;
     if (!routeId) {
-      setMsg('No route assigned to this transport to update live tracking.');
+      setMsg('No route assigned.');
       setLoading(false);
       return;
     }
 
     try {
-      // 1. Update Live Position
       await updateLivePosition({
         transportId: transport._id,
         routeId,
@@ -45,19 +44,10 @@ const DashboardLiveTracking = ({ transport }) => {
         availableSeats: form.availableSeats ? Number(form.availableSeats) : null,
       });
 
-      // 2. Update Official Crowd Level
-      await updateCrowdLevel({
-        transportId: transport._id,
-        routeId,
-        tripId: form.tripId,
-        crowdLevel: form.crowdLevel,
-        currentStop: form.currentStop
-      });
-
       setMsg('Live status updated successfully!');
       setTimeout(() => setMsg(''), 3000);
     } catch (err) {
-      setMsg(err.message || 'Failed to update live status.');
+      setMsg(err.message || 'Update failed.');
     } finally {
       setLoading(false);
     }
@@ -66,53 +56,117 @@ const DashboardLiveTracking = ({ transport }) => {
   if (!transport) return null;
 
   return (
-    <div className="card-custom p-4 mt-4">
-      <h3 className="card-title-custom d-flex align-items-center mb-3">
-        <LocationIcon size={20} className="me-2 text-primary" /> Live Duty Updates
-      </h3>
-      <form onSubmit={handleSubmit}>
-        <div className="row g-3">
-          <div className="col-md-6">
-            <label className="form-label">Current Stop</label>
-            <input type="text" className="form-control" name="currentStop" value={form.currentStop} onChange={handleChange} placeholder="e.g. Central Station" />
+    <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8">
+      <div className="flex items-center gap-3 mb-10 pb-6 border-b border-slate-50">
+        <div className="p-2.5 bg-primary-50 rounded-xl text-primary-600 shadow-sm shadow-primary-100">
+          <LocationIcon size={24} />
+        </div>
+        <div>
+          <h3 className="text-xl font-black text-slate-800 m-0">Live Duty Updates</h3>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">Report real-time position and status</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Stop</label>
+            <input 
+              type="text" 
+              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700" 
+              name="currentStop" 
+              value={form.currentStop} 
+              onChange={handleChange} 
+              placeholder="e.g. Central Station" 
+            />
           </div>
-          <div className="col-md-6">
-            <label className="form-label">Next Stop</label>
-            <input type="text" className="form-control" name="nextStop" value={form.nextStop} onChange={handleChange} placeholder="e.g. North Square" />
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Next Stop</label>
+            <input 
+              type="text" 
+              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700" 
+              name="nextStop" 
+              value={form.nextStop} 
+              onChange={handleChange} 
+              placeholder="e.g. North Square" 
+            />
           </div>
-          
-          <div className="col-md-3">
-            <label className="form-label">Delay (Mins)</label>
-            <input type="number" className="form-control" name="delayMinutes" min="0" value={form.delayMinutes} onChange={handleChange} />
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Delay (Min)</label>
+            <input 
+              type="number" 
+              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all font-bold text-slate-700" 
+              name="delayMinutes" 
+              min="0" 
+              value={form.delayMinutes} 
+              onChange={handleChange} 
+            />
           </div>
-          <div className="col-md-3">
-            <label className="form-label">Status</label>
-            <select className="form-select" name="status" value={form.status} onChange={handleChange}>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
+            <select 
+              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-no-repeat" 
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2394a3b8\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundSize: '1.25rem' }}
+              name="status" 
+              value={form.status} 
+              onChange={handleChange}
+            >
               <option value="on-time">On Time</option>
               <option value="delayed">Delayed</option>
               <option value="cancelled">Cancelled</option>
               <option value="completed">Completed</option>
             </select>
           </div>
-          <div className="col-md-3">
-            <label className="form-label">Available Seats</label>
-            <input type="number" className="form-control" name="availableSeats" min="0" value={form.availableSeats} onChange={handleChange} placeholder="e.g. 15" />
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Seats Free</label>
+            <input 
+              type="number" 
+              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all font-bold text-slate-700" 
+              name="availableSeats" 
+              min="0" 
+              value={form.availableSeats} 
+              onChange={handleChange} 
+              placeholder="0" 
+            />
           </div>
-          <div className="col-md-3">
-            <label className="form-label">Official Crowd</label>
-            <select className="form-select" name="crowdLevel" value={form.crowdLevel} onChange={handleChange}>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Official Crowd</label>
+            <select 
+              className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-no-repeat" 
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2394a3b8\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundSize: '1.25rem' }}
+              name="crowdLevel" 
+              value={form.crowdLevel} 
+              onChange={handleChange}
+            >
               <option value="empty">Empty</option>
               <option value="average">Average</option>
               <option value="crowded">Crowded</option>
             </select>
           </div>
         </div>
-        <div className="mt-3 d-flex align-items-center justify-content-between">
-          <div style={{ fontSize: '.85rem', color: msg.includes('success') ? 'var(--success)' : '#ef4444' }}>
-            {msg && <><CheckCircleIcon size={16} className="me-1"/> {msg}</>}
+
+        <div className="pt-8 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+             {msg && (
+               <div className={`px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-2 animate-in fade-in slide-in-from-left-2 ${msg.includes('success') ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                 {msg.includes('success') ? <CheckCircleIcon size={16} /> : <AlertIcon size={16} />}
+                 {msg}
+               </div>
+             )}
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Updating...' : 'Update Live Status'}
+          <button 
+            type="submit" 
+            className="w-full sm:w-auto px-10 py-4 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-2xl shadow-xl shadow-primary-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <><ClockIcon size={20} /> Broadcast Update</>
+            )}
           </button>
         </div>
       </form>

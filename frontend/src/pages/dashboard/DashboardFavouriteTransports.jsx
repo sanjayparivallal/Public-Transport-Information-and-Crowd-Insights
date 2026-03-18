@@ -1,69 +1,70 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { StarIcon, SearchIcon, BusIcon, TrainIcon, BuildingIcon } from '../../components/icons';
+import { StarIcon, SearchIcon, BusIcon, TrainIcon } from '../../components/icons';
 import CrowdBadge from '../../components/CrowdBadge';
 
 const DashboardFavouriteTransports = ({ favLoading, favTransports, crowdMap }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="detail-section">
-      <div className="detail-section-title d-flex justify-content-between align-items-center">
-        <span className="d-flex align-items-center"><StarIcon size={20} className="me-2" filled/> Favourite Transports</span>
-        <Link to="/search" className="btn btn-sm btn-outline-primary">+ Add Favourite</Link>
+    <section>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="flex items-center gap-2">
+          <StarIcon size={18} className="text-amber-500" filled />
+          Favourite Transports
+        </h2>
+        <Link to="/search" className="btn-secondary text-sm">
+          <SearchIcon size={15} />
+          Add Favourite
+        </Link>
       </div>
 
       {favLoading ? (
-        <div className="loading-state" style={{ padding: '1.5rem' }}>
-          <div className="spinner-large" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="card card-body h-40 animate-pulse bg-slate-100" />
+          ))}
         </div>
       ) : favTransports.length === 0 ? (
-        <div className="empty-state" style={{ padding: '1.5rem' }}>
-          <div className="empty-state-icon text-warning"><StarIcon size={48} filled /></div>
-          <h5>No favourites yet</h5>
-          <p style={{ color: '#64748b', fontSize: '.9rem' }}>
-            Search for a route and click the <StarIcon size={16} className="mx-1" style={{verticalAlign: 'text-bottom'}} filled/> Favourite button to save it here.
-          </p>
-          <button className="btn btn-primary btn-sm mt-2 d-flex align-items-center justify-content-center mx-auto" onClick={() => navigate('/search')}>
-            <SearchIcon size={16} className="me-2"/> Search Routes
+        <div className="empty-state card card-body">
+          <StarIcon size={36} className="text-slate-300 mb-3" />
+          <p className="font-semibold text-slate-500">No favourites yet</p>
+          <p className="text-sm mt-1">Search routes and star the ones you use regularly.</p>
+          <button onClick={() => navigate('/search')} className="btn-secondary mt-4 text-sm">
+            <SearchIcon size={15} /> Search Routes
           </button>
         </div>
       ) : (
-        <div className="row g-3">
-          {favTransports.map((t) => (
-            <div className="col-md-6 col-lg-4" key={t._id}>
-              <div
-                className="transport-card"
-                onClick={() => navigate(`/transport/${t._id}`)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && navigate(`/transport/${t._id}`)}
-              >
-                <div className="d-flex align-items-start justify-content-between">
-                  <div>
-                    <span className="transport-number">{t.transportNumber}</span>
-                    <div className="transport-name mt-1">{t.name || '—'}</div>
-                  </div>
-                  <span className={`meta-chip ${t.type}`}>
-                    {t.type === 'bus' ? <BusIcon size={16} className="me-1"/> : <TrainIcon size={16} className="me-1"/>} {t.type}
-                  </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {favTransports.map(t => (
+            <div
+              key={t._id}
+              className="card card-body cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group"
+              onClick={() => navigate(`/transport/${t._id}`)}
+              role="button" tabIndex={0}
+              onKeyDown={e => e.key === 'Enter' && navigate(`/transport/${t._id}`)}
+            >
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="min-w-0">
+                  <span className="badge badge-blue mb-1.5 text-xs">{t.transportNumber}</span>
+                  <h4 className="font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                    {t.name || '—'}
+                  </h4>
+                  {t.operator && <p className="text-xs text-slate-400 mt-0.5">{t.operator}</p>}
                 </div>
-                <div className="d-flex align-items-center justify-content-between mt-3">
-                  <CrowdBadge level={crowdMap[t._id] || null} />
-                  <span className="text-primary fw-semibold" style={{ fontSize: '.84rem' }}>
-                    View →
-                  </span>
+                <div className={`p-2 rounded-lg shrink-0 ${t.type === 'bus' ? 'bg-blue-50 text-blue-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                  {t.type === 'bus' ? <BusIcon size={18} /> : <TrainIcon size={18} />}
                 </div>
-                {t.operator && (
-                  <div className="mt-2">
-                    <span className="meta-chip"><BuildingIcon size={14} className="me-1"/> {t.operator}</span>
-                  </div>
-                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
+                <CrowdBadge level={crowdMap[t._id] || null} />
+                <span className="text-xs text-blue-600 font-semibold group-hover:underline">View →</span>
               </div>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

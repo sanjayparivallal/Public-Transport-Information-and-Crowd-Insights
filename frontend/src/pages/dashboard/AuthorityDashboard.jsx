@@ -7,38 +7,50 @@ import {
   getAllIncidentsForAuthority,
 } from '../../api/adminApi';
 import { deleteIncident } from '../../api/incidentApi';
-import { BusIcon, TrainIcon, BuildingIcon, EditIcon, CheckCircleIcon, WrenchIcon, AlertIcon, ClockIcon, UsersIcon, ClipboardIcon, SearchIcon, UserIcon, ZapIcon, TrashIcon } from '../../components/icons';
+import {
+  BusIcon, TrainIcon, AlertIcon, ClockIcon, ClipboardIcon,
+  SearchIcon, WrenchIcon, TrashIcon, UserIcon, UsersIcon,
+} from '../../components/icons';
 
-/* ── Helpers ─────────────────────────────────────────────── */
-const severityColors = {
-  critical: { bg: '#fee2e2', color: '#991b1b' },
-  high:     { bg: '#ffedd5', color: '#9a3412' },
-  medium:   { bg: '#fef3c7', color: '#92400e' },
-  low:      { bg: '#dbeafe', color: '#1e40af' },
+/* ── Time-based greeting ── */
+const getGreeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
 };
 
+/* ── Severity badge ── */
 const SeverityBadge = ({ severity }) => {
-  const style = severityColors[severity] || { bg: '#f1f5f9', color: '#64748b' };
-  return (
-    <span className="severity-badge" style={{ background: style.bg, color: style.color }}>
-      {severity}
-    </span>
-  );
+  const cls = {
+    critical: 'badge-red',
+    high:     'badge-amber',
+    medium:   'badge-amber',
+    low:      'badge-blue',
+  };
+  return <span className={`badge ${cls[severity] || 'badge-gray'} uppercase`}>{severity}</span>;
 };
 
-const StatusBadge = ({ status }) => (
-  <span className={`status-badge ${status}`}>{status}</span>
-);
+/* ── Status badge ── */
+const StatusBadge = ({ status }) => {
+  const cls = {
+    open:         'badge-red',
+    acknowledged: 'badge-amber',
+    resolved:     'badge-green',
+  };
+  return <span className={`badge ${cls[status] || 'badge-gray'} uppercase`}>{status}</span>;
+};
 
-/* ── Page ────────────────────────────────────────────────── */
+/* ── Page ── */
 const AuthorityDashboard = () => {
   const { user } = useAuth();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
 
   const [profile,    setProfile]    = useState(null);
   const [transports, setTransports] = useState([]);
   const [incidents,  setIncidents]  = useState([]);
   const [loading,    setLoading]    = useState(true);
+  const [search,     setSearch]     = useState('');
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -48,7 +60,6 @@ const AuthorityDashboard = () => {
         getManagedTransports().catch(() => null),
         getAllIncidentsForAuthority({ limit: 100 }).catch(() => null),
       ]);
-
       if (profileRes) {
         const d = profileRes.data?.data;
         setProfile(d?.authorityProfile || d?.user || d);
@@ -61,273 +72,214 @@ const AuthorityDashboard = () => {
         const d = incidentsRes.data?.data;
         setIncidents(d?.incidents || (Array.isArray(d) ? d : []));
       }
-    } catch (_) {}
+    } catch { /* ignore */ }
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  const handleDeleteIncident = async (id) => {
+    if (!window.confirm('Delete this incident report?')) return;
+    try {
+      await deleteIncident(id);
+      setIncidents(p => p.filter(i => i._id !== id));
+    } catch (err) { alert(err.message || 'Failed to delete.'); }
+  };
+
   if (!user) {
     return (
-      <div className="container py-5 text-center">
-        <p>Please <Link to="/login">login</Link> to view your dashboard.</p>
+      <div className="page-container text-center py-20">
+        <p>Please <button onClick={() => navigate('/login/authority')} className="text-blue-600 font-semibold">sign in</button> as an authority.</p>
       </div>
     );
   }
 
-  const stats = {
-    total:    transports.length,
-    active:   transports.filter((t) => t.isActive !== false).length,
-    open:     incidents.filter((i)  => i.status === 'open').length,
-    critical: incidents.filter((i)  => i.severity === 'critical').length,
-  };
+  /* ── Computed stats ── */
+  const busCount   = transports.filter(t => t.type === 'bus').length;
+  const trainCount = transports.filter(t => t.type === 'train').length;
+  const statCards = [
+    { label: 'Total Transport', value: transports.length, icon: WrenchIcon,    color: 'text-blue-600',   bg: 'bg-blue-50'  },
+    { label: 'Bus Count',       value: busCount,          icon: BusIcon,        color: 'text-indigo-600', bg: 'bg-indigo-50'},
+    { label: 'Train Count',     value: trainCount,        icon: TrainIcon,      color: 'text-violet-600', bg: 'bg-violet-50'},
+    { label: 'Reports Count',   value: incidents.length,  icon: ClipboardIcon,  color: 'text-red-600',    bg: 'bg-red-50'   },
+  ];
+
+  const displayName = profile?.name || user.name || user.email?.split('@')[0] || 'Authority';
+  const filtered = transports.filter(t =>
+    !search || t.name?.toLowerCase().includes(search.toLowerCase()) ||
+    t.transportNumber?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const fmtTime = ts => ts ? new Date(ts).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 
   return (
-    <>
-      {/* Page Header */}
+    <div className="min-h-screen bg-slate-50">
+
+      {/* ── Page Header ── */}
       <div className="page-header">
-        <div className="container d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="d-flex align-items-center"><BuildingIcon size={32} className="me-2"/> Authority Dashboard</h1>
-            <p>Manage your transport fleet, monitor incidents, and track crowd levels</p>
+            <h1>
+              {getGreeting()}, <span className="text-blue-600">{displayName}</span>
+            </h1>
+            <p className="mt-1">{profile?.organizationName || 'Transport Authority Dashboard'}</p>
           </div>
-          <button className="btn btn-light fw-semibold d-flex align-items-center" onClick={() => navigate('/authority/manage')}>
-            <WrenchIcon size={18} className="me-2"/> Manage Transports
-          </button>
+          <Link to="/authority/manage" className="btn-primary shrink-0">
+            <WrenchIcon size={16} /> Manage Transport
+          </Link>
         </div>
       </div>
 
-      <div className="container pb-5">
-
+      <div className="page-container space-y-8">
         {loading ? (
-          <div className="loading-state"><div className="spinner-large" /></div>
+          <div className="flex flex-col items-center py-24 gap-4">
+            <span className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <p className="text-sm text-slate-400">Loading dashboard…</p>
+          </div>
         ) : (
           <>
-            {/* Stats */}
-            <div className="row g-3 mb-4">
-              {[
-                { label: 'Total Transports',  value: stats.total,    color: 'var(--primary)' },
-                { label: 'Active',            value: stats.active,   color: 'var(--success)' },
-                { label: 'Open Incidents',    value: stats.open,     color: 'var(--warning)' },
-                { label: 'Critical Alerts',   value: stats.critical, color: 'var(--danger)' },
-              ].map(({ label, value, color }) => (
-                <div className="col-sm-6 col-lg-3" key={label}>
-                  <div className="detail-section text-center py-4" style={{ marginBottom: 0 }}>
-                    <div style={{ fontSize: '2.2rem', fontWeight: 800, color }}>{value}</div>
-                    <div style={{ fontSize: '.82rem', color: '#64748b', marginTop: '.3rem' }}>{label}</div>
+            {/* ── Stats Row ── */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {statCards.map(({ label, value, icon: Icon, color, bg }) => (
+                <div key={label} className="card card-body flex items-center gap-4">
+                  <div className={`p-3 rounded-xl ${bg} shrink-0`}>
+                    <Icon size={22} className={color} />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">{value}</p>
+                    <p className="text-xs text-slate-400 font-medium">{label}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Authority Profile Summary */}
-            {profile && (
-              <div className="detail-section">
-                <div className="detail-section-title d-flex justify-content-between align-items-center">
-                  <span className="d-flex align-items-center"><BuildingIcon size={20} className="me-2"/> Authority Profile</span>
-                  <Link to="/profile" className="btn btn-sm btn-outline-primary d-flex align-items-center"><EditIcon size={14} className="me-1"/> Edit Profile</Link>
-                </div>
-                <div className="info-grid">
-                  <div className="info-item"><label>Name</label><span>{profile.name || user.name || '—'}</span></div>
-                  <div className="info-item"><label>Email</label><span>{profile.email || user.email || '—'}</span></div>
-                  <div className="info-item"><label>Organisation</label><span>{profile.organizationName || '—'}</span></div>
-                  <div className="info-item"><label>Authority Code</label><span>{profile.authorityCode || '—'}</span></div>
-                  <div className="info-item"><label>Region</label><span>{profile.region || '—'}</span></div>
-                  <div className="info-item">
-                    <label>Covered Districts</label>
-                    <span>{(profile.coveredDistricts || []).join(', ') || '—'}</span>
-                  </div>
-                  {profile.officeAddress && (
-                    <div className="info-item"><label>Office Address</label><span>{profile.officeAddress}</span></div>
-                  )}
-                  {profile.contactPhone && (
-                    <div className="info-item"><label>Contact Phone</label><span>{profile.contactPhone}</span></div>
-                  )}
+            {/* ── Fleet Table ── */}
+            <section>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <h2 className="flex items-center gap-2">
+                  <BusIcon size={18} className="text-blue-600" />
+                  Fleet Under Control
+                </h2>
+                <div className="relative sm:w-64">
+                  <SearchIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    className="input pl-9 text-sm"
+                    placeholder="Search transport…"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
                 </div>
               </div>
-            )}
 
-            {/* Main content row */}
-            <div className="row g-4">
-
-              {/* Managed Transports */}
-              <div className="col-lg-7">
-                <div className="detail-section h-100" style={{ marginBottom: 0 }}>
-                  <div className="detail-section-title d-flex justify-content-between align-items-center">
-                    <span className="d-flex align-items-center"><BusIcon size={20} className="me-2"/> Managed Transports</span>
-                    <button
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => navigate('/authority/manage')}
-                    >
-                      Manage All →
-                    </button>
+              {filtered.length === 0 ? (
+                <div className="empty-state card card-body">
+                  <BusIcon size={32} className="text-slate-300 mb-2" />
+                  <p className="font-semibold text-slate-500">No transports found</p>
+                </div>
+              ) : (
+                <div className="card overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-100 bg-slate-50 text-left">
+                          <th className="px-4 py-3 font-semibold text-slate-500">Route No.</th>
+                          <th className="px-4 py-3 font-semibold text-slate-500">Name</th>
+                          <th className="px-4 py-3 font-semibold text-slate-500">Type</th>
+                          <th className="px-4 py-3 font-semibold text-slate-500">Available Seats</th>
+                          <th className="px-4 py-3 font-semibold text-slate-500">Status</th>
+                          <th className="px-4 py-3 font-semibold text-slate-500">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filtered.map(t => (
+                          <tr key={t._id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-4 py-3">
+                              <span className="badge badge-blue">{t.transportNumber}</span>
+                            </td>
+                            <td className="px-4 py-3 font-medium text-slate-800">{t.name || '—'}</td>
+                            <td className="px-4 py-3">
+                              <span className={`badge flex items-center gap-1 w-fit ${t.type === 'bus' ? 'badge-blue' : 'badge-purple'}`}>
+                                {t.type === 'bus' ? <BusIcon size={11}/> : <TrainIcon size={11}/>}
+                                {t.type}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-slate-700">
+                              {t.livePosition?.availableSeats ?? t.totalSeats ?? '—'}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`badge ${t.isActive !== false ? 'badge-green' : 'badge-gray'}`}>
+                                {t.isActive !== false ? 'Active' : 'Paused'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <Link to={`/transport/${t._id}`} className="btn-ghost text-xs py-1 px-2 text-blue-600">
+                                View →
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
+                </div>
+              )}
+            </section>
 
-                  {transports.length === 0 ? (
-                    <div className="empty-state" style={{ padding: '1.5rem' }}>
-                      <div className="empty-state-icon" style={{ color: '#3b82f6' }}><BusIcon size={48} /></div>
-                      <p style={{ color: '#64748b', margin: 0 }}>No transports yet.</p>
+            {/* ── Incident Reports ── */}
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="flex items-center gap-2">
+                  <AlertIcon size={18} className="text-red-500" />
+                  Incident Reports
+                </h2>
+                <span className="badge badge-gray">{incidents.length} total</span>
+              </div>
+
+              {incidents.length === 0 ? (
+                <div className="empty-state card card-body">
+                  <ClipboardIcon size={32} className="text-slate-300 mb-2" />
+                  <p className="font-semibold text-slate-500">No incident reports</p>
+                </div>
+              ) : (
+                <div className="card divide-y divide-slate-100">
+                  {incidents.map(inc => (
+                    <div key={inc._id} className="flex items-start gap-4 px-5 py-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <SeverityBadge severity={inc.severity} />
+                          <StatusBadge status={inc.status} />
+                          {inc.incidentType && <span className="badge badge-gray">{inc.incidentType}</span>}
+                        </div>
+                        <p className="text-sm text-slate-700 truncate">{inc.description || 'No description'}</p>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                          <span className="flex items-center gap-1"><UsersIcon size={11}/>{inc.reportedBy?.name || inc.username || 'Unknown'}</span>
+                          <span className="flex items-center gap-1"><ClockIcon size={11}/>{fmtTime(inc.createdAt)}</span>
+                          {inc.transport?.name && (
+                            <span className="flex items-center gap-1">
+                              <BusIcon size={11}/>
+                              <Link to={`/transport/${inc.transport._id}`} className="hover:underline text-blue-600">
+                                {inc.transport.name}
+                              </Link>
+                            </span>
+                          )}
+                        </div>
+                      </div>
                       <button
-                        className="btn btn-primary btn-sm mt-3"
-                        onClick={() => navigate('/authority/manage')}
+                        onClick={() => handleDeleteIncident(inc._id)}
+                        className="btn-ghost text-red-500 hover:bg-red-50 hover:text-red-600 p-2 shrink-0"
+                        aria-label="Delete incident"
                       >
-                        Add First Transport
+                        <TrashIcon size={16} />
                       </button>
                     </div>
-                  ) : (
-                    <div className="table-responsive">
-                      <table className="table table-hover mb-0 align-middle">
-                        <thead>
-                          <tr style={{ fontSize: '.82rem', color: '#64748b', textTransform: 'uppercase' }}>
-                            <th style={{ fontWeight: 700, paddingLeft: 0 }}>Number</th>
-                            <th style={{ fontWeight: 700 }}>Name</th>
-                            <th style={{ fontWeight: 700 }}>Type</th>
-                            <th style={{ fontWeight: 700 }}>Status</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {transports.slice(0, 6).map((t) => (
-                            <tr key={t._id} style={{ borderBottom: '1px solid var(--border)' }}>
-                              <td style={{ paddingLeft: 0 }}>
-                                <span className="transport-number">{t.transportNumber}</span>
-                              </td>
-                              <td>
-                                <div style={{ fontWeight: 600, fontSize: '.9rem' }}>{t.name || '—'}</div>
-                                {t.operator && (
-                                  <div style={{ fontSize: '.78rem', color: '#64748b' }}>{t.operator}</div>
-                                )}
-                              </td>
-                              <td>
-                                <span className={`meta-chip ${t.type}`}>
-                                  {t.type === 'bus' ? <BusIcon size={16} className="me-1"/> : <TrainIcon size={16} className="me-1"/>} {t.type}
-                                </span>
-                              </td>
-                              <td>
-                                <span style={{
-                                  fontSize: '.72rem', fontWeight: 700, padding: '.18rem .5rem',
-                                  borderRadius: 5,
-                                  background: t.isActive !== false ? '#d1fae5' : '#f1f5f9',
-                                  color: t.isActive !== false ? '#065f46' : '#64748b',
-                                }}>
-                                  {t.isActive !== false ? 'Active' : 'Inactive'}
-                                </span>
-                              </td>
-                              <td>
-                                <Link
-                                  to={`/transport/${t._id}`}
-                                  style={{ fontSize: '.84rem', fontWeight: 600, color: 'var(--primary)', textDecoration: 'none' }}
-                                >
-                                  View →
-                                </Link>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      {transports.length > 6 && (
-                        <div className="text-center pt-2 pb-1">
-                          <button
-                            className="btn btn-link btn-sm"
-                            onClick={() => navigate('/authority/manage')}
-                          >
-                            View all {transports.length} transports →
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  ))}
                 </div>
-              </div>
-
-              {/* Categorized Incidents */}
-              <div className="col-lg-5">
-                <div className="detail-section h-100" style={{ marginBottom: 0 }}>
-                  <div className="detail-section-title d-flex align-items-center justify-content-between">
-                    <span className="d-flex align-items-center"><AlertIcon size={20} className="me-2"/> Incidents by Transport</span>
-                  </div>
-
-                  {incidents.length === 0 ? (
-                    <div className="empty-state" style={{ padding: '1.5rem' }}>
-                      <div className="empty-state-icon text-success"><CheckCircleIcon size={48} /></div>
-                      <p style={{ color: '#64748b', margin: 0 }}>No active incidents reported.</p>
-                    </div>
-                  ) : (
-                    <div className="d-flex flex-column gap-3">
-                      {Object.entries(
-                        incidents.reduce((acc, inc) => {
-                          const tName = inc.transportId?.name || 'Unknown Transport';
-                          if (!acc[tName]) acc[tName] = [];
-                          acc[tName].push(inc);
-                          return acc;
-                        }, {})
-                      ).map(([transportName, groupIncidents]) => (
-                        <div key={transportName} className="border rounded p-3 bg-white shadow-sm">
-                          <h6 className="fw-bold mb-3 border-bottom pb-2 d-flex align-items-center text-primary">
-                            <BusIcon size={16} className="me-2"/> {transportName}
-                          </h6>
-                          <div className="d-flex flex-column gap-2">
-                            {groupIncidents.map((inc) => (
-                              <div className="p-2 border rounded" key={inc._id} style={{ background: '#f8fafc' }}>
-                                <div className="d-flex align-items-start justify-content-between">
-                                  <div className="d-flex align-items-center gap-2 flex-wrap">
-                                    <span style={{ fontWeight: 600, textTransform: 'capitalize', fontSize: '.85rem' }}>
-                                      {inc.incidentType}
-                                    </span>
-                                    <SeverityBadge severity={inc.severity} />
-                                    <StatusBadge status={inc.status} />
-                                  </div>
-                                  <button
-                                    className="btn btn-link text-danger p-0"
-                                    title="Delete Incident"
-                                    onClick={async () => {
-                                      if (window.confirm('Delete this incident?')) {
-                                        try {
-                                          await deleteIncident(inc._id);
-                                          fetchAll();
-                                        } catch (e) { alert('Failed to delete'); }
-                                      }
-                                    }}
-                                  >
-                                    <TrashIcon size={14} />
-                                  </button>
-                                </div>
-                                <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: '.25rem' }}>
-                                  {inc.description || inc.location ? (inc.description || inc.location) : 'No details provided'}
-                                </div>
-                                <div className="d-flex justify-content-between mt-1">
-                                  <span style={{ fontSize: '.72rem', color: '#94a3b8' }}>
-                                    {inc.reportedAt ? new Date(inc.reportedAt).toLocaleDateString('en-IN') : ''}
-                                  </span>
-                                  <span style={{ fontSize: '.72rem', color: '#64748b', fontWeight: 600 }}>
-                                    By: {inc.reportedBy?.name || inc.reporterRole}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Quick Actions */}
-            <div className="detail-section mt-4">
-              <div className="detail-section-title d-flex align-items-center"><ZapIcon size={20} className="me-2"/> Quick Actions</div>
-              <div className="d-flex flex-wrap gap-2">
-                <button className="btn btn-primary d-flex align-items-center" onClick={() => navigate('/authority/manage')}><WrenchIcon size={18} className="me-2"/> Manage Transports</button>
-                <button className="btn btn-outline-primary d-flex align-items-center" onClick={() => navigate('/search')}><SearchIcon size={18} className="me-2"/> Search Routes</button>
-                <button className="btn btn-outline-secondary d-flex align-items-center" onClick={() => navigate('/profile')}><UserIcon size={18} className="me-2"/> View Profile</button>
-              </div>
-            </div>
+              )}
+            </section>
           </>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

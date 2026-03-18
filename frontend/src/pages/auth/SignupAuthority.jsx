@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { registerAuthority } from '../../api/authApi';
-import { BusIcon, MailIcon, LockIcon, EyeIcon, EyeOffIcon, UserIcon, BuildingIcon, LocationIcon, IdCardIcon } from '../../components/icons';
+import { MailIcon, LockIcon, EyeIcon, EyeOffIcon, UserIcon, BuildingIcon, LocationIcon, IdCardIcon } from '../../components/icons';
+import AuthLayout from '../../components/AuthLayout';
 
 const SignupAuthority = () => {
   const navigate = useNavigate();
@@ -11,30 +12,28 @@ const SignupAuthority = () => {
     name: '', email: '', password: '', confirmPassword: '',
     organizationName: '', authorityCode: '', region: '',
   });
-  const [errors, setErrors]    = useState({});
-  const [showPw, setShowPw]    = useState(false);
-  const [showCp, setShowCp]    = useState(false);
-  const [loading, setLoading]  = useState(false);
+  const [errors, setErrors]   = useState({});
+  const [showPw, setShowPw]   = useState(false);
+  const [showCp, setShowCp]   = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    setErrors(prev => ({ ...prev, [e.target.name]: '' }));
+    setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+    setErrors(p => ({ ...p, [e.target.name]: '' }));
   };
 
   const validate = () => {
     const errs = {};
     if (!form.name.trim())             errs.name = 'Name is required.';
     if (!form.email.trim())            errs.email = 'Email is required.';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-                                       errs.email = 'Enter a valid email address.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Enter a valid email.';
     if (!form.organizationName.trim()) errs.organizationName = 'Organization name is required.';
     if (!form.authorityCode.trim())    errs.authorityCode = 'Authority code is required.';
     if (!form.region.trim())           errs.region = 'Region is required.';
     if (!form.password)                errs.password = 'Password is required.';
-    else if (form.password.length < 6) errs.password = 'Password must be at least 6 characters.';
+    else if (form.password.length < 6) errs.password = 'Minimum 6 characters.';
     if (!form.confirmPassword)         errs.confirmPassword = 'Please confirm your password.';
-    else if (form.password !== form.confirmPassword)
-                                       errs.confirmPassword = 'Passwords do not match.';
+    else if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords do not match.';
     return errs;
   };
 
@@ -42,174 +41,154 @@ const SignupAuthority = () => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
-
     setLoading(true);
     try {
-      const payload = {
-        name: form.name.trim(),
-        email: form.email.trim(),
-        password: form.password,
+      await registerAuthority({
+        name: form.name.trim(), email: form.email.trim(), password: form.password,
         organizationName: form.organizationName.trim(),
-        authorityCode: form.authorityCode.trim(),
-        region: form.region.trim(),
-      };
-
-      await registerAuthority(payload);
+        authorityCode: form.authorityCode.trim(), region: form.region.trim(),
+      });
       toast.success('Authority account created! Redirecting to login…');
       setTimeout(() => navigate('/login/authority'), 1800);
     } catch (err) {
       toast.error(err.message || 'Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
+  const ic = (f) => `input pl-9 ${errors[f] ? 'input-error' : ''}`;
+  const Err = ({ f }) => errors[f] ? <p className="mt-1 text-xs text-red-600">{errors[f]}</p> : null;
+
   return (
-    <div className="auth-page">
-      <div className="auth-card auth-card-wide">
-        <Link to="/" className="auth-logo text-decoration-none mb-3 d-flex align-items-center justify-content-center">
-          <BusIcon size={24} className="me-2" style={{ color: '#1e293b' }} />
-          <span><span style={{ color: '#1e293b' }}>Public</span><span style={{ color: '#2563eb' }}>Transit</span></span>
-        </Link>
+    <AuthLayout
+      title="Authority Registration"
+      subtitle="Register your transport authority"
+      badge="Authority"
+      badgeClass="badge-amber"
+      maxWidth="max-w-2xl"
+    >
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
 
-        <h1 className="auth-title">Authority Registration</h1>
-        <p className="auth-subtitle">Register your transport authority to manage buses and trains</p>
-
-        <form onSubmit={handleSubmit} noValidate>
-          {/* ── Personal Info ── */}
-          <p style={{ fontSize: '.8rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '.75rem' }}>
+        {/* ── Administrator Details ── */}
+        <div>
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">
             Administrator Details
-          </p>
-          <div className="row g-3 mb-3">
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="name">Full Name *</label>
-              <div className="input-group-icon">
-                <span className="icon"><UserIcon size={18} /></span>
-                <input
-                  id="name" name="name" type="text"
-                  className={`form-control${errors.name ? ' is-invalid' : ''}`}
-                  placeholder="Authority Admin Name"
-                  value={form.name} onChange={handleChange}
-                />
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <div>
+              <label htmlFor="name" className="label">Full Name *</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><UserIcon size={16} /></span>
+                <input id="name" name="name" type="text" placeholder="Admin Name"
+                  className={ic('name')} value={form.name} onChange={handleChange} />
               </div>
-              {errors.name && <div className="invalid-feedback d-block">{errors.name}</div>}
-            </div>
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="email">Email Address *</label>
-              <div className="input-group-icon">
-                <span className="icon"><MailIcon size={18} /></span>
-                <input
-                  id="email" name="email" type="email"
-                  className={`form-control${errors.email ? ' is-invalid' : ''}`}
-                  placeholder="admin@authority.gov"
-                  value={form.email} onChange={handleChange}
-                />
-              </div>
-              {errors.email && <div className="invalid-feedback d-block">{errors.email}</div>}
+              <Err f="name" />
             </div>
 
-          </div>
+            <div>
+              <label htmlFor="email" className="label">Email Address *</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><MailIcon size={16} /></span>
+                <input id="email" name="email" type="email" placeholder="admin@authority.gov"
+                  className={ic('email')} value={form.email} onChange={handleChange} />
+              </div>
+              <Err f="email" />
+            </div>
 
-          {/* Passwords */}
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="auth-password">Password *</label>
-              <div className="input-group-icon">
-                <span className="icon"><LockIcon size={18} /></span>
-                <input
-                  id="auth-password" name="password"
-                  type={showPw ? 'text' : 'password'}
-                  className={`form-control${errors.password ? ' is-invalid' : ''}`}
-                  placeholder="Min. 6 characters"
-                  value={form.password} onChange={handleChange}
-                />
-                <button type="button" className="toggle-password" onClick={() => setShowPw(v => !v)}>
-                  {showPw ? <EyeOffIcon size={18}/> : <EyeIcon size={18}/>}
+            <div>
+              <label htmlFor="auth-password" className="label">Password *</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><LockIcon size={16} /></span>
+                <input id="auth-password" name="password" type={showPw ? 'text' : 'password'}
+                  placeholder="Min. 6 characters" className={`${ic('password')} pr-9`}
+                  value={form.password} onChange={handleChange} />
+                <button type="button" onClick={() => setShowPw(v => !v)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-amber-600">
+                  {showPw ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
                 </button>
               </div>
-              {errors.password && <div className="invalid-feedback d-block">{errors.password}</div>}
+              <Err f="password" />
             </div>
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="confirmPassword">Confirm Password *</label>
-              <div className="input-group-icon">
-                <span className="icon"><LockIcon size={18} /></span>
-                <input
-                  id="confirmPassword" name="confirmPassword"
-                  type={showCp ? 'text' : 'password'}
-                  className={`form-control${errors.confirmPassword ? ' is-invalid' : ''}`}
-                  placeholder="Re-enter password"
-                  value={form.confirmPassword} onChange={handleChange}
-                />
-                <button type="button" className="toggle-password" onClick={() => setShowCp(v => !v)}>
-                  {showCp ? <EyeOffIcon size={18}/> : <EyeIcon size={18}/>}
+
+            <div>
+              <label htmlFor="confirmPassword" className="label">Confirm Password *</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><LockIcon size={16} /></span>
+                <input id="confirmPassword" name="confirmPassword" type={showCp ? 'text' : 'password'}
+                  placeholder="Re-enter password" className={`${ic('confirmPassword')} pr-9`}
+                  value={form.confirmPassword} onChange={handleChange} />
+                <button type="button" onClick={() => setShowCp(v => !v)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-amber-600">
+                  {showCp ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
                 </button>
               </div>
-              {errors.confirmPassword && <div className="invalid-feedback d-block">{errors.confirmPassword}</div>}
+              <Err f="confirmPassword" />
             </div>
           </div>
-
-          {/* ── Organisation Info ── */}
-          <p style={{ fontSize: '.8rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '.75rem' }}>
-            Organisation Details
-          </p>
-          <div className="row g-3 mb-3">
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="organizationName">Organisation Name *</label>
-              <div className="input-group-icon">
-                <span className="icon"><BuildingIcon size={18} /></span>
-                <input
-                  id="organizationName" name="organizationName" type="text"
-                  className={`form-control${errors.organizationName ? ' is-invalid' : ''}`}
-                  placeholder="Tamil Nadu State Transport"
-                  value={form.organizationName} onChange={handleChange}
-                />
-              </div>
-              {errors.organizationName && <div className="invalid-feedback d-block">{errors.organizationName}</div>}
-            </div>
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="authorityCode">Authority Code *</label>
-              <div className="input-group-icon">
-                <span className="icon"><IdCardIcon size={18} /></span>
-                <input
-                  id="authorityCode" name="authorityCode" type="text"
-                  className={`form-control${errors.authorityCode ? ' is-invalid' : ''}`}
-                  placeholder="TNSTC-NTH"
-                  value={form.authorityCode} onChange={handleChange}
-                />
-              </div>
-              {errors.authorityCode && <div className="invalid-feedback d-block">{errors.authorityCode}</div>}
-            </div>
-            <div className="col-md-6">
-              <label className="form-label" htmlFor="region">Region *</label>
-              <div className="input-group-icon">
-                <span className="icon"><LocationIcon size={18} /></span>
-                <input
-                  id="region" name="region" type="text"
-                  className={`form-control${errors.region ? ' is-invalid' : ''}`}
-                  placeholder="Salem"
-                  value={form.region} onChange={handleChange}
-                />
-              </div>
-              {errors.region && <div className="invalid-feedback d-block">{errors.region}</div>}
-            </div>
-
-          </div>
-
-          <button type="submit" className="btn-primary-custom d-flex align-items-center justify-content-center" disabled={loading}>
-            {loading
-              ? <><span className="spinner" /> Registering…</>
-              : <><BuildingIcon size={18} className="me-2"/> Register Authority Account</>
-            }
-          </button>
-        </form>
-
-        <div className="auth-links mt-3">
-          Already have an account? <Link to="/login/authority">Sign In</Link>
-          <br />
-          Registering as a commuter? <Link to="/signup/commuter">Commuter Sign Up</Link>
         </div>
+
+        {/* ── Organisation Details ── */}
+        <div>
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">
+            Organisation Details
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <div>
+              <label htmlFor="organizationName" className="label">Organisation Name *</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><BuildingIcon size={16} /></span>
+                <input id="organizationName" name="organizationName" type="text"
+                  placeholder="Tamil Nadu State Transport" className={ic('organizationName')}
+                  value={form.organizationName} onChange={handleChange} />
+              </div>
+              <Err f="organizationName" />
+            </div>
+
+            <div>
+              <label htmlFor="authorityCode" className="label">Authority Code *</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><IdCardIcon size={16} /></span>
+                <input id="authorityCode" name="authorityCode" type="text"
+                  placeholder="TNSTC-NTH" className={ic('authorityCode')}
+                  value={form.authorityCode} onChange={handleChange} />
+              </div>
+              <Err f="authorityCode" />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="region" className="label">Region *</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><LocationIcon size={16} /></span>
+                <input id="region" name="region" type="text" placeholder="Salem"
+                  className={ic('region')} value={form.region} onChange={handleChange} />
+              </div>
+              <Err f="region" />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" disabled={loading}
+          className="w-full justify-center py-2.5 btn bg-amber-600 hover:bg-amber-700 text-white shadow-sm focus:ring-amber-500 focus:ring-2 focus:ring-offset-2 focus:outline-none">
+          {loading
+            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Registering…</>
+            : <><BuildingIcon size={16} />Register Authority Account</>}
+        </button>
+      </form>
+
+      <div className="divider-text my-5">or continue with</div>
+
+      <div className="text-center text-sm space-y-1.5">
+        <p className="text-slate-500">
+          Have an account?{' '}
+          <Link to="/login/authority" className="text-amber-600 font-semibold hover:underline">Sign In</Link>
+        </p>
+        <p className="text-slate-500">
+          Registering as commuter?{' '}
+          <Link to="/signup/commuter" className="text-blue-600 font-semibold hover:underline">Commuter Sign Up</Link>
+        </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

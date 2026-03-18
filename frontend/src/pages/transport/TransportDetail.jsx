@@ -11,7 +11,7 @@ import IncidentList from '../../components/IncidentList';
 import FareCalculator from './FareCalculator';
 import ScheduleSection from './ScheduleSection';
 import TransportInfo from './TransportInfo';
-import { BusIcon, TrainIcon, UserIcon, AlertIcon, StarIcon, SearchIcon, ClockIcon, LocationIcon, ArrowRightIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/icons';
+import { BusIcon, TrainIcon, UserIcon, AlertIcon, StarIcon, SearchIcon, ClockIcon, LocationIcon, ArrowRightIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '../../components/icons';
 
 const TransportDetail = () => {
   const { id } = useParams();
@@ -82,14 +82,17 @@ const TransportDetail = () => {
       }
     };
     fetchAll();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
     if (transport) fetchIncidentsData(incidentsPage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incidentsPage]);
 
   useEffect(() => {
     if (transport) fetchCrowdData(crowdPage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [crowdPage]);
 
   // Check if already favourite
@@ -194,10 +197,10 @@ const TransportDetail = () => {
 
   if (loading) {
     return (
-      <div className="container py-5">
-        <div className="loading-state">
-          <div className="spinner-large" />
-          <p>Loading transport details…</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-slate-100 border-t-primary-600 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-6 text-slate-500 font-bold uppercase tracking-widest text-xs animate-pulse">Synchronizing Fleet Data...</p>
         </div>
       </div>
     );
@@ -205,9 +208,23 @@ const TransportDetail = () => {
 
   if (error) {
     return (
-      <div className="container py-5">
-        <div className="alert-custom alert-error mb-3 d-flex align-items-center"><AlertIcon size={18} className="me-2"/> {error}</div>
-        <button className="btn btn-outline-primary d-flex align-items-center" onClick={() => navigate(-1)}><ArrowLeftIcon size={16} className="me-2"/> Go Back</button>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-[2.5rem] p-12 text-center shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden relative">
+          <div className="absolute top-0 left-0 w-full h-2 bg-red-500"></div>
+          <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-8">
+            <AlertIcon size={40} />
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 mb-4 tracking-tight">System Outage</h2>
+          <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 font-bold text-sm mb-10 leading-relaxed">
+            {error}
+          </div>
+          <button 
+            className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-xl shadow-slate-300 transform active:scale-95" 
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeftIcon size={20} /> Revert to Safety
+          </button>
+        </div>
       </div>
     );
   }
@@ -219,266 +236,371 @@ const TransportDetail = () => {
   const schedule      = primaryRoute?.schedule || [];
   const fareTable     = primaryRoute?.fareTable || [];
   const livePosition  = transport.livePosition || crowd?.livePosition || null;
-  const crowdLevel    = transport.crowdLevel || crowd?.officialCrowdLevel?.crowdLevel || crowd?.crowdLevel?.crowdLevel || null;
+  const crowdLevel    = crowd?.official?.crowdLevel || transport.crowdLevel || null;
+  const role          = String(user?.role || '').toLowerCase();
+  const canReport     = !!user && role !== 'authority';
 
   return (
-    <>
-      {/* Hero Header */}
-      <div className="page-header">
-        <div className="container">
-          <div className="d-flex align-items-start justify-content-between flex-wrap gap-3">
-            <div>
-              <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                <span
-                  className="fw-bold"
-                  style={{ background: 'rgba(255,255,255,.2)', padding: '.25rem .75rem', borderRadius: 20, fontSize: '.85rem' }}
-                >
+    <div className="min-h-screen bg-slate-50/50">
+      <div className="container mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pt-8 pb-4">
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="space-y-4 max-w-3xl">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="px-3 py-1 bg-slate-100 border border-slate-200 rounded-full text-sm font-bold tracking-wider text-slate-700">
                   {transport.transportNumber}
                 </span>
-                <span
-                  style={{ background: 'rgba(255,255,255,.15)', padding: '.2rem .6rem', borderRadius: 6, fontSize: '.8rem', textTransform: 'capitalize' }}
-                  className="d-flex align-items-center"
-                >
-                  {transport.type === 'bus' ? <BusIcon size={14} className="me-1"/> : <TrainIcon size={14} className="me-1"/>} {transport.type}
+                <span className="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-100 rounded-full text-sm font-medium capitalize text-primary-600">
+                  {transport.type === 'bus' ? <BusIcon size={14} /> : <TrainIcon size={14} />} 
+                  {transport.type}
                 </span>
-                <CrowdBadge level={crowdLevel} />
               </div>
-              <h1 style={{ fontSize: '1.75rem' }}>{transport.name}</h1>
+
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-tight text-slate-900">
+                {transport.name}
+              </h1>
+
               {primaryRoute && (
-                <p>
-                  {primaryRoute.origin} <ArrowRightIcon size={14} className="mx-1"/> {primaryRoute.destination}
-                  {primaryRoute.totalDistance && ` · ${primaryRoute.totalDistance} km`}
-                  {primaryRoute.estimatedDuration && ` · ~${primaryRoute.estimatedDuration} min`}
-                </p>
+                <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-slate-500 font-medium">
+                  <span className="text-slate-800">{primaryRoute.origin}</span>
+                  <ArrowRightIcon size={16} className="text-slate-400" />
+                  <span className="text-slate-800">{primaryRoute.destination}</span>
+                  {primaryRoute.totalDistance && (
+                    <>
+                      <span className="w-1 h-1 rounded-full bg-slate-400 mx-1"></span>
+                      <span>{primaryRoute.totalDistance} km</span>
+                    </>
+                  )}
+                  {primaryRoute.estimatedDuration && (
+                    <>
+                      <span className="w-1 h-1 rounded-full bg-slate-400 mx-1"></span>
+                      <span>{primaryRoute.estimatedDuration} min</span>
+                    </>
+                  )}
+                </div>
               )}
             </div>
-              <div className="d-flex flex-column align-items-end gap-2">
-                <div className="d-flex gap-2 flex-wrap">
-                  <button
-                    className="btn btn-sm fw-semibold d-flex align-items-center shadow-sm"
-                    style={{ background: isFav ? '#fbbf24' : 'rgba(255,255,255,.2)', color: isFav ? '#1e293b' : 'white', border: 'none', borderRadius: 8, padding: '.5rem 1rem' }}
-                    onClick={handleFavourite}
-                    disabled={favLoading || !user || user.role === 'authority'}
-                  >
-                    <StarIcon size={16} className="me-2" filled={isFav}/> {isFav ? 'Saved' : 'Save'}
-                  </button>
-                  <button
-                    className="btn btn-sm shadow-sm"
-                    style={{ background: 'rgba(255,255,255,.15)', color: 'white', border: '1px solid rgba(255,255,255,.3)', borderRadius: 8, padding: '.5rem 1rem' }}
-                    onClick={() => navigate(-1)}
-                  >
-                    <ArrowLeftIcon size={16} className="me-2"/> Back
-                  </button>
-                </div>
-              </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-sm active:scale-95 ${isFav ? 'bg-amber-400 text-slate-900 border border-amber-500/40' : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'}`}
+                onClick={handleFavourite}
+                disabled={favLoading || !user || user.role === 'authority'}
+              >
+                <StarIcon size={20} filled={isFav}/>
+                {isFav ? 'In Favourites' : 'Add to Favourites'}
+              </button>
+
+              <button
+                className="p-3 bg-slate-100 border border-slate-200 text-slate-700 rounded-2xl hover:bg-slate-200 transition-all active:scale-95 group"
+                onClick={() => navigate(-1)}
+                title="Go Back"
+              >
+                <ArrowLeftIcon size={24} className="group-hover:-translate-x-1 transition-transform" />
+              </button>
+            </div>
           </div>
-          {favMsg && <div className="mt-2 text-end" style={{ fontSize: '.85rem', color: '#fbbf24' }}>{favMsg}</div>}
+
+          {favMsg && (
+            <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <span className="inline-block px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm font-bold text-amber-400 shadow-sm">
+                {favMsg}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="container pb-5">
-        <div className="row g-4">
-          <div className="col-lg-8">
-            {/* Basic Info */}
-            <TransportInfo transport={transport} />
+      <div className="container mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-20 space-y-8">
+        <TransportInfo transport={transport} crowdLevel={crowdLevel} availableSeats={livePosition?.availableSeats} />
 
-            {/* Live Position */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Split */}
+          <div className="lg:col-span-8 space-y-8">
+
             {livePosition && (
-              <div className="detail-section">
-                <div className="detail-section-title d-flex align-items-center"><LocationIcon size={20} className="me-2"/> Live Position</div>
-                <div className="info-grid">
-                  <div className="info-item">
-                    <label>Current Stop</label>
-                    <span>{livePosition.currentStop || '—'}</span>
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-4">
+                  <div className="flex h-3 w-3 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                   </div>
-                  <div className="info-item">
-                    <label>Next Stop</label>
-                    <span>{livePosition.nextStop || '—'}</span>
+                </div>
+                
+                <div className="flex items-center text-lg font-bold text-slate-800 mb-6 pb-4 border-b border-slate-50">
+                  <LocationIcon size={24} className="mr-3 text-emerald-500" />
+                  Live Tracking
+                </div>
+                
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="flex flex-col">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Current Stop</label>
+                    <span className="text-slate-800 font-bold leading-tight">{livePosition.currentStop || 'No data'}</span>
                   </div>
-                  <div className="info-item">
-                    <label>Status</label>
-                    <span style={{ textTransform: 'capitalize' }}>{livePosition.status || '—'}</span>
+                  <div className="flex flex-col">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Next Stop</label>
+                    <span className="text-slate-800 font-bold leading-tight">{livePosition.nextStop || 'No data'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Status</label>
+                    <span className="text-emerald-600 font-bold capitalize bg-emerald-50 px-2 py-0.5 rounded-lg w-fit text-sm">{livePosition.status || 'On track'}</span>
                   </div>
                   {livePosition.delayMinutes > 0 && (
-                    <div className="info-item">
-                      <label>Delay</label>
-                      <span style={{ color: '#ef4444' }}>+{livePosition.delayMinutes} min</span>
+                    <div className="flex flex-col">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Delay</label>
+                      <span className="text-red-500 font-black">+{livePosition.delayMinutes} min</span>
                     </div>
                   )}
                   {livePosition.availableSeats !== null && livePosition.availableSeats !== undefined && (
-                    <div className="info-item">
-                      <label>Available Seats</label>
-                      <span className="fw-bold" style={{ color: livePosition.availableSeats > 10 ? 'var(--success)' : '#ef4444' }}>
-                        {livePosition.availableSeats}
-                      </span>
+                    <div className="flex flex-col mt-2 lg:mt-0">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Availability</label>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-black px-2 py-0.5 rounded-lg ${livePosition.availableSeats > 10 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                          {livePosition.availableSeats} Seats
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Route & Stops */}
             {stops.length > 0 && (
-              <div className="detail-section">
-                <div className="detail-section-title d-flex align-items-center"><ClockIcon size={20} className="me-2"/> Stops Timeline</div>
-                {primaryRoute && (
-                  <div className="mb-3" style={{ fontSize: '.85rem', color: '#64748b' }}>
-                    {primaryRoute.routeName}
-                    {primaryRoute.direction && ` · ${primaryRoute.direction}`}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+                <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50">
+                  <div className="flex items-center text-lg font-bold text-slate-800">
+                    <ClockIcon size={24} className="mr-3 text-primary-500" />
+                    Stops Timeline
                   </div>
-                )}
+                  {primaryRoute && (
+                    <div className="hidden sm:block text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                      {primaryRoute.routeName} {primaryRoute.direction && `• ${primaryRoute.direction}`}
+                    </div>
+                  )}
+                </div>
                 <StopsTimeline stops={stops} currentStop={livePosition?.currentStop} />
               </div>
             )}
+          </div>
 
-            {/* Incidents */}
-            <div className="detail-section p-4 bg-white rounded-4 shadow-sm">
-              <div className="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4 flex-wrap gap-3">
-                <h4 className="d-flex align-items-center fw-bold text-dark m-0">
-                  <AlertIcon size={24} className="me-2 text-danger"/> All Incidents <span className="badge bg-light text-secondary ms-2 rounded-pill border">{incidentsPagination.total}</span>
-                </h4>
-                {user && user.role !== 'authority' && (
-                  <button className="btn btn-danger btn-sm fw-medium rounded-pill px-3 shadow-sm d-flex align-items-center" onClick={() => setShowIncidentModal(true)}>
-                    <AlertIcon size={16} className="me-2"/> Report Incident
+          {/* Right Split */}
+          <div className="lg:col-span-4 space-y-8">
+            <FareCalculator fareTable={fareTable} />
+          </div>
+        </div>
+
+        <ScheduleSection schedule={schedule} />
+
+        {/* Row 2: Incidents Section */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50 flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-red-50 rounded-xl text-red-500">
+                    <AlertIcon size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-slate-800 m-0">Recent Incidents</h4>
+                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{incidentsPagination.total} reports found</span>
+                  </div>
+                </div>
+                
+                {canReport && (
+                  <button 
+                    className="btn-danger" 
+                    onClick={() => setShowIncidentModal(true)}
+                  >
+                    <PlusIcon size={18} className="mr-2" /> 
+                    Report Incident
                   </button>
                 )}
               </div>
+              
               <IncidentList 
                 incidents={incidents}
                 onDelete={user?.role === 'authority' ? handleDeleteIncident : undefined}
               />
+              
               {incidentsPagination.pages > 1 && (
-                <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                  <button className="btn btn-sm btn-outline-secondary d-flex align-items-center" disabled={incidentsPage === 1} onClick={() => setIncidentsPage(p => p - 1)}>
-                    <ChevronLeftIcon size={16}/> Prev
+                <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-50">
+                  <button 
+                    className="flex items-center px-4 py-2 text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-colors" 
+                    disabled={incidentsPage === 1} 
+                    onClick={() => setIncidentsPage(p => p - 1)}
+                  >
+                    <ChevronLeftIcon size={18} className="mr-2"/> Prev
                   </button>
-                  <span style={{ fontSize: '.85rem', color: '#64748b' }}>Page {incidentsPage} of {incidentsPagination.pages}</span>
-                  <button className="btn btn-sm btn-outline-secondary d-flex align-items-center" disabled={incidentsPage === incidentsPagination.pages} onClick={() => setIncidentsPage(p => p + 1)}>
-                    Next <ChevronRightIcon size={16}/>
+                  <span className="text-xs font-black text-slate-400 uppercase">Page {incidentsPage} / {incidentsPagination.pages}</span>
+                  <button 
+                    className="flex items-center px-4 py-2 text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-colors" 
+                    disabled={incidentsPage === incidentsPagination.pages} 
+                    onClick={() => setIncidentsPage(p => p + 1)}
+                  >
+                    Next <ChevronRightIcon size={18} className="ml-2"/>
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Crowd Reports by Users */}
-            <div className="detail-section p-4 bg-white rounded-4 shadow-sm">
-              <div className="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4 flex-wrap gap-3">
-                <h4 className="d-flex align-items-center fw-bold text-dark m-0">
-                  <UserIcon size={24} className="me-2 text-primary"/> Commuter Crowd Reports <span className="badge bg-light text-secondary ms-2 rounded-pill border">{crowdPagination.total}</span>
-                </h4>
-                {user && user.role !== 'authority' && (
-                  <button className="btn btn-primary btn-sm fw-medium rounded-pill px-3 shadow-sm d-flex align-items-center" onClick={() => setShowCrowdModal(true)}>
-                    <UserIcon size={16} className="me-2"/> Report Crowd
+            {/* Commuter Crowd Reports */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50 flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-primary-50 rounded-xl text-primary-500">
+                    <UserIcon size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-slate-800 m-0">Commuter Crowd Reports</h4>
+                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{crowdPagination.total} recent updates</span>
+                  </div>
+                </div>
+                
+                {canReport && (
+                  <button 
+                    className="btn-primary" 
+                    onClick={() => setShowCrowdModal(true)}
+                  >
+                    <PlusIcon size={18} className="mr-2" /> 
+                    Report Crowd
                   </button>
                 )}
               </div>
               
               {crowdReports.length === 0 ? (
-                <div className="text-center py-5 bg-light rounded-4 border-dashed">
-                  <UserIcon size={40} className="text-muted mb-2"/>
-                  <h6 className="text-muted fw-normal m-0" style={{ fontSize: '.95rem' }}>No recent commuter reports.</h6>
+                <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                  <UserIcon size={48} className="text-slate-300 mx-auto mb-4"/>
+                  <p className="text-slate-500 font-semibold">No crowd reports yet.</p>
+                  <p className="text-xs text-slate-400 mt-1">Be the first to update others on the crowd level!</p>
                 </div>
               ) : (
-                <div className="row g-3">
-                  {crowdReports.map(report => (
-                    <div key={report._id} className="col-md-6">
-                      <div className="card h-100 shadow-sm border-0 bg-light" style={{ borderRadius: '12px' }}>
-                        <div className="card-body">
-                          <div className="d-flex align-items-start justify-content-between mb-3">
-                             <CrowdBadge level={report.crowdLevel} />
-                             <span className="badge bg-white text-secondary border d-flex align-items-center" style={{ fontSize: '.75rem' }}>
-                               <CalendarIcon size={12} className="me-1"/> {new Date(report.reportedAt).toLocaleDateString()}
-                             </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {crowdReports.map(report => {
+                    const reportedAt = report.reportedAt || report.createdAt || report.updatedAt;
+                    const reporterName = report.reportedBy?.name || report.reportedBy?.email || report.reporterName || 'Unknown Commuter';
+
+                    return (
+                    <div key={report._id} className="p-5 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow group">
+                      <div className="flex items-center justify-between mb-4">
+                         <CrowdBadge level={report.crowdLevel} />
+                         <span className="text-[10px] font-black text-slate-400 uppercase">
+                          {reportedAt ? new Date(reportedAt).toLocaleDateString('en-IN') : '--'}
+                         </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors">
+                          <UserIcon size={20} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-slate-800 truncate leading-none mb-1">
+                            {reporterName}
                           </div>
-                          <div>
-                            <div className="fw-bold text-dark d-flex align-items-center mb-1">
-                              <UserIcon size={16} className="me-2 text-primary"/>  {report.reportedBy?.name || 'Commuter'}
+                          {report.boardingStop && (
+                            <div className="text-xs text-slate-500 flex items-center truncate">
+                              <LocationIcon size={12} className="mr-1 shrink-0"/> Boarded at <span className="font-bold ml-1 text-slate-700">{report.boardingStop}</span>
                             </div>
-                            {report.boardingStop && (
-                              <div className="text-secondary d-flex align-items-center" style={{ fontSize: '.85rem' }}>
-                                <LocationIcon size={14} className="me-1"/> Boarded at <strong className="ms-1">{report.boardingStop}</strong>
-                              </div>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               )}
+              
               {crowdPagination.pages > 1 && (
-                <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                  <button className="btn btn-sm btn-outline-secondary d-flex align-items-center" disabled={crowdPage === 1} onClick={() => setCrowdPage(p => p - 1)}>
-                    <ChevronLeftIcon size={16}/> Prev
+                <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-50">
+                  <button 
+                    className="flex items-center px-4 py-2 text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-colors" 
+                    disabled={crowdPage === 1} 
+                    onClick={() => setCrowdPage(p => p - 1)}
+                   >
+                    <ChevronLeftIcon size={18} className="mr-2"/> Prev
                   </button>
-                  <span style={{ fontSize: '.85rem', color: '#64748b' }}>Page {crowdPage} of {crowdPagination.pages}</span>
-                  <button className="btn btn-sm btn-outline-secondary d-flex align-items-center" disabled={crowdPage === crowdPagination.pages} onClick={() => setCrowdPage(p => p + 1)}>
-                    Next <ChevronRightIcon size={16}/>
+                  <span className="text-xs font-black text-slate-400 uppercase">Page {crowdPage} / {crowdPagination.pages}</span>
+                  <button 
+                    className="flex items-center px-4 py-2 text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-colors" 
+                    disabled={crowdPage === crowdPagination.pages} 
+                    onClick={() => setCrowdPage(p => p + 1)}
+                  >
+                    Next <ChevronRightIcon size={18} className="ml-2"/>
                   </button>
                 </div>
               )}
             </div>
-          </div>
-
-          <div className="col-lg-4">
-            {/* Crowd Level */}
-            <div className="detail-section">
-              <div className="detail-section-title d-flex align-items-center"><UserIcon size={20} className="me-2"/> Crowd Level</div>
-              <div className="text-center py-2">
-                <CrowdBadge level={crowdLevel || 'unknown'} />
-                {crowd?.crowdLevel?.updatedAt && (
-                  <div className="mt-2" style={{ fontSize: '.78rem', color: '#94a3b8' }}>
-                    Updated: {new Date(crowd.crowdLevel.updatedAt).toLocaleTimeString('en-IN')}
-                  </div>
-                )}
-                {!crowdLevel && (
-                  <p className="text-muted mt-2" style={{ fontSize: '.85rem' }}>
-                    No crowd data available yet.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Schedule */}
-            <ScheduleSection schedule={schedule} />
-
-            {/* Fare Calculator */}
-            <FareCalculator fareTable={fareTable} />
-          </div>
-        </div>
       </div>
 
       {/* Crowd Modal */}
       {showCrowdModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)' }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content shadow-lg border-0" style={{ borderRadius: '16px', overflow: 'hidden' }}>
-              <div className="modal-header bg-primary text-white border-0 py-3">
-                <h5 className="modal-title d-flex align-items-center fw-bold"><UserIcon size={22} className="me-2 text-white-50"/> Report Crowd Level</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setShowCrowdModal(false)}></button>
-              </div>
-              <div className="modal-body p-4 bg-light">
-                <form id="crowdForm" onSubmit={handleCrowdSubmit}>
-                  <div className="mb-3">
-                    <label className="form-label">How crowded is it?</label>
-                    <select className="form-select" value={crowdForm.crowdLevel} onChange={e => setCrowdForm({...crowdForm, crowdLevel: e.target.value})}>
-                      <option value="empty">Empty / Seats Available</option>
-                      <option value="average">Average / Standing Room</option>
-                      <option value="crowded">Crowded / Full</option>
-                    </select>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="flex items-center gap-2">
+                <UserIcon size={18} className="text-blue-600" /> Report Crowd
+              </h3>
+              <button 
+                onClick={() => setShowCrowdModal(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+               >
+                <PlusIcon size={20} className="rotate-45" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <form id="crowdForm" onSubmit={handleCrowdSubmit} className="space-y-4">
+                <div>
+                  <label className="label">Crowd Level</label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {['empty', 'average', 'crowded'].map((level) => (
+                      <label 
+                        key={level}
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${crowdForm.crowdLevel === level ? 'bg-blue-50 border-blue-300' : 'bg-white border-slate-200 hover:border-slate-300'}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input 
+                            type="radio" 
+                            name="crowdLevel" 
+                            value={level} 
+                            checked={crowdForm.crowdLevel === level}
+                            onChange={e => setCrowdForm({...crowdForm, crowdLevel: e.target.value})}
+                            className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                          />
+                          <span className="font-bold text-slate-700 capitalize">{level === 'empty' ? 'Seats Available' : level === 'average' ? 'Standing Room' : 'Full / Crowded'}</span>
+                        </div>
+                        <CrowdBadge level={level} />
+                      </label>
+                    ))}
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">Boarding Stop (Optional)</label>
-                    <input type="text" className="form-control" placeholder="Where are you boarding?" value={crowdForm.boardingStop} onChange={e => setCrowdForm({...crowdForm, boardingStop: e.target.value})} />
-                  </div>
-                </form>
-              </div>
-              <div className="modal-footer border-0 bg-white p-3 d-flex gap-2">
-                <button type="button" className="btn btn-light rounded-pill px-4 fw-medium" onClick={() => setShowCrowdModal(false)}>Cancel</button>
-                <button type="submit" form="crowdForm" className="btn btn-primary rounded-pill px-4 fw-medium flex-grow-1 shadow-sm" disabled={reportLoading}>
-                  {reportLoading ? 'Submitting...' : 'Submit Report'}
-                </button>
-              </div>
+                </div>
+                
+                <div>
+                  <label className="label">Boarding Stop (Optional)</label>
+                  <input 
+                    type="text" 
+                    className="input" 
+                    placeholder="Where did you board?" 
+                    value={crowdForm.boardingStop} 
+                    onChange={e => setCrowdForm({...crowdForm, boardingStop: e.target.value})} 
+                  />
+                </div>
+              </form>
+            </div>
+            
+            <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
+              <button 
+                type="button" 
+                className="btn-secondary flex-1 justify-center" 
+                onClick={() => setShowCrowdModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                form="crowdForm" 
+                className="btn-primary flex-1 justify-center" 
+                disabled={reportLoading}
+              >
+                {reportLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : 'Post Report'}
+              </button>
             </div>
           </div>
         </div>
@@ -486,18 +608,59 @@ const TransportDetail = () => {
 
       {/* Incident Modal */}
       {showIncidentModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)' }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content shadow-lg border-0" style={{ borderRadius: '16px', overflow: 'hidden' }}>
-              <div className="modal-header bg-danger text-white border-0 py-3">
-                <h5 className="modal-title d-flex align-items-center fw-bold"><AlertIcon size={22} className="me-2 text-white-50"/> Report Incident</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setShowIncidentModal(false)}></button>
-              </div>
-              <div className="modal-body p-4 bg-light">
-                <form id="incidentForm" onSubmit={handleIncidentSubmit}>
-                  <div className="mb-3">
-                    <label className="form-label">Incident Type *</label>
-                    <select className="form-select" value={incidentForm.incidentType} onChange={e => setIncidentForm({...incidentForm, incidentType: e.target.value})}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+              <h3 className="flex items-center gap-2">
+                <AlertIcon size={18} className="text-red-600" /> Report Incident
+              </h3>
+              <button 
+                onClick={() => setShowIncidentModal(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <PlusIcon size={20} className="rotate-45" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <form id="incidentForm" onSubmit={handleIncidentSubmit} className="space-y-4">
+                <div>
+                  <label className="label">Photo Evidence</label>
+                  <div className={`relative border-2 border-dashed rounded-2xl p-6 text-center transition-all ${incidentForm.img ? 'border-red-500 bg-red-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
+                    {incidentForm.img ? (
+                      <div className="relative inline-block">
+                        <img src={incidentForm.img} alt="Preview" className="max-h-40 rounded-xl shadow-lg border border-white" />
+                        <button 
+                          type="button" 
+                          className="absolute -top-2 -right-2 p-1.5 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
+                          onClick={() => setIncidentForm(prev => ({ ...prev, img: '' }))}
+                        >
+                          <PlusIcon size={16} className="rotate-45" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="mx-auto w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-400">
+                          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </div>
+                        <div className="text-sm font-bold text-slate-500">
+                          Click to upload or drag image
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Max size 5MB</p>
+                        <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={handleImageChange} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Type *</label>
+                    <select 
+                      className="input" 
+                      value={incidentForm.incidentType} 
+                      onChange={e => setIncidentForm({...incidentForm, incidentType: e.target.value})}
+                    >
                       <option value="delay">Delay</option>
                       <option value="breakdown">Breakdown</option>
                       <option value="accident">Accident</option>
@@ -505,46 +668,67 @@ const TransportDetail = () => {
                       <option value="other">Other</option>
                     </select>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">Severity</label>
-                    <select className="form-select" value={incidentForm.severity} onChange={e => setIncidentForm({...incidentForm, severity: e.target.value})}>
+                  <div>
+                    <label className="label">Severity</label>
+                    <select 
+                      className="input" 
+                      value={incidentForm.severity} 
+                      onChange={e => setIncidentForm({...incidentForm, severity: e.target.value})}
+                    >
                       <option value="low">Low</option>
                       <option value="medium">Medium</option>
                       <option value="high">High</option>
                       <option value="critical">Critical</option>
                     </select>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">Location (Optional)</label>
-                    <input type="text" className="form-control" placeholder="E.g. near Main St" value={incidentForm.location} onChange={e => setIncidentForm({...incidentForm, location: e.target.value})} />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Description (Optional)</label>
-                    <textarea className="form-control" rows="2" placeholder="More details..." value={incidentForm.description} onChange={e => setIncidentForm({...incidentForm, description: e.target.value})}></textarea>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Photo Evidence (Optional)</label>
-                    <input type="file" className="form-control" accept="image/*" onChange={handleImageChange} />
-                    {incidentForm.img && (
-                      <div className="mt-2">
-                        <img src={incidentForm.img} alt="Preview" style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px' }} />
-                        <button type="button" className="btn btn-sm btn-link text-danger mt-1 p-0" onClick={() => setIncidentForm(prev => ({ ...prev, img: '' }))}>Remove image</button>
-                      </div>
-                    )}
-                  </div>
-                </form>
-              </div>
-              <div className="modal-footer border-0 bg-white p-3 d-flex gap-2">
-                <button type="button" className="btn btn-light rounded-pill px-4 fw-medium" onClick={() => setShowIncidentModal(false)}>Cancel</button>
-                <button type="submit" form="incidentForm" className="btn btn-danger rounded-pill px-4 fw-medium flex-grow-1 shadow-sm" disabled={reportLoading}>
-                  {reportLoading ? 'Submitting...' : 'Submit Report'}
-                </button>
-              </div>
+                </div>
+
+                <div>
+                  <label className="label">Location</label>
+                  <input 
+                    type="text" 
+                    className="input" 
+                    placeholder="E.g. Near Teynampet station" 
+                    value={incidentForm.location} 
+                    onChange={e => setIncidentForm({...incidentForm, location: e.target.value})} 
+                  />
+                </div>
+
+                <div>
+                  <label className="label">Description</label>
+                  <textarea 
+                    className="input min-h-25" 
+                    placeholder="Tell us what happened..." 
+                    value={incidentForm.description} 
+                    onChange={e => setIncidentForm({...incidentForm, description: e.target.value})}
+                  />
+                </div>
+              </form>
+            </div>
+            
+            <div className="flex gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
+              <button 
+                type="button" 
+                className="btn-secondary flex-1 justify-center" 
+                onClick={() => setShowIncidentModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                form="incidentForm" 
+                className="btn-danger flex-1 justify-center" 
+                disabled={reportLoading}
+              >
+                {reportLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : 'Submit Report'}
+              </button>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

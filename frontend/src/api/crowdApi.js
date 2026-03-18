@@ -29,3 +29,8 @@ export const getLivePosition = (transportId) => api.get(`/crowd/live/${transport
  * @param {string} transportId
  */
 export const getCrowd = (transportId) => api.get(`/crowd/${transportId}`);
+
+/**
+ * Get all crowd reports submitted by the current user.
+ */
+export const getAllCrowdReports = () => api.get('/crowd/my-reports');

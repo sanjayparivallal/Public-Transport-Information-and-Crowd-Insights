@@ -3,18 +3,18 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { loginUser } from '../../api/authApi';
 import { useAuth } from '../../context/AuthContext';
-import { BusIcon, MailIcon, LockIcon, EyeIcon, EyeOffIcon, LogInIcon } from '../../components/icons';
+import { MailIcon, LockIcon, EyeIcon, EyeOffIcon, LogInIcon } from '../../components/icons';
+import AuthLayout from '../../components/AuthLayout';
 
 const Login = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
   const { login, logout, user } = useAuth();
 
   const [form, setForm]       = useState({ email: '', password: '' });
   const [showPw, setShowPw]   = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Already logged in → redirect away
   useEffect(() => {
     if (user) {
       if (user.role === 'authority') navigate('/dashboard/authority', { replace: true });
@@ -22,146 +22,92 @@ const Login = () => {
     }
   }, [user, navigate]);
 
-
-  const handleChange = (e) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  const handleChange = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email.trim() || !form.password)  {
-      toast.error('Email and password are required.');
-      return;
-    }
-
+    if (!form.email.trim() || !form.password) { toast.error('Email and password are required.'); return; }
     setLoading(true);
     try {
-      const res = await loginUser({ email: form.email.trim().toLowerCase(), password: form.password });
-
-      // Backend returns { success:true, data: { accessToken, refreshToken, user } } for commuters
-      // and { success:true, data: { accessToken, refreshToken, authority } } for authorities
-      const payload      = res.data?.data || res.data;
+      const res         = await loginUser({ email: form.email.trim().toLowerCase(), password: form.password });
+      const payload     = res.data?.data || res.data;
       const accessToken  = payload.accessToken;
       const refreshToken = payload.refreshToken;
       const userObj      = payload.user || payload.authority;
 
       if (!accessToken || !userObj) throw new Error('Invalid response from server.');
 
-      if (userObj.role === 'authority') {
-        logout();
-        throw new Error('Please use the Authority Login portal.');
-      }
-
-      // Store & set auth state
       localStorage.setItem('token', accessToken);
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       login(userObj, accessToken, refreshToken);
 
-      // Redirect: go back to where they came from, or role-based default
       const from = location.state?.from;
-      if (from && from !== '/login') {
-        navigate(from, { replace: true });
-      } else {
-        navigate('/dashboard/commuter', { replace: true });
-      }
+      navigate(from && from !== '/login' ? from : '/dashboard/commuter', { replace: true });
     } catch (err) {
       const msg = err.message || '';
-      if (msg.toLowerCase().includes('invalid credentials')) {
-        toast.error('❌ Incorrect email or password. Please try again.');
-      } else if (msg.toLowerCase().includes('disabled')) {
-        toast.error('🚫 Your account has been disabled. Contact support.');
-      } else {
-        toast.error(msg || 'Login failed. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
+      if (msg.toLowerCase().includes('invalid credentials')) toast.error('Incorrect email or password.');
+      else if (msg.toLowerCase().includes('disabled')) toast.error('Account disabled. Contact support.');
+      else toast.error(msg || 'Login failed. Please try again.');
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        {/* Logo */}
-        <Link to="/" className="auth-logo text-decoration-none mb-3 d-flex align-items-center justify-content-center">
-          <BusIcon size={24} className="me-2" style={{ color: '#1e293b' }} />
-          <span><span style={{ color: '#1e293b' }}>Public</span><span style={{ color: '#2563eb' }}>Transit</span></span>
-        </Link>
+    <AuthLayout title="Welcome Back" subtitle="Sign in to your account">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
 
-        <h1 className="auth-title">Welcome Back</h1>
-        <p className="auth-subtitle">Sign in to your commuter account</p>
-
-        <form onSubmit={handleSubmit} noValidate>
-          {/* Email */}
-          <div className="mb-3">
-            <label className="form-label" htmlFor="email">Email Address</label>
-            <div className="input-group-icon">
-              <span className="icon"><MailIcon size={18} /></span>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                className="form-control"
-                placeholder="you@example.com"
-                value={form.email}
-                onChange={handleChange}
-                autoComplete="email"
-                required
-              />
-            </div>
+        {/* Email */}
+        <div>
+          <label htmlFor="email" className="label">Email Address</label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+              <MailIcon size={16} />
+            </span>
+            <input id="email" name="email" type="email" className="input pl-9"
+              placeholder="you@example.com" value={form.email} onChange={handleChange}
+              autoComplete="email" required />
           </div>
+        </div>
 
-          {/* Password */}
-          <div className="mb-4">
-            <label className="form-label" htmlFor="password">Password</label>
-            <div className="input-group-icon">
-              <span className="icon"><LockIcon size={18} /></span>
-              <input
-                id="password"
-                name="password"
-                type={showPw ? 'text' : 'password'}
-                className="form-control"
-                placeholder="Enter your password"
-                value={form.password}
-                onChange={handleChange}
-                autoComplete="current-password"
-                required
-              />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPw(v => !v)}
-                aria-label={showPw ? 'Hide password' : 'Show password'}
-              >
-                {showPw ? <EyeOffIcon size={18}/> : <EyeIcon size={18}/>}
-              </button>
-            </div>
+        {/* Password */}
+        <div>
+          <label htmlFor="password" className="label">Password</label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+              <LockIcon size={16} />
+            </span>
+            <input id="password" name="password" type={showPw ? 'text' : 'password'}
+              className="input pl-9 pr-9"
+              placeholder="Enter your password" value={form.password} onChange={handleChange}
+              autoComplete="current-password" required />
+            <button type="button" onClick={() => setShowPw(v => !v)}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600"
+              aria-label={showPw ? 'Hide password' : 'Show password'}>
+              {showPw ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+            </button>
           </div>
+        </div>
 
-          <button type="submit" className="btn-primary-custom" disabled={loading}>
-            {loading ? (
-              <>
-                <span className="spinner" />
-                Signing in…
-              </>
-            ) : (
-              <>
-                <LogInIcon size={18} className="me-2"/> Sign In
-              </>
-            )}
-          </button>
-        </form>
+        <button type="submit" className="btn-primary w-full justify-center py-2.5 mt-2" disabled={loading}>
+          {loading
+            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Signing in…</>
+            : <><LogInIcon size={16} />Sign In</>}
+        </button>
+      </form>
 
-        <div className="divider">or continue with</div>
+      {/* Divider */}
+      <div className="divider-text my-6">or continue with</div>
 
-        <div className="auth-links">
-          Not a commuter?{' '}
-          <Link to="/login/authority">Authority Login</Link>
-          <br />
-          Don't have an account?{' '}
-          <Link to="/signup/commuter">Commuter Sign Up</Link>
+      {/* Links */}
+      <div className="text-center text-sm space-y-3">
+        <p className="text-slate-500">
+          No account yet?
+        </p>
+        <div className="flex justify-center gap-4">
+          <Link to="/signup/commuter" className="btn-secondary text-xs">Normal Commuter Registration</Link>
+          <Link to="/signup/authority" className="btn-secondary text-xs">Authority Registration</Link>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

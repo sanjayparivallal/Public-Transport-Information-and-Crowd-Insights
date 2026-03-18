@@ -1,20 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getProfile } from '../../api/userApi';
 import { getTransportById } from '../../api/transportApi';
 import { getCrowd } from '../../api/crowdApi';
-import DashboardAccountInfo from './DashboardAccountInfo';
-import DashboardQuickActions from './DashboardQuickActions';
 import DashboardAssignedTransport from './DashboardAssignedTransport';
 import DashboardFavouriteTransports from './DashboardFavouriteTransports';
-import DashboardGettingStarted from './DashboardGettingStarted';
 import DashboardMyIncidents from './DashboardMyIncidents';
-import DashboardLiveTracking from './DashboardLiveTracking';
+import DashboardMyCrowdReports from './DashboardMyCrowdReports';
+
+/* ── Time-based greeting ────────────────────────────── */
+const getGreeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+};
 
 const CommuterDashboard = () => {
   const { user } = useAuth();
-  const navigate  = useNavigate();
 
   const [profile,        setProfile]        = useState(null);
   const [loading,        setLoading]        = useState(true);
@@ -31,25 +35,24 @@ const CommuterDashboard = () => {
         const data = res.data?.data?.user || res.data?.user || res.data?.data || res.data;
         setProfile(data);
 
-        // Fetch favourite transports
+        // Favourite transports
         const favIds = data?.favouriteTransports || [];
         if (favIds.length > 0) {
           setFavLoading(true);
           const results = await Promise.all(
-            favIds.map((item) => {
+            favIds.map(item => {
               const id = typeof item === 'object' ? item._id : item;
               return id ? getTransportById(id).catch(() => null) : null;
             })
           );
           const valid = results
             .filter(Boolean)
-            .map((r) => r.data?.data?.transport || r.data?.data || r.data)
+            .map(r => r.data?.data?.transport || r.data?.data || r.data)
             .filter(Boolean);
           setFavTransports(valid);
 
-          // Fetch crowd for each favourite
           const crowdResults = await Promise.all(
-            valid.map((t) => t._id ? getCrowd(t._id).catch(() => null) : null)
+            valid.map(t => t._id ? getCrowd(t._id).catch(() => null) : null)
           );
           const map = {};
           crowdResults.forEach((cr, i) => {
@@ -62,17 +65,13 @@ const CommuterDashboard = () => {
           setFavLoading(false);
         }
 
-        // Fetch assigned transport detail (driver / conductor)
+        // Assigned transport (driver / conductor)
         const assignedId = data?.assignedTransport?._id || data?.assignedTransport;
         if (assignedId) {
           const tRes = await getTransportById(assignedId).catch(() => null);
-          if (tRes) {
-            setAssignedDetail(
-              tRes.data?.data?.transport || tRes.data?.data || tRes.data
-            );
-          }
+          if (tRes) setAssignedDetail(tRes.data?.data?.transport || tRes.data?.data || tRes.data);
         }
-      } catch (_) {}
+      } catch { /* ignore */ }
       setLoading(false);
     };
     fetchAll();
@@ -80,13 +79,14 @@ const CommuterDashboard = () => {
 
   if (!user) {
     return (
-      <div className="container py-5 text-center">
-        <p>Please <Link to="/login">login</Link> to view your dashboard.</p>
+      <div className="page-container text-center py-20">
+        <p>Please <Link to="/login" className="text-blue-600 font-semibold hover:underline">login</Link> to view your dashboard.</p>
       </div>
     );
   }
 
   const isStaff = user.role === 'driver' || user.role === 'conductor';
+  const displayName = profile?.name || user.name || user.email?.split('@')[0] || 'User';
   const assignedTransportFallback = profile?.assignedTransport
     ? (typeof profile.assignedTransport === 'object'
       ? (profile.assignedTransport._id || profile.assignedTransport.transportNumber || '—')
@@ -94,64 +94,73 @@ const CommuterDashboard = () => {
     : null;
 
   return (
-    <>
-      {/* Page Header */}
+    <div className="min-h-screen bg-slate-50">
+
+      {/* ── Page Header ── */}
       <div className="page-header">
-        <div className="container">
-          <h1>Welcome, {profile?.name || user.name || user.email}</h1>
-          <p className="text-capitalize">
-            {isStaff ? `${user.role} dashboard` : 'Your commuter dashboard — search routes and track crowd levels'}
+        <div className="max-w-7xl mx-auto">
+          <h1>
+            {getGreeting()}, <span className="text-blue-600">{displayName}</span>
+          </h1>
+          <p className="mt-1">
+            {isStaff
+              ? `You're logged in as a ${user.role}. Manage your assigned transport below.`
+              : 'Your travel hub — track favourite routes and stay updated with crowd & incident alerts.'}
           </p>
         </div>
       </div>
 
-      <div className="container pb-5">
+      {/* ── Content ── */}
+      <div className="page-container">
         {loading ? (
-          <div className="loading-state"><div className="spinner-large" /></div>
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <span className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <p className="text-sm text-slate-400">Loading dashboard…</p>
+          </div>
         ) : (
-          <>
-            {/* Top row: Account Info + Quick Actions */}
-            <div className="row g-4 mb-2">
-              <div className="col-md-8">
-                <DashboardAccountInfo profile={profile} user={user} />
-              </div>
-              <div className="col-md-4">
-                <DashboardQuickActions isStaff={isStaff} assignedDetail={assignedDetail} />
-              </div>
-            </div>
+          <div className="space-y-8">
 
-            {/* Assigned Transport (Driver / Conductor) */}
+            {/* ── Staff: Assigned Transport + Incidents for assigned transport ── */}
             {isStaff && (
               <>
-                <DashboardAssignedTransport 
-                  assignedDetail={assignedDetail} 
-                  profile={profile} 
-                  assignedTransportFallback={assignedTransportFallback} 
+                <DashboardAssignedTransport
+                  assignedDetail={assignedDetail}
+                  profile={profile}
+                  assignedTransportFallback={assignedTransportFallback}
                 />
-                <DashboardLiveTracking transport={assignedDetail} />
+
+                {/* Incidents for allotted transport */}
+                {assignedDetail && (
+                  <section>
+                    <h2 className="mb-4">Incidents on Assigned Route</h2>
+                    <div className="card card-body text-sm text-slate-500">
+                      <Link to={`/transport/${assignedDetail._id}`} className="text-blue-600 font-semibold hover:underline">
+                        View all incidents for {assignedDetail.name || assignedDetail.transportNumber} →
+                      </Link>
+                    </div>
+                  </section>
+                )}
               </>
             )}
 
-            {/* Favourite Transports (Commuter) */}
+            {/* ── Commuter: Favourite Transports ── */}
             {!isStaff && (
-              <DashboardFavouriteTransports 
-                favLoading={favLoading} 
-                favTransports={favTransports} 
-                crowdMap={crowdMap} 
+              <DashboardFavouriteTransports
+                favLoading={favLoading}
+                favTransports={favTransports}
+                crowdMap={crowdMap}
               />
             )}
 
-            {/* Getting Started tip (shown only when no favourites) */}
-            {!isStaff && favTransports.length === 0 && (
-              <DashboardGettingStarted />
-            )}
-
-            {/* My Incidents */}
+            {/* ── My Incident Reports ── */}
             <DashboardMyIncidents />
-          </>
+
+            {/* ── My Crowd Reports ── */}
+            <DashboardMyCrowdReports />
+          </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

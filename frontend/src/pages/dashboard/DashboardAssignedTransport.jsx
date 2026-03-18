@@ -3,60 +3,56 @@ import { BusIcon, TrainIcon } from '../../components/icons';
 
 const DashboardAssignedTransport = ({ assignedDetail, profile, assignedTransportFallback }) => {
   return (
-    <div className="detail-section">
-      <div className="detail-section-title d-flex align-items-center"><BusIcon size={20} className="me-2"/> Assigned Transport</div>
+    <section>
+      <h2 className="flex items-center gap-2 mb-4">
+        <BusIcon size={18} className="text-blue-600" />
+        Assigned Transport
+      </h2>
+
       {assignedDetail ? (
-        <div className="row g-3 align-items-center">
-          <div className="col-md-8">
-            <div className="info-grid">
-              <div className="info-item">
-                <label>Transport Number</label>
-                <span><span className="transport-number">{assignedDetail.transportNumber}</span></span>
-              </div>
-              <div className="info-item">
-                <label>Name</label>
-                <span>{assignedDetail.name || '—'}</span>
-              </div>
-              <div className="info-item">
-                <label>Type</label>
-                <span className={`meta-chip ${assignedDetail.type}`}>
-                  {assignedDetail.type === 'bus' ? <BusIcon size={16} className="me-1"/> : <TrainIcon size={16} className="me-1"/>} {assignedDetail.type}
-                </span>
-              </div>
-              <div className="info-item">
-                <label>Operator</label>
-                <span>{assignedDetail.operator || '—'}</span>
-              </div>
-              <div className="info-item">
-                <label>Vehicle No.</label>
-                <span>{assignedDetail.vehicleNumber || '—'}</span>
-              </div>
-              <div className="info-item">
-                <label>Assigned By</label>
-                <span>{profile?.assignedAt ? `Assigned ${new Date(profile.assignedAt).toLocaleDateString('en-IN')}` : '—'}</span>
-              </div>
+        <div className="card card-body">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-4 flex-1">
+              {[
+                { label: 'Route No.',   value: <span className="badge badge-blue">{assignedDetail.transportNumber}</span> },
+                { label: 'Name',        value: assignedDetail.name || '—' },
+                { label: 'Type',        value: (
+                  <span className={`badge ${assignedDetail.type === 'bus' ? 'badge-blue' : 'badge-purple'} flex items-center gap-1 w-fit`}>
+                    {assignedDetail.type === 'bus' ? <BusIcon size={12}/> : <TrainIcon size={12}/>}
+                    {assignedDetail.type}
+                  </span>
+                )},
+                { label: 'Operator',    value: assignedDetail.operator || '—' },
+                { label: 'Vehicle No.', value: assignedDetail.vehicleNumber || '—' },
+                { label: 'Assigned',    value: profile?.assignedAt
+                    ? new Date(profile.assignedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : '—' },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <p className="text-xs text-slate-400 font-medium mb-1">{label}</p>
+                  <div className="text-sm font-semibold text-slate-800">{value}</div>
+                </div>
+              ))}
             </div>
-          </div>
-          <div className="col-md-4 text-end">
-            <Link
-              to={`/transport/${assignedDetail._id}`}
-              className="btn btn-outline-primary"
-            >
-              View Full Details →
+
+            <Link to={`/transport/${assignedDetail._id}`} className="btn-primary shrink-0">
+              View Duty Details →
             </Link>
           </div>
         </div>
       ) : assignedTransportFallback ? (
-        <p style={{ color: '#64748b', margin: 0 }}>
-          Transport ID: <code>{assignedTransportFallback}</code> — details unavailable.
-        </p>
+        <div className="card card-body text-sm text-slate-600">
+          <p>Current Assignment ID: <code className="bg-slate-100 px-2 py-0.5 rounded text-blue-600">{assignedTransportFallback}</code></p>
+          <p className="text-xs text-slate-400 mt-1">Vehicle details unavailable. Refresh or contact your supervisor.</p>
+        </div>
       ) : (
-        <div className="empty-state" style={{ padding: '1.5rem' }}>
-          <div className="empty-state-icon" style={{ color: '#3b82f6' }}><BusIcon size={48} /></div>
-          <p style={{ color: '#64748b', margin: 0 }}>No transport assigned yet. Contact your authority.</p>
+        <div className="empty-state card card-body">
+          <BusIcon size={32} className="text-slate-300 mb-2" />
+          <p className="font-semibold text-slate-500">No transport assigned</p>
+          <p className="text-sm mt-1">Contact your supervisor for shift assignment.</p>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
