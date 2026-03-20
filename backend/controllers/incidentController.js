@@ -1,4 +1,5 @@
-const Incident = require('../models/Incident');
+const Incident   = require('../models/Incident');
+const Transport  = require('../models/Transport');
 const { sendSuccess, sendError } = require('../utils/apiResponse');
 
 // POST /api/incidents/report  — commuter, driver, or conductor
@@ -36,7 +37,7 @@ const reportIncident = async (req, res, next) => {
   }
 };
 
-// GET /api/incidents  — authority sees all; others see only their own reports
+// GET /api/incidents  — authority sees incidents for their managed transports; others see only their own reports
 // Query: status, severity, transportId, incidentType, page, limit
 const getAllIncidents = async (req, res, next) => {
   try {
@@ -46,7 +47,15 @@ const getAllIncidents = async (req, res, next) => {
     const skip  = (page - 1) * limit;
 
     const filter = {};
-    if (req.user.role !== 'authority') {
+    if (req.user.role === 'authority') {
+      // Scope incidents to only the transports this authority manages
+      const managedTransports = await Transport.find(
+        { authorityId: req.user.id },
+        '_id'
+      ).lean();
+      const transportIds = managedTransports.map((t) => t._id);
+      filter.transportId = { $in: transportIds };
+    } else {
       filter.reportedBy = req.user.id;
     }
     if (status)       filter.status       = status;
@@ -59,7 +68,7 @@ const getAllIncidents = async (req, res, next) => {
         .sort({ reportedAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('transportId', 'transportNumber name')
+        .populate('transportId', 'transportNumber name type')
         .populate('reportedBy',  'name email role')
         .populate('resolvedBy',  'name')
         .lean(),

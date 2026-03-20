@@ -10,6 +10,7 @@ const {
   updateTransport,
   deleteTransport,
   assignStaff,
+  unassignStaff,
 } = require('../controllers/transportController');
 
 // All transport routes require authentication
@@ -35,5 +36,8 @@ router.delete('/:id', requireRole('authority'), deleteTransport);
 
 // POST /api/transport/:id/assign — authority only
 router.post('/:id/assign', requireRole('authority'), assignStaff);
+
+// DELETE /api/transport/:id/unassign/:role — authority only
+router.delete('/:id/unassign/:role', requireRole('authority'), unassignStaff);
 
 module.exports = router;

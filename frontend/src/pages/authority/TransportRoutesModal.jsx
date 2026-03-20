@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getRoutes, createRoute, updateRoute, deleteRoute } from '../../api/transportApi';
-import { EditIcon, CheckCircleIcon, AlertIcon, PlusIcon, TrashIcon, MapIcon } from '../../components/icons';
+import { EditIcon, CheckCircleIcon, AlertIcon, PlusIcon, TrashIcon, MapIcon, ChevronRightIcon } from '../../components/icons';
 
 const EMPTY_ROUTE = {
   routeNumber: '',
@@ -8,45 +8,12 @@ const EMPTY_ROUTE = {
   origin: '',
   destination: '',
   direction: 'forward',
-  stopsRaw: '', // User will type: Stop A:0, Stop B:5 (Name:Distance)
-  fareRaw: '', // User will type: Stop A-Stop B:10 (From-To:Fare)
+  stops: [],
+  fares: [],
 };
 
-const parseStops = (raw) => {
-  if (!raw) return [];
-  return raw.split(',').map((s, i) => {
-    const [name, dist] = s.split(':');
-    return {
-      stopName: name?.trim() || `Stop ${i+1}`,
-      stopOrder: i + 1,
-      distanceFromOrigin: Number(dist) || i * 5,
-    };
-  });
-};
+// Removed stringify parsing/raw since we use direct arrays now
 
-const parseFares = (raw) => {
-  if (!raw) return [];
-  return raw.split(',').map(f => {
-    const [routeSpan, price] = f.split(':');
-    const [from, to] = (routeSpan || '').split('-');
-    return {
-      fromStop: from?.trim() || 'Unknown',
-      toStop: to?.trim() || 'Unknown',
-      fare: Number(price) || 10,
-      fareClass: 'general'
-    };
-  });
-};
-
-const stringifyStops = (stops) => {
-  if (!stops || !stops.length) return '';
-  return stops.map(s => `${s.stopName}:${s.distanceFromOrigin}`).join(', ');
-};
-
-const stringifyFares = (fares) => {
-  if (!fares || !fares.length) return '';
-  return fares.map(f => `${f.fromStop}-${f.toStop}:${f.fare}`).join(', ');
-};
 
 const TransportRoutesModal = ({ transport, onClose }) => {
   const [routes, setRoutes] = useState([]);
@@ -73,7 +40,7 @@ const TransportRoutesModal = ({ transport, onClose }) => {
     try {
       const res = await getRoutes(transport._id);
       const data = res.data?.data || res.data;
-      setRoutes(data?.routes || []);
+      setRoutes(Array.isArray(data) ? data : (data?.routes || []));
       setEditingRoute(null);
     } catch {
       setError('Failed to fetch routes.');
@@ -90,8 +57,15 @@ const TransportRoutesModal = ({ transport, onClose }) => {
       origin: rc.origin || '',
       destination: rc.destination || '',
       direction: rc.direction || 'forward',
-      stopsRaw: stringifyStops(rc.stops),
-      fareRaw: stringifyFares(rc.fareTable)
+      stops: rc.stops?.map(s => ({
+        stopName: s.stopName || '',
+        distanceFromOrigin: s.distanceFromOrigin || 0,
+      })) || [],
+      fares: rc.fareTable?.map(f => ({
+        fromStop: f.fromStop || '',
+        toStop: f.toStop || '',
+        fare: f.fare || 0,
+      })) || [],
     });
   };
 
@@ -122,8 +96,17 @@ const TransportRoutesModal = ({ transport, onClose }) => {
         origin: form.origin,
         destination: form.destination,
         direction: form.direction,
-        stops: parseStops(form.stopsRaw),
-        fareTable: parseFares(form.fareRaw)
+        stops: form.stops.map((s, i) => ({
+          stopName: s.stopName || `Stop ${i+1}`,
+          stopOrder: i + 1,
+          distanceFromOrigin: Number(s.distanceFromOrigin) || 0
+        })),
+        fareTable: form.fares.map(f => ({
+          fromStop: f.fromStop || 'Unknown',
+          toStop: f.toStop || 'Unknown',
+          fare: Number(f.fare) || 0,
+          fareClass: 'general'
+        }))
       };
 
       if (editingRoute === 'new') {
@@ -140,6 +123,42 @@ const TransportRoutesModal = ({ transport, onClose }) => {
   };
 
   const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.value }));
+
+  // Stop Actions
+  const addStop = () => setForm(p => ({ ...p, stops: [...p.stops, { stopName: '', distanceFromOrigin: 0 }] }));
+  const updateStop = (index, field, value) => {
+    const newStops = [...form.stops];
+    newStops[index][field] = value;
+    setForm(p => ({ ...p, stops: newStops }));
+  };
+  const removeStop = (index) => setForm(p => ({ ...p, stops: p.stops.filter((_, i) => i !== index) }));
+  
+  const moveStopUp = (index) => {
+    if (index === 0) return;
+    setForm(p => {
+      const newStops = [...p.stops];
+      [newStops[index - 1], newStops[index]] = [newStops[index], newStops[index - 1]];
+      return { ...p, stops: newStops };
+    });
+  };
+
+  const moveStopDown = (index) => {
+    setForm(p => {
+      if (index === p.stops.length - 1) return p;
+      const newStops = [...p.stops];
+      [newStops[index + 1], newStops[index]] = [newStops[index], newStops[index + 1]];
+      return { ...p, stops: newStops };
+    });
+  };
+
+  // Fare Actions
+  const addFare = () => setForm(p => ({ ...p, fares: [...p.fares, { fromStop: '', toStop: '', fare: 0 }] }));
+  const updateFare = (index, field, value) => {
+    const newFares = [...form.fares];
+    newFares[index][field] = value;
+    setForm(p => ({ ...p, fares: newFares }));
+  };
+  const removeFare = (index) => setForm(p => ({ ...p, fares: p.fares.filter((_, i) => i !== index) }));
 
   return (
     <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-xl overflow-hidden">
@@ -301,35 +320,129 @@ const TransportRoutesModal = ({ transport, onClose }) => {
                     <option value="return">Return</option>
                   </select>
                 </div>
-                <div className="md:col-span-2 mt-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Stops (Comma Separated) <span className="text-red-500">*</span>
-                  </label>
-                  <p className="text-xs text-slate-500 mb-2">
-                    Format: <code className="bg-slate-100 px-1 py-0.5 rounded text-primary-600">StopName:DistanceFromOrigin</code>. Example: <code className="bg-slate-100 px-1 py-0.5 rounded">Central:0, North Square:5, Airport:12</code>
-                  </p>
-                  <textarea
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder-slate-400 font-mono text-sm"
-                    rows="3"
-                    value={form.stopsRaw}
-                    onChange={set('stopsRaw')}
-                    placeholder="Central:0, North Square:5"
-                  />
+                <div className="md:col-span-2 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-semibold text-slate-700">
+                      Stops <span className="text-red-500">*</span>
+                    </label>
+                    <button type="button" onClick={addStop} className="px-3 py-1.5 bg-white border border-slate-200 hover:border-primary-500 text-primary-600 rounded-lg text-xs font-bold flex items-center shadow-sm">
+                      <PlusIcon size={14} className="mr-1" /> Add Stop
+                    </button>
+                  </div>
+                  {form.stops.length === 0 && <p className="text-xs text-slate-500 italic">No stops added yet.</p>}
+                  <div className="space-y-3">
+                    {form.stops.length > 0 && (
+                      <div className="flex gap-3 px-1">
+                        <div className="flex-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">Stop Name</div>
+                        <div className="w-32 text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Distance</div>
+                        <div className="w-[84px] text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Actions</div>
+                      </div>
+                    )}
+                    {form.stops.map((stop, i) => (
+                      <div key={i} className="flex gap-3 items-start group">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="e.g. Central"
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm"
+                            value={stop.stopName}
+                            onChange={(e) => updateStop(i, 'stopName', e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="w-32">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              placeholder="0"
+                              className="w-full pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm"
+                              value={stop.distanceFromOrigin}
+                              onChange={(e) => updateStop(i, 'distanceFromOrigin', e.target.value)}
+                              required
+                              min="0"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">km</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 w-[84px] justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex flex-col gap-0.5 mt-0.5">
+                            <button type="button" onClick={() => moveStopUp(i)} disabled={i === 0} className="p-[1px] text-slate-400 hover:text-primary-600 disabled:opacity-30 transition-colors">
+                              <ChevronRightIcon size={14} className="-rotate-90" />
+                            </button>
+                            <button type="button" onClick={() => moveStopDown(i)} disabled={i === form.stops.length - 1} className="p-[1px] text-slate-400 hover:text-primary-600 disabled:opacity-30 transition-colors">
+                              <ChevronRightIcon size={14} className="rotate-90" />
+                            </button>
+                          </div>
+                          <button type="button" onClick={() => removeStop(i)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-0.5">
+                            <TrashIcon size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Fares (Comma Separated)
-                  </label>
-                  <p className="text-xs text-slate-500 mb-2">
-                    Format: <code className="bg-slate-100 px-1 py-0.5 rounded text-primary-600">FromStop-ToStop:Price</code>. Example: <code className="bg-slate-100 px-1 py-0.5 rounded">Central-North Square:15, Central-Airport:50</code>
-                  </p>
-                  <textarea
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder-slate-400 font-mono text-sm"
-                    rows="3"
-                    value={form.fareRaw}
-                    onChange={set('fareRaw')}
-                    placeholder="Central-North Square:15"
-                  />
+
+                <div className="md:col-span-2 mt-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-semibold text-slate-700">
+                      Fare Table
+                    </label>
+                    <button type="button" onClick={addFare} className="px-3 py-1.5 bg-white border border-slate-200 hover:border-primary-500 text-primary-600 rounded-lg text-xs font-bold flex items-center shadow-sm">
+                      <PlusIcon size={14} className="mr-1" /> Add Fare
+                    </button>
+                  </div>
+                  {form.fares.length === 0 && <p className="text-xs text-slate-500 italic">No fares added yet.</p>}
+                  <div className="space-y-3">
+                    {form.fares.length > 0 && (
+                      <div className="flex gap-3 px-1">
+                        <div className="flex-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">Source Stop</div>
+                        <div className="flex-1 text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Target Stop</div>
+                        <div className="w-28 text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Price</div>
+                        <div className="w-8"></div>
+                      </div>
+                    )}
+                    {form.fares.map((fare, i) => (
+                      <div key={i} className="flex gap-3 items-start group">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="From Stop"
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm"
+                            value={fare.fromStop}
+                            onChange={(e) => updateFare(i, 'fromStop', e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="To Stop"
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm"
+                            value={fare.toStop}
+                            onChange={(e) => updateFare(i, 'toStop', e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="w-28">
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              className="w-full pl-7 pr-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm"
+                              value={fare.fare}
+                              onChange={(e) => updateFare(i, 'fare', e.target.value)}
+                              required
+                              min="0"
+                            />
+                          </div>
+                        </div>
+                        <button type="button" onClick={() => removeFare(i)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-0.5 opacity-0 group-hover:opacity-100">
+                          <TrashIcon size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-6">

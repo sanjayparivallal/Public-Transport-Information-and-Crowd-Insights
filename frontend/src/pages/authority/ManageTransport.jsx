@@ -1,16 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   getManagedTransports,
   updateTransport,
   removeStaff,
 } from '../../api/adminApi';
-import { BusIcon, TrainIcon, EditIcon, CheckCircleIcon, UserIcon, WrenchIcon, AlertIcon, SearchIcon, TrashIcon, MapIcon, RefreshIcon, PlusIcon } from '../../components/icons';
+import { BusIcon, TrainIcon, EditIcon, WrenchIcon, AlertIcon, SearchIcon, TrashIcon, MapIcon, RefreshIcon, PlusIcon } from '../../components/icons';
 import TransportRoutesModal from './TransportRoutesModal';
 import TransportFormModal from './TransportFormModal';
 import AssignStaffModal from './AssignStaffModal';
 import DeleteModal from './DeleteModal';
+
+/* ── Status Badge ───────────────────────────────────────── */
+const StatusBadge = ({ isActive }) => {
+  const active = isActive !== false;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
+        active
+          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+          : 'bg-amber-50 text-amber-600 border-amber-100'
+      }`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+      {active ? 'Active' : 'Paused'}
+    </span>
+  );
+};
 
 /* ── Main Page ───────────────────────────────────────────── */
 const ManageTransport = () => {
@@ -22,6 +39,8 @@ const ManageTransport = () => {
   const [error, setError]               = useState('');
   const [search, setSearch]             = useState('');
   const [typeFilter, setTypeFilter]     = useState('all');
+  const [highlightedId, setHighlightedId] = useState(null);
+  const location = useLocation();
 
   // Modal visibility state
   const [showFormModal,   setShowFormModal]   = useState(false);
@@ -50,6 +69,25 @@ const ManageTransport = () => {
   }, []);
 
   useEffect(() => { fetchTransports(); }, [fetchTransports]);
+
+  // Handle deep linking / highlighting
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tid = params.get('transportId');
+    if (tid && transports.length > 0) {
+      setHighlightedId(tid);
+      // Wait for DOM to render the list
+      setTimeout(() => {
+        const el = document.getElementById(`transport-${tid}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+      // Remove highlight after 5s
+      const timer = setTimeout(() => setHighlightedId(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [location.search, transports]);
 
   const handleRemoveStaff = async (transportId, role) => {
     if (!window.confirm(`Are you sure you want to remove the ${role}?`)) return;
@@ -260,14 +298,18 @@ const ManageTransport = () => {
                   </tr>
                 ) : (
                   filtered.map((t) => (
-                    <tr key={t._id} className="hover:bg-slate-50/30 transition-all group">
+                    <tr 
+                      key={t._id} 
+                      id={`transport-${t._id}`}
+                      className={`transition-all group ${highlightedId === t._id ? 'bg-primary-50 ring-2 ring-primary-200 ring-inset' : 'hover:bg-slate-50/30'}`}
+                    >
                       <td className="px-8 py-8">
-                        <div className="flex items-center gap-4">
+                        <Link to={`/transport/${t._id}`} className="flex items-center gap-4 group/link">
                           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border transition-transform group-hover:scale-110 ${t.type === 'bus' ? 'bg-primary-50 text-primary-600 border-primary-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'}`}>
                             {t.type === 'bus' ? <BusIcon size={24} /> : <TrainIcon size={24} />}
                           </div>
                           <div>
-                            <div className="text-lg font-black text-slate-800 tracking-tight leading-none mb-1.5 group-hover:text-primary-600 transition-colors">{t.name}</div>
+                            <div className="text-lg font-black text-slate-800 tracking-tight leading-none mb-1.5 group-hover/link:text-primary-600 transition-colors">{t.name}</div>
                             <div className="flex items-center gap-2">
                                <div className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-black uppercase tracking-widest border border-slate-200">
                                 #{t.transportNumber}
@@ -275,7 +317,7 @@ const ManageTransport = () => {
                                <span className="text-[10px] font-bold text-slate-400">by {t.operator || 'Authority'}</span>
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className="px-8 py-8">
                         <button 
@@ -289,10 +331,10 @@ const ManageTransport = () => {
                         <div className="flex flex-col gap-3">
                           <div className="flex flex-col">
                             <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5 leading-none">Driver</span>
-                            {t.driverId ? (
+                            {t.assignedDriver ? (
                               <div className="flex items-center justify-between group/staff max-w-[120px]">
-                                <span className="text-xs font-black text-slate-800 leading-none truncate">{t.driverId.name || t.driverId.email || 'Assigned'}</span>
-                                <button className="p-1 text-slate-300 hover:text-rose-500 opacity-0 group-hover/staff:opacity-100 transition-all ml-2" onClick={() => handleRemoveStaff(t._id, 'driver')} title="Deassign"><TrashIcon size={12}/></button>
+                                <span className="text-xs font-black text-slate-800 leading-none truncate">{t.assignedDriver.name || t.assignedDriver.email || 'Assigned'}</span>
+                                <button className="p-1 text-slate-400 hover:text-rose-500 transition-all ml-2" onClick={() => handleRemoveStaff(t._id, 'driver')} title="Deassign Driver"><TrashIcon size={12}/></button>
                               </div>
                             ) : (
                               <button className="text-[10px] font-bold text-primary-500 hover:text-primary-600 text-left underline underline-offset-4 decoration-primary-200" onClick={() => openAssignModal(t)}>+ Assign Driver</button>
@@ -300,10 +342,10 @@ const ManageTransport = () => {
                           </div>
                           <div className="flex flex-col">
                             <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5 leading-none">Conductor</span>
-                            {t.conductorId ? (
+                            {t.assignedConductor ? (
                               <div className="flex items-center justify-between group/staff max-w-[120px]">
-                                <span className="text-xs font-black text-slate-800 leading-none truncate">{t.conductorId.name || t.conductorId.email || 'Assigned'}</span>
-                                <button className="p-1 text-slate-300 hover:text-rose-500 opacity-0 group-hover/staff:opacity-100 transition-all ml-2" onClick={() => handleRemoveStaff(t._id, 'conductor')} title="Deassign"><TrashIcon size={12}/></button>
+                                <span className="text-xs font-black text-slate-800 leading-none truncate">{t.assignedConductor.name || t.assignedConductor.email || 'Assigned'}</span>
+                                <button className="p-1 text-slate-400 hover:text-rose-500 transition-all ml-2" onClick={() => handleRemoveStaff(t._id, 'conductor')} title="Deassign Conductor"><TrashIcon size={12}/></button>
                               </div>
                             ) : (
                               <button className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 text-left underline underline-offset-4 decoration-indigo-200" onClick={() => openAssignModal(t)}>+ Assign Conductor</button>
@@ -318,6 +360,14 @@ const ManageTransport = () => {
                       </td>
                       <td className="px-8 py-8 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {/* View transport detail */}
+                          <Link
+                            to={`/transport/${t._id}`}
+                            className="btn text-xs py-1.5 px-3 btn-secondary text-blue-600 border-blue-200 hover:bg-blue-50"
+                            title="View transport routes & details"
+                          >
+                            View →
+                          </Link>
                           {/* Pause / Resume */}
                           <button
                             className={`btn text-xs py-1.5 px-3 ${t.isActive !== false ? 'btn-secondary text-amber-600 border-amber-200 hover:bg-amber-50' : 'btn-secondary text-green-600 border-green-200 hover:bg-green-50'}`}

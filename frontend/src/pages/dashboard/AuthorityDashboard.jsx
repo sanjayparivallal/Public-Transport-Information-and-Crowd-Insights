@@ -11,6 +11,7 @@ import {
   BusIcon, TrainIcon, AlertIcon, ClockIcon, ClipboardIcon,
   SearchIcon, WrenchIcon, TrashIcon, UserIcon, UsersIcon,
 } from '../../components/icons';
+import IncidentList from '../../components/IncidentList';
 
 /* ── Time-based greeting ── */
 const getGreeting = () => {
@@ -238,42 +239,15 @@ const AuthorityDashboard = () => {
               {incidents.length === 0 ? (
                 <div className="empty-state card card-body">
                   <ClipboardIcon size={32} className="text-slate-300 mb-2" />
-                  <p className="font-semibold text-slate-500">No incident reports</p>
+                  <p className="font-semibold text-slate-500">No incident reports under your fleet.</p>
                 </div>
               ) : (
-                <div className="card divide-y divide-slate-100">
-                  {incidents.map(inc => (
-                    <div key={inc._id} className="flex items-start gap-4 px-5 py-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <SeverityBadge severity={inc.severity} />
-                          <StatusBadge status={inc.status} />
-                          {inc.incidentType && <span className="badge badge-gray">{inc.incidentType}</span>}
-                        </div>
-                        <p className="text-sm text-slate-700 truncate">{inc.description || 'No description'}</p>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                          <span className="flex items-center gap-1"><UsersIcon size={11}/>{inc.reportedBy?.name || inc.username || 'Unknown'}</span>
-                          <span className="flex items-center gap-1"><ClockIcon size={11}/>{fmtTime(inc.createdAt)}</span>
-                          {inc.transport?.name && (
-                            <span className="flex items-center gap-1">
-                              <BusIcon size={11}/>
-                              <Link to={`/transport/${inc.transport._id}`} className="hover:underline text-blue-600">
-                                {inc.transport.name}
-                              </Link>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteIncident(inc._id)}
-                        className="btn-ghost text-red-500 hover:bg-red-50 hover:text-red-600 p-2 shrink-0"
-                        aria-label="Delete incident"
-                      >
-                        <TrashIcon size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                <IncidentList
+                  incidents={incidents}
+                  onDelete={handleDeleteIncident}
+                  onAction={(inc) => navigate(`/authority/manage?transportId=${inc.transportId?._id}`)}
+                  actionLabel="Manage"
+                />
               )}
             </section>
           </>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ClockIcon, WrenchIcon, AlertIcon, UsersIcon, ClipboardIcon, CheckCircleIcon, TrashIcon, LocationIcon, CalendarIcon } from './icons';
+import { ClockIcon, WrenchIcon, AlertIcon, UsersIcon, ClipboardIcon, CheckCircleIcon, TrashIcon, LocationIcon, CalendarIcon, BusIcon, TrainIcon } from './icons';
 
 const typeIcons = {
   delay:       { Icon: ClockIcon, color: '#f59e0b', bg: '#fffbeb', border: '#fef3c7' },
@@ -9,7 +9,7 @@ const typeIcons = {
   other:       { Icon: ClipboardIcon,  color: '#64748b', bg: '#f8fafc', border: '#f1f5f9' },
 };
 
-const IncidentList = ({ incidents = [], onDelete }) => {
+const IncidentList = ({ incidents = [], onDelete, onAction, actionLabel = 'Manage' }) => {
   const [previewImage, setPreviewImage] = useState(null);
 
   if (!incidents.length) {
@@ -49,15 +49,37 @@ const IncidentList = ({ incidents = [], onDelete }) => {
                 </div>
               </div>
 
-              {onDelete && (
-                <button
-                  className="p-2 bg-white text-slate-300 hover:bg-rose-50 hover:text-rose-600 border border-slate-100 rounded-xl transition-all shadow-sm active:scale-90"
-                  onClick={() => onDelete(inc._id)}
-                >
-                  <TrashIcon size={16}/>
-                </button>
-              )}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {onAction && (
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white border border-primary-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-90"
+                    onClick={() => onAction(inc)}
+                  >
+                    <WrenchIcon size={12}/> {actionLabel}
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    className="p-2 bg-white text-slate-300 hover:bg-rose-50 hover:text-rose-600 border border-slate-100 rounded-xl transition-all shadow-sm active:scale-90"
+                    onClick={() => onDelete(inc._id)}
+                  >
+                    <TrashIcon size={16}/>
+                  </button>
+                )}
+              </div>
             </div>
+
+            {inc.transportId && (
+              <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+                <div className={`p-1.5 rounded-lg ${inc.transportId.type === 'train' ? 'bg-indigo-50 text-indigo-500' : 'bg-blue-50 text-blue-500'}`}>
+                  {inc.transportId.type === 'train' ? <TrainIcon size={14} /> : <BusIcon size={14} />}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[11px] font-black text-slate-800 leading-none truncate mb-1">{inc.transportId.name}</div>
+                  <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">#{inc.transportId.transportNumber}</div>
+                </div>
+              </div>
+            )}
 
             <div className="overflow-hidden rounded-xl border border-slate-100 bg-slate-50 mb-3">
               {inc.img ? (
