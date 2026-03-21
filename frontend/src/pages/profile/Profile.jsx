@@ -83,7 +83,7 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="page-container text-center py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">
         <Link to="/login" className="text-blue-600 font-semibold">Please login to view your profile</Link>
       </div>
     );
@@ -101,7 +101,7 @@ const Profile = () => {
     <div className="min-h-screen bg-slate-50">
 
       {/* ── Page Header ── */}
-      <div className="page-header">
+      <div className="bg-white border-b border-slate-200 px-4 py-8 sm:px-6 lg:px-8 mb-8 sm:mb-10 shadow-sm shadow-slate-100/50">
         <div className="max-w-7xl mx-auto flex items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-bold">
@@ -115,7 +115,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <div className="page-container max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
         {/* Notifications */}
         {msg && (
@@ -137,20 +137,20 @@ const Profile = () => {
         ) : (
           <div className="max-w-3xl mx-auto">
             {/* ── Main card ── */}
-            <div className="card card-body">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8">
               <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-100">
                 <h2>Account Information</h2>
                 <div className="flex gap-3">
                   {!editing && (
                     <>
                       <button
-                        className="btn-secondary"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shadow-sm"
                         onClick={() => { setPwForm({ currentPassword: '', newPassword: '' }); setShowPasswordModal(true); setMsg(''); setError(''); }}
                       >
                         <KeyIcon size={15}/> Change Password
                       </button>
                       <button
-                        className="btn-primary"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md active:scale-95"
                         onClick={() => { setEditing(true); setMsg(''); setError(''); }}
                       >
                         <EditIcon size={15} /> Edit
@@ -212,10 +212,10 @@ const Profile = () => {
                 </div>
               )}
               <div>
-                <label className="label">Current Password</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Current Password</label>
                 <input
                   type="password"
-                  className="input"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                   placeholder="Enter current password"
                   value={pwForm.currentPassword}
                   onChange={e => setPwForm(p => ({ ...p, currentPassword: e.target.value }))}
@@ -223,10 +223,10 @@ const Profile = () => {
                 />
               </div>
               <div>
-                <label className="label">New Password</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">New Password</label>
                 <input
                   type="password"
-                  className="input"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                   placeholder="Min. 6 characters"
                   value={pwForm.newPassword}
                   onChange={e => setPwForm(p => ({ ...p, newPassword: e.target.value }))}
@@ -237,11 +237,11 @@ const Profile = () => {
 
             {/* Modal footer */}
             <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
-              <button className="btn-secondary flex-1 justify-center" onClick={() => setShowPasswordModal(false)}>
+              <button className="flex-1 inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shadow-sm" onClick={() => setShowPasswordModal(false)}>
                 Cancel
               </button>
               <button
-                className="btn-primary flex-1 justify-center"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md active:scale-95"
                 onClick={handleChangePassword}
                 disabled={saving || !pwForm.currentPassword || !pwForm.newPassword}
               >

@@ -137,4 +137,19 @@ const removeFavourite = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, updateProfile, addFavourite, removeFavourite };
+// GET /api/users/staff-candidates
+const getStaffCandidates = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'authority') {
+      return sendError(res, 403, 'Only authorities can search for staff');
+    }
+    const candidates = await User.find({ role: { $in: ['commuter', 'driver', 'conductor'] } })
+      .select('name email role')
+      .lean();
+    return sendSuccess(res, 200, candidates);
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getProfile, updateProfile, addFavourite, removeFavourite, getStaffCandidates };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { assignStaff } from '../../api/adminApi';
+import { assignStaff, getStaffCandidates } from '../../api/adminApi';
 import { UserIcon, PlusIcon, AlertIcon, CheckCircleIcon } from '../../components/icons';
 
 /* ── Assign Staff Modal ──────────────────────────────────── */
@@ -9,9 +9,13 @@ const AssignStaffModal = ({ transport, onSaved, onClose }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
   const [success, setSuccess] = useState('');
+  const [candidates, setCandidates] = useState([]);
 
   useEffect(() => {
     setEmail(''); setRole('driver'); setError(''); setSuccess('');
+    getStaffCandidates()
+      .then(res => setCandidates(res.data?.data || []))
+      .catch(() => {});
   }, [transport]);
 
   const handleSubmit = async (e) => {
@@ -55,13 +59,21 @@ const AssignStaffModal = ({ transport, onSaved, onClose }) => {
             <div className="space-y-2">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Commuter Email *</label>
               <input
-                type="email"
+                type="email" list="staff-candidates"
                 className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700"
-                placeholder="commuter@example.com"
+                placeholder="Type or select email..."
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="off"
               />
+              <datalist id="staff-candidates">
+                {candidates.map(c => (
+                  <option key={c._id} value={c.email}>
+                    {c.name} ({c.role})
+                  </option>
+                ))}
+              </datalist>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">The commuter's role will be updated to the assigned role.</p>
             </div>
             

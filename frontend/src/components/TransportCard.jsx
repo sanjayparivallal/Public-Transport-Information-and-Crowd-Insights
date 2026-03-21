@@ -21,6 +21,8 @@ const TransportCard = ({ transport }) => {
   const displayType   = t.type            || transport.type            || 'bus';
   const displayOp     = t.operator        || transport.operator        || null;
   const crowdLevel    = transport.crowdLevel || null;
+  const displayAvailableSeats = transport.availableSeats ?? t.availableSeats ?? t.totalSeats ?? '—';
+  const displayTotalSeats = t.totalSeats || '?';
 
   return (
     <div
@@ -94,10 +96,20 @@ const TransportCard = ({ transport }) => {
         </div>
       </div>
 
-      <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-slate-400 group-hover:text-primary-400 transition-colors">
-          <div className="w-2 h-2 rounded-full bg-current animate-pulse"></div>
-          <span className="text-[10px] font-black tracking-[0.3em] uppercase">Live Status Available</span>
+      <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2 text-slate-400 group-hover:text-primary-400 transition-colors">
+            <div className="w-2 h-2 rounded-full bg-current animate-pulse"></div>
+            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Live Status</span>
+          </div>
+          <div className="hidden sm:block h-3 w-px bg-slate-300"></div>
+          <div className="flex items-center gap-1.5 text-[10px] font-black tracking-[0.2em] uppercase text-slate-500">
+            <span>Seats:</span>
+            <span className={`px-2 py-0.5 rounded border ${displayAvailableSeats === '—' ? 'bg-slate-50 text-slate-600 border-slate-200' : (displayAvailableSeats > 10 ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200')}`}>
+              {displayAvailableSeats}
+            </span>
+            <span className="text-slate-400">/ {displayTotalSeats}</span>
+          </div>
         </div>
         
         <button className="flex items-center gap-2.5 px-5 py-2 bg-slate-900 group-hover:bg-primary-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200 group-hover:shadow-primary-200 group-hover:-translate-y-1">

@@ -71,7 +71,7 @@ const CommuterDashboard = () => {
 
   if (!user) {
     return (
-      <div className="page-container text-center py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">
         <p>Please <Link to="/login" className="text-blue-600 font-semibold hover:underline">login</Link> to view your dashboard.</p>
       </div>
     );
@@ -89,7 +89,7 @@ const CommuterDashboard = () => {
     <div className="min-h-screen bg-slate-50">
 
       {/* ── Page Header ── */}
-      <div className="page-header">
+      <div className="bg-white border-b border-slate-200 px-4 py-8 sm:px-6 lg:px-8 shadow-sm shadow-slate-100/50">
         <div className="max-w-7xl mx-auto">
           <h1>
             {getGreeting()}, <span className="text-blue-600">{displayName}</span>
@@ -103,7 +103,7 @@ const CommuterDashboard = () => {
       </div>
 
       {/* ── Content ── */}
-      <div className="page-container">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <span className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
@@ -125,7 +125,7 @@ const CommuterDashboard = () => {
                 {assignedDetail && (
                   <section>
                     <h2 className="mb-4">Incidents on Assigned Route</h2>
-                    <div className="card card-body text-sm text-slate-500">
+                    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 text-sm text-slate-500">
                       <Link to={`/transport/${assignedDetail._id}`} className="text-blue-600 font-semibold hover:underline">
                         View all incidents for {assignedDetail.name || assignedDetail.transportNumber} →
                       </Link>

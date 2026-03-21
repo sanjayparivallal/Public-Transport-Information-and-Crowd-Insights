@@ -489,7 +489,7 @@ const TransportDetail = () => {
                   {canOperateLive && (
                     <button
                       type="button"
-                      className="btn-secondary"
+                      className="inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shadow-sm"
                       onClick={() => setShowLiveUpdateModal(true)}
                     >
                       <EditIcon size={16} /> Update Live Status
@@ -569,7 +569,7 @@ const TransportDetail = () => {
                 
                 {canReportIncident && (
                   <button 
-                    className="btn-danger" 
+                    className="inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-md active:scale-95" 
                     onClick={() => setShowIncidentModal(true)}
                   >
                     <PlusIcon size={18} className="mr-2" /> 
@@ -619,7 +619,7 @@ const TransportDetail = () => {
                 
                 {canReportCrowd && (
                   <button 
-                    className="btn-primary" 
+                    className="inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md active:scale-95" 
                     onClick={() => setShowCrowdModal(true)}
                   >
                     <PlusIcon size={18} className="mr-2" /> 
@@ -721,7 +721,7 @@ const TransportDetail = () => {
             <div className="p-6">
               <form id="crowdForm" onSubmit={handleCrowdSubmit} className="space-y-4">
                 <div>
-                  <label className="label">Crowd Level</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Crowd Level</label>
                   <div className="grid grid-cols-1 gap-2">
                     {['empty', 'average', 'crowded'].map((level) => (
                       <label 
@@ -746,10 +746,10 @@ const TransportDetail = () => {
                 </div>
                 
                 <div>
-                  <label className="label">Boarding Stop (Optional)</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Boarding Stop (Optional)</label>
                   <input 
                     type="text" 
-                    className="input" 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800" 
                     placeholder="Where did you board?" 
                     value={crowdForm.boardingStop} 
                     onChange={e => setCrowdForm({...crowdForm, boardingStop: e.target.value})} 
@@ -761,7 +761,7 @@ const TransportDetail = () => {
             <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
               <button 
                 type="button" 
-                className="btn-secondary flex-1 justify-center" 
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shadow-sm" 
                 onClick={() => setShowCrowdModal(false)}
               >
                 Cancel
@@ -769,7 +769,7 @@ const TransportDetail = () => {
               <button 
                 type="submit" 
                 form="crowdForm" 
-                className="btn-primary flex-1 justify-center" 
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md active:scale-95" 
                 disabled={reportLoading}
               >
                 {reportLoading ? (
@@ -801,9 +801,9 @@ const TransportDetail = () => {
               <form id="liveUpdateForm" onSubmit={handleLiveUpdateSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="label">Route</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Route</label>
                     <select
-                      className="input"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                       value={liveForm.routeId}
                       onChange={(e) => setLiveForm((p) => ({ ...p, routeId: e.target.value }))}
                     >
@@ -815,9 +815,9 @@ const TransportDetail = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="label">Crowd Level</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Crowd Level</label>
                     <select
-                      className="input"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                       value={liveForm.crowdLevel}
                       onChange={(e) => setLiveForm((p) => ({ ...p, crowdLevel: e.target.value }))}
                     >
@@ -827,25 +827,25 @@ const TransportDetail = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="label">Current Stop</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Current Stop</label>
                     <input
-                      className="input"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                       value={liveForm.currentStop}
                       onChange={(e) => setLiveForm((p) => ({ ...p, currentStop: e.target.value }))}
                     />
                   </div>
                   <div>
-                    <label className="label">Next Stop</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Next Stop</label>
                     <input
-                      className="input"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                       value={liveForm.nextStop}
                       onChange={(e) => setLiveForm((p) => ({ ...p, nextStop: e.target.value }))}
                     />
                   </div>
                   <div>
-                    <label className="label">Status</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Status</label>
                     <select
-                      className="input"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                       value={liveForm.status}
                       onChange={(e) => setLiveForm((p) => ({ ...p, status: e.target.value }))}
                     >
@@ -856,21 +856,21 @@ const TransportDetail = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="label">Delay (Minutes)</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Delay (Minutes)</label>
                     <input
                       type="number"
                       min="0"
-                      className="input"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                       value={liveForm.delayMinutes}
                       onChange={(e) => setLiveForm((p) => ({ ...p, delayMinutes: e.target.value }))}
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="label">Available Seats</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Available Seats</label>
                     <input
                       type="number"
                       min="0"
-                      className="input"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                       value={liveForm.availableSeats}
                       onChange={(e) => setLiveForm((p) => ({ ...p, availableSeats: e.target.value }))}
                     />
@@ -882,7 +882,7 @@ const TransportDetail = () => {
             <div className="flex gap-3 px-6 py-4 border-t border-slate-100">
               <button
                 type="button"
-                className="btn-secondary flex-1 justify-center"
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shadow-sm"
                 onClick={() => setShowLiveUpdateModal(false)}
               >
                 Cancel
@@ -890,7 +890,7 @@ const TransportDetail = () => {
               <button
                 type="submit"
                 form="liveUpdateForm"
-                className="btn-primary flex-1 justify-center"
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md active:scale-95"
                 disabled={reportLoading}
               >
                 {reportLoading ? (
@@ -921,7 +921,7 @@ const TransportDetail = () => {
             <div className="p-6 overflow-y-auto">
               <form id="incidentForm" onSubmit={handleIncidentSubmit} className="space-y-4">
                 <div>
-                  <label className="label">Photo Evidence</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Photo Evidence</label>
                   <div className={`relative border-2 border-dashed rounded-2xl p-6 text-center transition-all ${incidentForm.img ? 'border-red-500 bg-red-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
                     {incidentForm.img ? (
                       <div className="relative inline-block">
@@ -951,9 +951,9 @@ const TransportDetail = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="label">Type *</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Type *</label>
                     <select 
-                      className="input" 
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800" 
                       value={incidentForm.incidentType} 
                       onChange={e => setIncidentForm({...incidentForm, incidentType: e.target.value})}
                     >
@@ -965,9 +965,9 @@ const TransportDetail = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="label">Severity</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Severity</label>
                     <select 
-                      className="input" 
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800" 
                       value={incidentForm.severity} 
                       onChange={e => setIncidentForm({...incidentForm, severity: e.target.value})}
                     >
@@ -980,10 +980,10 @@ const TransportDetail = () => {
                 </div>
 
                 <div>
-                  <label className="label">Location</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Location</label>
                   <input 
                     type="text" 
-                    className="input" 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800" 
                     placeholder="E.g. Near Teynampet station" 
                     value={incidentForm.location} 
                     onChange={e => setIncidentForm({...incidentForm, location: e.target.value})} 
@@ -991,9 +991,9 @@ const TransportDetail = () => {
                 </div>
 
                 <div>
-                  <label className="label">Description</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Description</label>
                   <textarea 
-                    className="input min-h-25" 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800 min-h-25" 
                     placeholder="Tell us what happened..." 
                     value={incidentForm.description} 
                     onChange={e => setIncidentForm({...incidentForm, description: e.target.value})}
@@ -1005,7 +1005,7 @@ const TransportDetail = () => {
             <div className="flex gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
               <button 
                 type="button" 
-                className="btn-secondary flex-1 justify-center" 
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shadow-sm" 
                 onClick={() => setShowIncidentModal(false)}
               >
                 Cancel
@@ -1013,7 +1013,7 @@ const TransportDetail = () => {
               <button 
                 type="submit" 
                 form="incidentForm" 
-                className="btn-danger flex-1 justify-center" 
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-md active:scale-95" 
                 disabled={reportLoading}
               >
                 {reportLoading ? (

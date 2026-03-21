@@ -101,8 +101,10 @@ axiosInstance.interceptors.response.use(
     }
 
     // Normal error normalisation
-    const message =
-      error.response?.data?.message || error.message || 'Something went wrong';
+    const isNetworkError = error.message === 'Network Error' || error.code === 'ERR_NETWORK';
+    const message = isNetworkError 
+      ? 'Internet connection error. Please check your network and try again.' 
+      : (error.response?.data?.message || error.message || 'Something went wrong');
     
     // Explicitly reject with an Error object containing the string message
     // to prevent components from trying to render the error object directly

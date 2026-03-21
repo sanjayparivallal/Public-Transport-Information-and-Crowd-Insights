@@ -92,31 +92,31 @@ const FareCalculator = ({ fareTable }) => {
         <div className="space-y-4 relative z-10">
           <div className="grid grid-cols-1 gap-3">
             <div className="space-y-2">
-              <label className="label">Origin Stop</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Origin Stop</label>
               <input
                 type="text"
                 list="fare-stops"
-                className="input"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                 placeholder="e.g. Salem Junction"
                 value={fareFrom}
                 onChange={e => { setFareFrom(e.target.value); setFareResult(null); }}
               />
             </div>
             <div className="space-y-2">
-              <label className="label">Destination</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Destination</label>
               <input
                 type="text"
                 list="fare-stops"
-                className="input"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                 placeholder="e.g. Chennai Central"
                 value={fareTo}
                 onChange={e => { setFareTo(e.target.value); setFareResult(null); }}
               />
             </div>
             <div className="space-y-2">
-              <label className="label">Travel Class</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Travel Class</label>
               <select
-                className="input"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                 value={fareClass}
                 onChange={e => { setFareClass(e.target.value); setFareResult(null); }}
                 disabled={!availableClasses.length}
@@ -144,7 +144,7 @@ const FareCalculator = ({ fareTable }) => {
           </datalist>
           
           <button
-            className="btn-primary w-full justify-center"
+            className="w-full inline-flex items-center justify-center px-6 py-3.5 font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md active:scale-95 text-lg"
             onClick={handleFareCalc}
             disabled={!fareFrom || !fareTo || !fareClass || (fareFrom && fareTo && !pairFares.length)}
           >

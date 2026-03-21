@@ -127,7 +127,7 @@ const ManageTransport = () => {
   // Access guard
   if (!user || !isAuthority) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <div className="bg-white rounded-[2.5rem] p-16 shadow-sm border border-slate-100 flex flex-col items-center">
           <div className="w-20 h-20 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-6">
             <AlertIcon size={40} />
@@ -137,7 +137,7 @@ const ManageTransport = () => {
             Only Transport Authorities can access this management portal.
           </p>
           <button 
-            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg transition-all shadow-sm active:scale-95"
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-95"
             onClick={() => navigate('/login')}
           >
             Login as Authority
@@ -174,57 +174,57 @@ const ManageTransport = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50/50 pb-12">
       {/* ── Page Header ── */}
-      <div className="page-header">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white border-b border-slate-200 px-4 py-8 sm:px-6 lg:px-8 mb-8 sm:mb-10 shadow-sm shadow-slate-100/50">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
           <div>
-            <h1 className="flex items-center gap-2"><WrenchIcon size={22} className="text-blue-600" /> Manage Transport</h1>
-            <p className="mt-1">Add, edit, assign staff and manage your entire fleet.</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3"><span className="p-2 bg-blue-50 text-blue-600 rounded-xl"><WrenchIcon size={24} /></span> Manage Transport</h1>
+            <p className="mt-2 text-sm font-medium text-slate-500">Add, edit, assign staff and manage your entire fleet.</p>
           </div>
-          <button className="btn-primary shrink-0" onClick={openAddModal}>
-            <PlusIcon size={16} /> Add Transport
+          <button className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all hover:-translate-y-0.5 shrink-0" onClick={openAddModal}>
+            <PlusIcon size={18} /> Add Transport
           </button>
         </div>
       </div>
 
-      <div className="page-container">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Error */}
         {error && (
-          <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mb-6">
-            <AlertIcon size={16}/> {error}
+          <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-semibold mb-6 shadow-sm">
+            <AlertIcon size={18} className="text-red-500"/> {error}
           </div>
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {[
-            { label: 'Total Transport', value: stats.total,  icon: WrenchIcon, color: 'text-blue-600',   bg: 'bg-blue-50'   },
-            { label: 'Total Bus',       value: stats.buses,  icon: BusIcon,    color: 'text-indigo-600', bg: 'bg-indigo-50' },
-            { label: 'Total Train',     value: stats.trains, icon: TrainIcon,  color: 'text-violet-600', bg: 'bg-violet-50' },
-          ].map(({ label, value, icon: Icon, color, bg }) => (
-            <div className="card card-body flex items-center gap-4" key={label}>
-              <div className={`p-3 rounded-xl shrink-0 ${bg}`}><Icon size={20} className={color} /></div>
+            { label: 'Total Transport', value: stats.total,  icon: WrenchIcon, color: 'text-blue-600',   bg: 'bg-blue-50', border: 'border-blue-100'   },
+            { label: 'Total Bus',       value: stats.buses,  icon: BusIcon,    color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+            { label: 'Total Train',     value: stats.trains, icon: TrainIcon,  color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
+          ].map(({ label, value, icon: Icon, color, bg, border }) => (
+            <div className={`bg-white border ${border} rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex items-center gap-4 sm:gap-5`} key={label}>
+              <div className={`p-3.5 rounded-xl shrink-0 ${bg}`}><Icon size={24} className={color} /></div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{value}</p>
-                <p className="text-xs text-slate-400 font-medium">{label}</p>
+                <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{value}</p>
+                <p className="text-xs sm:text-sm text-slate-500 font-bold uppercase tracking-wider mt-0.5">{label}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Advanced Filters */}
-        <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/40 border border-slate-100 p-8 mb-8">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 mb-8">
           <div className="flex flex-col md:flex-row items-end gap-6">
             <div className="flex-grow space-y-2 w-full">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5 mb-2">
                 <SearchIcon size={14}/> Find Vehicle
               </label>
               <div className="relative">
-                <SearchIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+                <SearchIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700"
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
                   placeholder="ID, Name or Operator..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -233,9 +233,9 @@ const ManageTransport = () => {
             </div>
             
             <div className="w-full md:w-64 space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Category</label>
               <select
-                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-primary-50 focus:border-primary-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-no-repeat cursor-pointer"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold text-slate-800 appearance-none bg-no-repeat cursor-pointer"
                 style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2394a3b8\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundSize: '1.25rem' }}
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
@@ -248,7 +248,7 @@ const ManageTransport = () => {
             
             <button 
               onClick={fetchTransports}
-              className="p-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-400 hover:text-primary-600 rounded-2xl transition-all shadow-sm active:scale-95"
+              className="p-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-blue-600 rounded-xl transition-all shadow-sm active:scale-95 shrink-0"
               title="Refresh Fleet Data"
             >
               <RefreshIcon size={20} className={loading ? 'animate-spin' : ''} />
@@ -257,40 +257,40 @@ const ManageTransport = () => {
         </div>
 
         {/* Fleet Table */}
-        <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Vehicle Identity</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Route Strategy</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Active Personnel</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Ops Status</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Vehicle Identity</th>
+                  <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Route Strategy</th>
+                  <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Active Personnel</th>
+                  <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Ops Status</th>
+                  <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-100">
                 {loading && transports.length === 0 ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan="5" className="px-8 py-8">
-                        <div className="h-14 bg-slate-50 rounded-2xl w-full"></div>
+                      <td colSpan="5" className="px-6 py-6">
+                        <div className="h-14 bg-slate-50 rounded-xl w-full"></div>
                       </td>
                     </tr>
                   ))
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-8 py-32 text-center">
-                      <div className="w-24 h-24 bg-slate-50 text-slate-300 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
-                        <WrenchIcon size={48} />
+                    <td colSpan="5" className="px-6 py-24 text-center">
+                      <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-slate-100">
+                        <WrenchIcon size={40} />
                       </div>
-                      <h3 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Fleet Empty</h3>
-                      <p className="text-slate-400 font-medium max-w-xs mx-auto mb-10 text-lg leading-relaxed">
+                      <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Fleet Empty</h3>
+                      <p className="text-slate-500 font-medium max-w-sm mx-auto mb-8 text-sm leading-relaxed">
                         No vehicles matching your search criteria were found in our database.
                       </p>
                       <button 
                         onClick={() => { setSearch(''); setTypeFilter('all'); }}
-                        className="px-4 py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                        className="px-5 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-sm active:scale-95"
                       >
                         Reset Filters
                       </button>
@@ -301,17 +301,17 @@ const ManageTransport = () => {
                     <tr 
                       key={t._id} 
                       id={`transport-${t._id}`}
-                      className={`transition-all group ${highlightedId === t._id ? 'bg-primary-50 ring-2 ring-primary-200 ring-inset' : 'hover:bg-slate-50/30'}`}
+                      className={`transition-all group ${highlightedId === t._id ? 'bg-blue-50/50 ring-2 ring-blue-200 ring-inset' : 'hover:bg-slate-50/50'}`}
                     >
-                      <td className="px-8 py-8">
+                      <td className="px-6 py-5">
                         <Link to={`/transport/${t._id}`} className="flex items-center gap-4 group/link">
-                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border transition-transform group-hover:scale-110 ${t.type === 'bus' ? 'bg-primary-50 text-primary-600 border-primary-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'}`}>
-                            {t.type === 'bus' ? <BusIcon size={24} /> : <TrainIcon size={24} />}
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm border transition-transform group-hover:scale-105 ${t.type === 'bus' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-violet-50 text-violet-600 border-violet-100'}`}>
+                            {t.type === 'bus' ? <BusIcon size={20} /> : <TrainIcon size={20} />}
                           </div>
                           <div>
-                            <div className="text-lg font-black text-slate-800 tracking-tight leading-none mb-1.5 group-hover/link:text-primary-600 transition-colors">{t.name}</div>
+                            <div className="text-base font-bold text-slate-900 tracking-tight leading-none mb-2 group-hover/link:text-blue-600 transition-colors">{t.name}</div>
                             <div className="flex items-center gap-2">
-                               <div className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-black uppercase tracking-widest border border-slate-200">
+                               <div className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-black uppercase tracking-wider border border-slate-200">
                                 #{t.transportNumber}
                                </div>
                                <span className="text-[10px] font-bold text-slate-400">by {t.operator || 'Authority'}</span>
@@ -319,33 +319,33 @@ const ManageTransport = () => {
                           </div>
                         </Link>
                       </td>
-                      <td className="px-8 py-8">
+                      <td className="px-6 py-5">
                         <button 
-                          className="flex items-center gap-2.5 px-5 py-2.5 bg-slate-100 hover:bg-slate-900 group-hover:bg-slate-900 hover:text-white group-hover:text-white text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm group-hover:shadow-xl group-hover:shadow-slate-200"
+                          className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-800 group-hover:bg-slate-800 hover:text-white group-hover:text-white text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-sm group-hover:shadow-md"
                           onClick={() => openRoutesModal(t)}
                         >
-                          <MapIcon size={16} /> Update Routes &amp; Fares
+                          <MapIcon size={14} /> Update Routes &amp; Fares
                         </button>
                       </td>
-                      <td className="px-8 py-8">
+                      <td className="px-6 py-5">
                         <div className="flex flex-col gap-3">
                           <div className="flex flex-col">
-                            <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5 leading-none">Driver</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Driver</span>
                             {t.assignedDriver ? (
-                              <div className="flex items-center justify-between group/staff max-w-[120px]">
-                                <span className="text-xs font-black text-slate-800 leading-none truncate">{t.assignedDriver.name || t.assignedDriver.email || 'Assigned'}</span>
-                                <button className="p-1 text-slate-400 hover:text-rose-500 transition-all ml-2" onClick={() => handleRemoveStaff(t._id, 'driver')} title="Deassign Driver"><TrashIcon size={12}/></button>
+                              <div className="flex items-center justify-between group/staff max-w-[140px]">
+                                <span className="text-xs font-bold text-slate-800 leading-none truncate">{t.assignedDriver.name || t.assignedDriver.email || 'Assigned'}</span>
+                                <button className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-all ml-2" onClick={() => handleRemoveStaff(t._id, 'driver')} title="Deassign Driver"><TrashIcon size={12}/></button>
                               </div>
                             ) : (
-                              <button className="text-[10px] font-bold text-primary-500 hover:text-primary-600 text-left underline underline-offset-4 decoration-primary-200" onClick={() => openAssignModal(t)}>+ Assign Driver</button>
+                              <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600 text-left underline underline-offset-4 decoration-blue-200" onClick={() => openAssignModal(t)}>+ Assign Driver</button>
                             )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5 leading-none">Conductor</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Conductor</span>
                             {t.assignedConductor ? (
-                              <div className="flex items-center justify-between group/staff max-w-[120px]">
-                                <span className="text-xs font-black text-slate-800 leading-none truncate">{t.assignedConductor.name || t.assignedConductor.email || 'Assigned'}</span>
-                                <button className="p-1 text-slate-400 hover:text-rose-500 transition-all ml-2" onClick={() => handleRemoveStaff(t._id, 'conductor')} title="Deassign Conductor"><TrashIcon size={12}/></button>
+                              <div className="flex items-center justify-between group/staff max-w-[140px]">
+                                <span className="text-xs font-bold text-slate-800 leading-none truncate">{t.assignedConductor.name || t.assignedConductor.email || 'Assigned'}</span>
+                                <button className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-all ml-2" onClick={() => handleRemoveStaff(t._id, 'conductor')} title="Deassign Conductor"><TrashIcon size={12}/></button>
                               </div>
                             ) : (
                               <button className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 text-left underline underline-offset-4 decoration-indigo-200" onClick={() => openAssignModal(t)}>+ Assign Conductor</button>
@@ -353,42 +353,42 @@ const ManageTransport = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-8">
-                        <div className="scale-90 origin-left">
+                      <td className="px-6 py-5">
+                        <div className="origin-left">
                           <StatusBadge isActive={t.isActive} />
                         </div>
                       </td>
-                      <td className="px-8 py-8 text-right">
+                      <td className="px-6 py-5 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {/* View transport detail */}
                           <Link
                             to={`/transport/${t._id}`}
-                            className="btn text-xs py-1.5 px-3 btn-secondary text-blue-600 border-blue-200 hover:bg-blue-50"
+                            className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg transition-colors border border-blue-200 shadow-sm text-xs"
                             title="View transport routes & details"
                           >
-                            View →
+                            View
                           </Link>
                           {/* Pause / Resume */}
                           <button
-                            className={`btn text-xs py-1.5 px-3 ${t.isActive !== false ? 'btn-secondary text-amber-600 border-amber-200 hover:bg-amber-50' : 'btn-secondary text-green-600 border-green-200 hover:bg-green-50'}`}
+                            className={`inline-flex items-center justify-center px-3 py-1.5 font-bold rounded-lg transition-colors border shadow-sm text-xs ${t.isActive !== false ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'}`}
                             onClick={() => handlePause(t)}
                             title={t.isActive !== false ? 'Pause transport' : 'Resume transport'}
                           >
                             {t.isActive !== false ? 'Pause' : 'Resume'}
                           </button>
                           <button
-                            className="p-2 btn-ghost text-slate-500 hover:text-blue-600"
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             onClick={() => openEditModal(t)}
                             title="Edit"
                           >
-                            <EditIcon size={17} />
+                            <EditIcon size={16} />
                           </button>
                           <button
-                            className="p-2 btn-ghost text-slate-500 hover:text-red-600"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                             onClick={() => openDeleteModal(t)}
                             title="Delete"
                           >
-                            <TrashIcon size={17} />
+                            <TrashIcon size={16} />
                           </button>
                         </div>
                       </td>

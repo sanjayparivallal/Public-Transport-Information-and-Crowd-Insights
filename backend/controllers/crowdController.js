@@ -76,7 +76,7 @@ const updateLivePosition = async (req, res, next) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    // Update the available seats on the specific route
+    // Update the available seats on the specific route and transport
     if (availableSeats !== undefined) {
       const Route = require('../models/Route');
       await Route.findByIdAndUpdate(

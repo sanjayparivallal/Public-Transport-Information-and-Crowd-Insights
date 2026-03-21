@@ -21,6 +21,11 @@ const errorHandler = (err, req, res, next) => {
     return res.status(400).json({ success: false, message: `Invalid ${err.path}: ${err.value}` });
   }
 
+  // Internet Connection / MongoDB Driver errors
+  if (err.name === 'MongoServerSelectionError' || err.message?.includes('ENOTFOUND')) {
+    return res.status(503).json({ success: false, message: 'Internet connection error. Please try again later.' });
+  }
+
   const statusCode = err.statusCode || 500;
   return res.status(statusCode).json({
     success: false,

@@ -9,12 +9,11 @@ const SignupAuthority = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    name: '', email: '', password: '', confirmPassword: '',
+    name: '', email: '', password: '',
     organizationName: '', authorityCode: '', region: '',
   });
   const [errors, setErrors]   = useState({});
   const [showPw, setShowPw]   = useState(false);
-  const [showCp, setShowCp]   = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -32,8 +31,6 @@ const SignupAuthority = () => {
     if (!form.region.trim())           errs.region = 'Region is required.';
     if (!form.password)                errs.password = 'Password is required.';
     else if (form.password.length < 6) errs.password = 'Minimum 6 characters.';
-    if (!form.confirmPassword)         errs.confirmPassword = 'Please confirm your password.';
-    else if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords do not match.';
     return errs;
   };
 
@@ -55,89 +52,84 @@ const SignupAuthority = () => {
     } finally { setLoading(false); }
   };
 
-  const ic = (f) => `input pl-9 ${errors[f] ? 'input-error' : ''}`;
-  const Err = ({ f }) => errors[f] ? <p className="mt-1 text-xs text-red-600">{errors[f]}</p> : null;
+  const ic = (f) => `w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-2.5 pl-11 pr-4 text-sm font-medium text-slate-900 
+                       placeholder:text-slate-400 outline-hidden transition-all focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/10 
+                       ${errors[f] ? 'border-red-500 bg-red-50 focus:border-red-500' : ''}`;
+  
+  const Err = ({ f }) => errors[f] ? <p className="mt-1.5 text-[10px] font-black uppercase tracking-tight text-red-500 animate-in fade-in slide-in-from-top-1">{errors[f]}</p> : null;
+
+  const SectionHeader = ({ icon: Icon, title }) => (
+    <div className="flex items-center gap-2.5 mb-4 pb-2 border-b border-slate-100">
+      <div className="p-1.5 bg-amber-50 rounded-lg text-amber-600">
+        <Icon size={16} />
+      </div>
+      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+        {title}
+      </h3>
+    </div>
+  );
 
   return (
     <AuthLayout
       title="Authority Registration"
       subtitle="Register your transport authority"
       badge="Authority"
-      badgeClass="badge-amber"
-      maxWidth="max-w-2xl"
+      badgeClass="bg-amber-100 text-amber-600 shadow-sm shadow-amber-100"
+      maxWidth="max-w-3xl"
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-6">
 
         {/* ── Administrator Details ── */}
-        <div>
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">
-            Administrator Details
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-            <div>
-              <label htmlFor="name" className="label">Full Name *</label>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <SectionHeader icon={UserIcon} title="Administrator Details" />
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+            <div className="group">
+              <label htmlFor="name" className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 group-focus-within:text-amber-600 transition-colors">Full Name *</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><UserIcon size={16} /></span>
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none group-focus-within:text-amber-500 transition-colors"><UserIcon size={18} /></span>
                 <input id="name" name="name" type="text" placeholder="Admin Name"
                   className={ic('name')} value={form.name} onChange={handleChange} />
               </div>
               <Err f="name" />
             </div>
 
-            <div>
-              <label htmlFor="email" className="label">Email Address *</label>
+            <div className="group">
+              <label htmlFor="email" className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 group-focus-within:text-amber-600 transition-colors">Email Address *</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><MailIcon size={16} /></span>
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none group-focus-within:text-amber-500 transition-colors"><MailIcon size={18} /></span>
                 <input id="email" name="email" type="email" placeholder="admin@authority.gov"
                   className={ic('email')} value={form.email} onChange={handleChange} />
               </div>
               <Err f="email" />
             </div>
 
-            <div>
-              <label htmlFor="auth-password" className="label">Password *</label>
+            <div className="group">
+              <label htmlFor="auth-password" className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 group-focus-within:text-amber-600 transition-colors">Password *</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><LockIcon size={16} /></span>
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none group-focus-within:text-amber-500 transition-colors"><LockIcon size={18} /></span>
                 <input id="auth-password" name="password" type={showPw ? 'text' : 'password'}
-                  placeholder="Min. 6 characters" className={`${ic('password')} pr-9`}
+                  placeholder="Min. 6 characters" className={`${ic('password')} pr-12`}
                   value={form.password} onChange={handleChange} />
                 <button type="button" onClick={() => setShowPw(v => !v)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-amber-600">
-                  {showPw ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-amber-600 transition-colors">
+                  {showPw ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
                 </button>
               </div>
               <Err f="password" />
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="label">Confirm Password *</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><LockIcon size={16} /></span>
-                <input id="confirmPassword" name="confirmPassword" type={showCp ? 'text' : 'password'}
-                  placeholder="Re-enter password" className={`${ic('confirmPassword')} pr-9`}
-                  value={form.confirmPassword} onChange={handleChange} />
-                <button type="button" onClick={() => setShowCp(v => !v)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-amber-600">
-                  {showCp ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
-                </button>
-              </div>
-              <Err f="confirmPassword" />
             </div>
           </div>
         </div>
 
         {/* ── Organisation Details ── */}
-        <div>
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">
-            Organisation Details
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-            <div>
-              <label htmlFor="organizationName" className="label">Organisation Name *</label>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+          <SectionHeader icon={BuildingIcon} title="Organisation Details" />
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+            <div className="group">
+              <label htmlFor="organizationName" className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 group-focus-within:text-amber-600 transition-colors">Organisation Name *</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><BuildingIcon size={16} /></span>
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none group-focus-within:text-amber-500 transition-colors"><BuildingIcon size={18} /></span>
                 <input id="organizationName" name="organizationName" type="text"
                   placeholder="Tamil Nadu State Transport" className={ic('organizationName')}
                   value={form.organizationName} onChange={handleChange} />
@@ -145,10 +137,10 @@ const SignupAuthority = () => {
               <Err f="organizationName" />
             </div>
 
-            <div>
-              <label htmlFor="authorityCode" className="label">Authority Code *</label>
+            <div className="group">
+              <label htmlFor="authorityCode" className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 group-focus-within:text-amber-600 transition-colors">Authority Code *</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><IdCardIcon size={16} /></span>
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none group-focus-within:text-amber-500 transition-colors"><IdCardIcon size={18} /></span>
                 <input id="authorityCode" name="authorityCode" type="text"
                   placeholder="TNSTC-NTH" className={ic('authorityCode')}
                   value={form.authorityCode} onChange={handleChange} />
@@ -156,12 +148,12 @@ const SignupAuthority = () => {
               <Err f="authorityCode" />
             </div>
 
-            <div className="sm:col-span-2">
-              <label htmlFor="region" className="label">Region *</label>
+            <div className="sm:col-span-2 group">
+              <label htmlFor="region" className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 group-focus-within:text-amber-600 transition-colors">Region *</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none"><LocationIcon size={16} /></span>
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none group-focus-within:text-amber-500 transition-colors"><LocationIcon size={18} /></span>
                 <input id="region" name="region" type="text" placeholder="Salem"
-                  className={ic('region')} value={form.region} onChange={handleChange} />
+                   className={ic('region')} value={form.region} onChange={handleChange} />
               </div>
               <Err f="region" />
             </div>
@@ -169,23 +161,22 @@ const SignupAuthority = () => {
         </div>
 
         <button type="submit" disabled={loading}
-          className="w-full justify-center py-2.5 btn bg-amber-600 hover:bg-amber-700 text-white shadow-sm focus:ring-amber-500 focus:ring-2 focus:ring-offset-2 focus:outline-none">
+          className="relative w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-2xl shadow-xl shadow-amber-200 
+                     flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group overflow-hidden mt-2">
+          <div className="absolute inset-0 bg-linear-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:animate-shimmer" />
           {loading
-            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Registering…</>
-            : <><BuildingIcon size={16} />Register Authority Account</>}
+            ? <><span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />Registering…</>
+            : <><BuildingIcon size={20} className="group-hover:rotate-6 transition-transform" />Register Authority Account</>}
         </button>
       </form>
 
-      <div className="divider-text my-5">or continue with</div>
-
-      <div className="text-center text-sm space-y-1.5">
-        <p className="text-slate-500">
-          Have an account?{' '}
-          <Link to="/login/authority" className="text-amber-600 font-semibold hover:underline">Sign In</Link>
+      <div className="mt-6 text-center text-sm">
+        <p className="text-slate-500 font-medium">
+          Already have an account?{' '}
+          <Link to="/login" className="font-bold text-amber-600 hover:text-amber-700 hover:underline">Sign In</Link>
         </p>
-        <p className="text-slate-500">
-          Registering as commuter?{' '}
-          <Link to="/signup/commuter" className="text-blue-600 font-semibold hover:underline">Commuter Sign Up</Link>
+        <p className="text-slate-400 mt-2 text-xs font-medium">
+          Registering as commuter? <Link to="/signup/commuter" className="font-bold text-slate-600 hover:text-slate-900 hover:underline">Commuter Sign Up</Link>
         </p>
       </div>
     </AuthLayout>

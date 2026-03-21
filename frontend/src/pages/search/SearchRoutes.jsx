@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { toast } from 'react-toastify';
 import { searchTransports } from '../../api/transportApi';
@@ -16,6 +16,30 @@ const SearchRoutes = () => {
   const [searched, setSearched]   = useState(false);
   const [pagination, setPagination] = useState(null);
   const [page, setPage]           = useState(1);
+  const [options, setOptions]     = useState({ origins: [], destinations: [], identifiers: [] });
+
+  useEffect(() => {
+    searchTransports({ limit: 500 }).then(res => {
+      const payload = res.data?.data?.results || res.data?.results || [];
+      const origins = new Set();
+      const destinations = new Set();
+      const identifiers = new Set();
+      
+      payload.forEach(r => {
+        if (r.origin) origins.add(r.origin);
+        if (r.destination) destinations.add(r.destination);
+        const t = r.transportId || {};
+        if (t.transportNumber) identifiers.add(t.transportNumber);
+        if (t.name) identifiers.add(t.name);
+      });
+
+      setOptions({
+        origins: Array.from(origins).sort(),
+        destinations: Array.from(destinations).sort(),
+        identifiers: Array.from(identifiers).sort(),
+      });
+    }).catch(() => {});
+  }, []);
 
   const handleChange = (e) => {
     setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -61,7 +85,7 @@ const SearchRoutes = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* ── Page Header ── */}
-      <div className="page-header">
+      <div className="bg-white border-b border-slate-200 px-4 py-5 sm:px-6 lg:px-8 mb-6 sm:mb-8 shadow-sm shadow-slate-100/50">
         <div className="max-w-7xl mx-auto flex items-center gap-3">
           <SearchIcon size={20} className="text-blue-600" />
           <div>
@@ -71,10 +95,10 @@ const SearchRoutes = () => {
         </div>
       </div>
 
-      <div className="page-container">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="max-w-5xl mx-auto">
           {/* Search Form Card */}
-          <div className="card card-body mb-8">
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 sm:p-6 mb-8">
             <h2 className="mb-4 flex items-center gap-2">
               <LocationIcon size={18} className="text-blue-600" /> Search Parameters
             </h2>
@@ -87,12 +111,16 @@ const SearchRoutes = () => {
                     <div className="relative">
                       <LocationIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
                       <input
-                        name="origin" type="text"
-                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700 shadow-inner"
+                        name="origin" type="text" list="origins"
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700 shadow-inner"
                         placeholder="e.g. Salem"
                         value={filters.origin}
                         onChange={handleChange}
+                        autoComplete="off"
                       />
+                      <datalist id="origins">
+                        {options.origins.map(o => <option key={o} value={o} />)}
+                      </datalist>
                     </div>
                   </div>
 
@@ -101,26 +129,34 @@ const SearchRoutes = () => {
                     <div className="relative">
                       <LocationIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
                       <input
-                        name="destination" type="text"
-                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700 shadow-inner"
+                        name="destination" type="text" list="destinations"
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700 shadow-inner"
                         placeholder="e.g. Chennai"
                         value={filters.destination}
                         onChange={handleChange}
+                        autoComplete="off"
                       />
+                      <datalist id="destinations">
+                        {options.destinations.map(d => <option key={d} value={d} />)}
+                      </datalist>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bus / Train No.</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Transport Name or No.</label>
                     <div className="relative">
                       <BuildingIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
                       <input
-                        name="busNo" type="text"
-                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700 shadow-inner"
-                        placeholder="e.g. 12A"
+                        name="busNo" type="text" list="identifiers"
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700 shadow-inner"
+                        placeholder="e.g. Express or 12A"
                         value={filters.busNo}
                         onChange={handleChange}
+                        autoComplete="off"
                       />
+                      <datalist id="identifiers">
+                        {options.identifiers.map(i => <option key={i} value={i} />)}
+                      </datalist>
                     </div>
                   </div>
 
@@ -129,7 +165,7 @@ const SearchRoutes = () => {
                     <div className="relative">
                       <select 
                         name="type" 
-                        className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-no-repeat shadow-inner"
+                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-no-repeat shadow-inner"
                         style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2394a3b8\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1.25rem center', backgroundSize: '1.25rem' }}
                         value={filters.type} 
                         onChange={handleChange}
@@ -145,7 +181,7 @@ const SearchRoutes = () => {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Earliest Departure</label>
                     <input
                       name="departureTime" type="time"
-                      className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all font-bold text-slate-700 shadow-inner"
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all font-bold text-slate-700 shadow-inner"
                       value={filters.departureTime}
                       onChange={handleChange}
                     />
@@ -208,12 +244,12 @@ const SearchRoutes = () => {
               </div>
             ) : searched ? (
               results.length === 0 ? (
-                <div className="bg-white rounded-[3rem] p-24 text-center shadow-xl shadow-slate-200/40 border border-slate-100">
-                  <div className="w-24 h-24 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-                    <AlertIcon size={48} />
+                <div className="bg-white rounded-3xl p-16 text-center shadow-xl shadow-slate-200/40 border border-slate-100">
+                  <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <AlertIcon size={32} />
                   </div>
-                  <h3 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Access Denied: No Results</h3>
-                  <p className="text-slate-500 font-medium max-w-lg mx-auto mb-10 text-lg leading-relaxed text-balance">
+                  <h3 className="text-2xl font-black text-slate-800 mb-4 tracking-tight">No Results</h3>
+                  <p className="text-slate-500 font-medium max-w-lg mx-auto mb-8 text-base leading-relaxed text-balance">
                     We couldn't find any fleets currently servicing this operational sector. Try broadening your geographic parameters.
                   </p>
                   <button 
@@ -254,16 +290,16 @@ const SearchRoutes = () => {
                 </div>
               )
             ) : (
-              <div className="bg-white rounded-[3rem] p-32 text-center shadow-xl shadow-slate-200/40 border border-slate-100 relative overflow-hidden group">
+                <div className="bg-white rounded-3xl p-16 text-center shadow-xl shadow-slate-200/40 border border-slate-100 relative overflow-hidden group">
                 {/* Background decorative spot */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary-50/50 rounded-full blur-[100px] pointer-events-none"></div>
                 
                 <div className="relative z-10 font-sans">
-                  <div className="w-24 h-24 bg-primary-100 text-primary-600 rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-sm transition-transform duration-700 group-hover:rotate-12">
-                    <LocationIcon size={48} />
+                  <div className="w-16 h-16 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm transition-transform duration-700 group-hover:rotate-12">
+                    <LocationIcon size={32} />
                   </div>
-                  <h3 className="text-4xl md:text-5xl font-black text-slate-800 mb-6 tracking-tighter">Your Network, <span className="text-primary-600">Unveiled</span></h3>
-                  <p className="text-slate-400 text-xl font-medium max-w-xl mx-auto leading-relaxed text-balance">
+                  <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-4 tracking-tight">Your Network, <span className="text-primary-600">Unveiled</span></h3>
+                  <p className="text-slate-500 text-lg font-medium max-w-xl mx-auto leading-relaxed text-balance">
                     Initialize your journey parameters above to synchronize with the global transit grid and real-time crowd dynamics.
                   </p>
                 </div>

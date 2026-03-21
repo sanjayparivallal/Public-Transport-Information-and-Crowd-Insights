@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { loginUser } from '../../api/authApi';
 import { useAuth } from '../../context/AuthContext';
-import { MailIcon, LockIcon, EyeIcon, EyeOffIcon, LogInIcon } from '../../components/icons';
+import { MailIcon, LockIcon, EyeIcon, EyeOffIcon, LogInIcon, UserIcon, BuildingIcon } from '../../components/icons';
 import AuthLayout from '../../components/AuthLayout';
 
 const Login = () => {
@@ -56,56 +56,65 @@ const Login = () => {
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
 
         {/* Email */}
-        <div>
-          <label htmlFor="email" className="label">Email Address</label>
+        <div className="group">
+          <label htmlFor="email" className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 group-focus-within:text-blue-600 transition-colors">
+            Email Address
+          </label>
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
-              <MailIcon size={16} />
+            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none group-focus-within:text-blue-500 transition-colors">
+              <MailIcon size={18} />
             </span>
-            <input id="email" name="email" type="email" className="input pl-9"
+            <input id="email" name="email" type="email" 
+              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-2.5 pl-11 pr-4 text-sm font-medium text-slate-900 
+                         placeholder:text-slate-400 outline-hidden focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all"
               placeholder="you@example.com" value={form.email} onChange={handleChange}
               autoComplete="email" required />
           </div>
         </div>
 
         {/* Password */}
-        <div>
-          <label htmlFor="password" className="label">Password</label>
+        <div className="group">
+          <label htmlFor="password" className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 group-focus-within:text-blue-600 transition-colors">
+            Password
+          </label>
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
-              <LockIcon size={16} />
+            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none group-focus-within:text-blue-500 transition-colors">
+              <LockIcon size={18} />
             </span>
             <input id="password" name="password" type={showPw ? 'text' : 'password'}
-              className="input pl-9 pr-9"
-              placeholder="Enter your password" value={form.password} onChange={handleChange}
+              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-2.5 pl-11 pr-12 text-sm font-medium text-slate-900 
+                         placeholder:text-slate-400 outline-hidden focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all"
+              placeholder="••••••••" value={form.password} onChange={handleChange}
               autoComplete="current-password" required />
             <button type="button" onClick={() => setShowPw(v => !v)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-blue-600 transition-colors"
               aria-label={showPw ? 'Hide password' : 'Show password'}>
-              {showPw ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+              {showPw ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
             </button>
           </div>
         </div>
 
-        <button type="submit" className="btn-primary w-full justify-center py-2.5 mt-2" disabled={loading}>
+
+        <button type="submit" 
+          className="relative w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-2xl shadow-xl shadow-blue-200 
+                     flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed group overflow-hidden" 
+          disabled={loading}>
+          <div className="absolute inset-0 bg-linear-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:animate-shimmer" />
           {loading
-            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Signing in…</>
-            : <><LogInIcon size={16} />Sign In</>}
+            ? <><span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />Signing in…</>
+            : <><LogInIcon size={20} className="group-hover:translate-x-1 transition-transform" />Sign In</>}
         </button>
       </form>
 
-      {/* Divider */}
-      <div className="divider-text my-6">or continue with</div>
-
       {/* Links */}
-      <div className="text-center text-sm space-y-3">
-        <p className="text-slate-500">
-          No account yet?
+      <div className="mt-6 text-center text-sm">
+        <p className="text-slate-500 font-medium">
+          Don't have an account?{' '}
+          <Link to="/signup/commuter" className="font-bold text-blue-600 hover:text-blue-700 hover:underline">Sign up</Link>
         </p>
-        <div className="flex justify-center gap-4">
-          <Link to="/signup/commuter" className="btn-secondary text-xs">Normal Commuter Registration</Link>
-          <Link to="/signup/authority" className="btn-secondary text-xs">Authority Registration</Link>
-        </div>
+        <p className="text-slate-400 mt-2 text-xs font-medium">
+          Are you a transport authority? <Link to="/signup/authority" className="font-bold text-slate-600 hover:text-slate-900 hover:underline">Register here</Link>
+        </p>
       </div>
     </AuthLayout>
   );

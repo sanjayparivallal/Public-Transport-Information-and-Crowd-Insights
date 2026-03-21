@@ -60,3 +60,8 @@ export const updateTransport = (transportId, data) => api.put(`/transport/${tran
  * Delete a transport (admin shorthand).
  */
 export const deleteTransport = (transportId) => api.delete(`/transport/${transportId}`);
+
+/**
+ * Get all users eligible to be assigned as staff
+ */
+export const getStaffCandidates = () => api.get('/users/staff-candidates');

@@ -6,6 +6,7 @@ const {
   updateProfile,
   addFavourite,
   removeFavourite,
+  getStaffCandidates,
 } = require('../controllers/userController');
 
 // All user routes are protected
@@ -15,5 +16,7 @@ router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
 router.post('/favourites/:routeId', addFavourite);
 router.delete('/favourites/:routeId', removeFavourite);
+
+router.get('/staff-candidates', getStaffCandidates);
 
 module.exports = router;

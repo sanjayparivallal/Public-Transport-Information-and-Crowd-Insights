@@ -69,6 +69,31 @@ const updateCrowdLevel = async (userId, userRole, { transportId, routeId, crowdL
     { transportId, routeId, crowdLevel, currentStop, updatedBy: userId, updatedByModel, updatedByRole: userRole },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
+
+  // --- Smart Seat Estimation ---
+  // If crowd level is updated, we should estimate available seats if not manually provided
+  const transport = await Transport.findById(transportId);
+  if (transport && transport.totalSeats) {
+    let estimatedSeats = transport.availableSeats;
+    
+    if (crowdLevel === 'empty') {
+      estimatedSeats = Math.floor(transport.totalSeats * 0.9); // 90% full of hope/seats
+    } else if (crowdLevel === 'average') {
+      estimatedSeats = Math.floor(transport.totalSeats * 0.2); // 20% seats left
+    } else if (crowdLevel === 'crowded') {
+      estimatedSeats = 0; // No seats
+    }
+
+    // Update Route
+    await Route.findByIdAndUpdate(routeId, { availableSeats: estimatedSeats });
+
+    // Update LivePosition if exists
+    await LivePosition.findOneAndUpdate(
+      { transportId, routeId },
+      { availableSeats: estimatedSeats }
+    );
+  }
+
   return level;
 };
 

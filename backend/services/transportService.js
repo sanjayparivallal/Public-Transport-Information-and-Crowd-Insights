@@ -184,7 +184,6 @@ const createTransport = async (userId, { transportNumber, name, type, operator, 
     operator:      operator      || undefined,
     amenities:     amenities     || [],
     totalSeats:    totalSeats    || undefined,
-    availableSeats: availableSeats ?? null,
     vehicleNumber: vehicleNumber || undefined,
     authorityId: authority._id,
   });
@@ -216,10 +215,13 @@ const updateTransport = async (userId, transportId, updates) => {
     throw err;
   }
 
-  const allowed = ['transportNumber', 'name', 'type', 'operator', 'amenities', 'totalSeats', 'availableSeats', 'vehicleNumber', 'isActive'];
+  const allowed = ['transportNumber', 'name', 'type', 'operator', 'amenities', 'totalSeats', 'vehicleNumber', 'isActive'];
   allowed.forEach((f) => {
-    if (updates[f] !== undefined) transport[f] = updates[f];
+    if (updates[f] !== undefined) {
+      transport[f] = updates[f];
+    }
   });
+
   await transport.save();
   return transport;
 };
@@ -350,11 +352,43 @@ const getMyTransports = async (userId) => {
     err.statusCode = 403;
     throw err;
   }
+
+  // 1. Fetch all transports for this authority
   const transports = await Transport.find({ authorityId: authority._id })
     .populate('assignedDriver',    'name email phone')
     .populate('assignedConductor', 'name email phone')
     .lean();
-  return { transports, total: transports.length };
+
+  if (transports.length === 0) return { routes: [], total: 0 };
+
+  const transportIds = transports.map(t => t._id);
+
+  // 2. Fetch all routes belonging to these transports
+  const routes = await Route.find({ transportId: { $in: transportIds } }).lean();
+
+  // 3. Enrich each route with its transport, crowd, and live data
+  const enrichedRoutes = await Promise.all(routes.map(async (r) => {
+    const transport = transports.find(t => String(t._id) === String(r.transportId));
+    
+    const [crowd, live] = await Promise.all([
+      CrowdLevel.findOne({ routeId: r._id }).sort({ updatedAt: -1 }).lean(),
+      LivePosition.findOne({ routeId: r._id }).sort({ updatedAt: -1 }).lean(),
+    ]);
+
+    return {
+      ...r,
+      transportId: transport, // Provide full transport info
+      crowdLevel: crowd?.crowdLevel || null,
+      livePosition: live || null,
+      isActive: transport?.isActive !== false,
+    };
+  }));
+
+  return { 
+    routes: enrichedRoutes, 
+    transports: transports, // Restore for fleet management
+    total: enrichedRoutes.length 
+  };
 };
 
 /**
