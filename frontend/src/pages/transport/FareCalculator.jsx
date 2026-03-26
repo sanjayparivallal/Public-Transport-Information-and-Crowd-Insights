@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import SearchableCombobox from '../../components/SearchableCombobox';
 import { SearchIcon, MapIcon } from '../../components/icons';
 
 const FareCalculator = ({ fareTable }) => {
@@ -58,6 +59,11 @@ const FareCalculator = ({ fareTable }) => {
     sleeper: 'Sleeper / Extended',
   };
 
+  const classOptions = availableClasses.map((c) => ({
+    label: classLabel[c] || c,
+    value: c,
+  }));
+
   const handleFareCalc = () => {
     if (!fareFrom || !fareTo) return;
     if (!normalizedFares.length) { setFareResult('No data'); return; }
@@ -89,80 +95,56 @@ const FareCalculator = ({ fareTable }) => {
       </div>
 
       {fareTable?.length > 0 ? (
-        <div className="space-y-6 relative z-10">
-          <div className="grid grid-cols-1 gap-5">
-            <div className="relative">
-              <input
-                type="text"
-                list="fare-stops"
-                id="fare_from"
-                className="block px-5 pb-3 pt-6 w-full text-sm font-bold text-slate-900 bg-white rounded-2xl border-2 border-slate-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer transition-colors hover:border-slate-300 shadow-sm"
-                placeholder=" "
-                value={fareFrom}
-                onChange={e => { setFareFrom(e.target.value); setFareResult(null); }}
-              />
-              <label htmlFor="fare_from" className="absolute text-[10px] font-black uppercase tracking-widest text-slate-500 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-3 peer-focus:start-3 peer-focus:scale-75 peer-focus:-translate-y-4 start-3 pointer-events-none">Origin Stop</label>
-            </div>
+        <div className="space-y-5 relative z-10">
+          {/* Origin Stop */}
+          <SearchableCombobox
+            id="fare_from"
+            label="Origin Stop"
+            options={stopSuggestions}
+            value={fareFrom}
+            onChange={(v) => { setFareFrom(v); setFareResult(null); }}
+            placeholder="e.g. Salem"
+            allowCustom
+          />
 
-            <div className="relative">
-              <input
-                type="text"
-                list="fare-stops"
-                id="fare_to"
-                className="block px-5 pb-3 pt-6 w-full text-sm font-bold text-slate-900 bg-white rounded-2xl border-2 border-slate-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer transition-colors hover:border-slate-300 shadow-sm"
-                placeholder=" "
-                value={fareTo}
-                onChange={e => { setFareTo(e.target.value); setFareResult(null); }}
-              />
-              <label htmlFor="fare_to" className="absolute text-[10px] font-black uppercase tracking-widest text-slate-500 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-3 peer-focus:start-3 peer-focus:scale-75 peer-focus:-translate-y-4 start-3 pointer-events-none">Destination</label>
-            </div>
+          {/* Destination Stop */}
+          <SearchableCombobox
+            id="fare_to"
+            label="Destination Stop"
+            options={stopSuggestions}
+            value={fareTo}
+            onChange={(v) => { setFareTo(v); setFareResult(null); }}
+            placeholder="e.g. Chennai"
+            allowCustom
+          />
 
-            <div className="relative">
-              <select
-                id="fare_class"
-                className="block px-5 pb-3 pt-6 w-full text-sm font-bold text-slate-900 bg-white rounded-2xl border-2 border-slate-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer transition-colors hover:border-slate-300 shadow-sm"
-                value={fareClass}
-                onChange={e => { setFareClass(e.target.value); setFareResult(null); }}
-                disabled={!availableClasses.length}
-              >
-                {!availableClasses.length ? (
-                  <option value="">No class available</option>
-                ) : (
-                  availableClasses.map((c) => (
-                    <option key={c} value={c} className="font-bold">{classLabel[c] || c}</option>
-                  ))
-                )}
-              </select>
-              <label htmlFor="fare_class" className="absolute text-[10px] font-black uppercase tracking-widest text-slate-500 duration-300 transform -translate-y-4 scale-75 top-3 z-10 origin-[0] bg-white px-2 start-3 pointer-events-none">Travel Class</label>
-
-              {fareFrom && fareTo && !pairFares.length && (
-                <p className="absolute -bottom-5 left-2 text-[9px] font-bold text-rose-500 uppercase tracking-wider">
-                  No fare entries available for this stop pair.
-                </p>
-              )}
-            </div>
+          {/* Travel Class */}
+          <div>
+            <SearchableCombobox
+              id="fare_class"
+              label="Travel Class"
+              options={classOptions}
+              value={fareClass}
+              onChange={(v) => { setFareClass(v); setFareResult(null); }}
+              placeholder="Select class…"
+              allowCustom={false}
+              disabled={!availableClasses.length}
+            />
+            {fareFrom && fareTo && !pairFares.length && (
+              <p className="mt-1.5 ml-1 text-[9px] font-bold text-rose-500 uppercase tracking-wider">
+                No fare entries available for this stop pair.
+              </p>
+            )}
           </div>
 
-          <datalist id="fare-stops">
-            {stopSuggestions.map((stop) => (
-              <option key={stop} value={stop} />
-            ))}
-          </datalist>
-
           <button
-            className="w-full mt-4 inline-flex items-center justify-center px-6 py-4 font-black tracking-widest uppercase text-xs rounded-2xl 
-  border-2 border-blue-600 text-blue-600 bg-transparent 
-  hover:bg-blue-600 hover:text-white 
-  transition-all duration-300 
-  shadow-sm hover:shadow-lg hover:shadow-blue-500/30 
-  active:scale-95 
-  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600 
-  group"
+            className="w-full mt-2 inline-flex items-center justify-center px-6 py-4 font-black tracking-widest uppercase text-xs rounded-2xl border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600"
             onClick={handleFareCalc}
             disabled={!fareFrom || !fareTo || !fareClass || (fareFrom && fareTo && !pairFares.length)}
           >
             Calculate Fare
           </button>
+
           {fareResult && (
             <div className="mt-6 p-6 bg-slate-50 border border-slate-200 rounded-[1.5rem] text-center animate-in fade-in slide-in-from-bottom-4 duration-500 relative shadow-sm">
               {fareResult === 'not_found' ? (
@@ -191,4 +173,3 @@ const FareCalculator = ({ fareTable }) => {
 };
 
 export default FareCalculator;
-

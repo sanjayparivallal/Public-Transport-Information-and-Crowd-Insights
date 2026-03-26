@@ -119,7 +119,7 @@ const removeFavourite = async (req, res, next) => {
     if (req.user.role !== 'commuter') {
       return sendError(res, 403, 'Only commuters can manage favourite transports');
     }
-    const { transportId: routeId } = req.params;
+    const { routeId } = req.params;
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { $pull: { favouriteRoutes: routeId } },

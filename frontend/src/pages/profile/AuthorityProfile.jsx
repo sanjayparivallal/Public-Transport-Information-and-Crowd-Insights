@@ -105,11 +105,15 @@ const AuthorityProfile = () => {
   return (
     <>
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #f0f4ff 0%, #e8eeff 100%)' }}>
-      {/* Gradient Page Header */}
-      <div className="relative overflow-hidden px-4 py-10 sm:px-6 lg:px-8"
-        style={{ background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 45%, #4f46e5 100%)' }}>
-        <div className="absolute -top-10 -right-10 w-72 h-72 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 -left-8 w-56 h-56 bg-indigo-400/20 rounded-full blur-2xl pointer-events-none" />
+      {/* Vivid Gradient Page Header */}
+      <div className="relative overflow-hidden px-4 py-12 sm:px-6 lg:px-8"
+        style={{ background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 45%, #4f46e5 80%, #7c3aed 100%)' }}>
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.07]"
+            style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+          <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full blur-3xl" style={{ background: 'rgba(217,70,239,0.25)' }} />
+          <div className="absolute bottom-0 -left-10 w-64 h-64 rounded-full blur-2xl" style={{ background: 'rgba(6,182,212,0.18)' }} />
+        </div>
         <div className="relative max-w-7xl mx-auto">
           <div className="flex items-start gap-5">
             <div className="p-3.5 rounded-2xl shrink-0" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)' }}>
@@ -168,8 +172,8 @@ const AuthorityProfile = () => {
                         Account Information
                       </h2>
                       {!editing ? (
-                        <button
-                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-primary-600 border-2 border-primary-600 hover:bg-primary-50 focus:ring-4 focus:ring-primary-100 transition-all active:scale-95"
+                      <button
+                          className="btn-outline"
                           onClick={() => { setEditing(true); setMsg(''); setError(''); }}
                         >
                           <EditIcon size={14} /> Edit Profile
@@ -277,7 +281,7 @@ const AuthorityProfile = () => {
 
                         <div className="flex gap-4 pt-8 border-t border-slate-100">
                           <button 
-                            className="flex-1 px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-2xl transition-all shadow-lg shadow-primary-200 active:scale-95 flex items-center justify-center gap-2"
+                            className="flex-1 btn-primary flex items-center justify-center gap-2"
                             onClick={handleSave} 
                             disabled={saving}
                           >

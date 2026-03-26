@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCrowd } from '../../api/crowdApi';
-import { BusIcon, TrainIcon, StarIcon, SearchIcon, MapPinIcon, ActivityIcon, ArrowRightIcon } from '../../components/icons';
+import { removeFavourite } from '../../api/userApi';
+import { BusIcon, TrainIcon, StarIcon, SearchIcon, MapPinIcon, ActivityIcon, ArrowRightIcon, HeartIcon, TrashIcon } from '../../components/icons';
 import CrowdBadge from '../../components/CrowdBadge';
 
-const DashboardFavouriteTransports = ({ favTransports = [], favLoading = false }) => {
+const DashboardFavouriteTransports = ({ favTransports = [], favLoading = false, onRemove }) => {
   const navigate  = useNavigate();
   const { user }  = useAuth();
   const [crowdMap, setCrowdMap] = useState({});
+  const [removing, setRemoving] = useState({});
 
   useEffect(() => {
     const fetchCrowd = async () => {
@@ -25,6 +27,19 @@ const DashboardFavouriteTransports = ({ favTransports = [], favLoading = false }
     };
     if (favTransports.length > 0) fetchCrowd();
   }, [favTransports]);
+
+  const handleRemove = async (e, routeId) => {
+    e.stopPropagation();
+    setRemoving(prev => ({ ...prev, [routeId]: true }));
+    try {
+      await removeFavourite(routeId);
+      onRemove?.();
+    } catch {
+      /* silent — could add toast */
+    } finally {
+      setRemoving(prev => ({ ...prev, [routeId]: false }));
+    }
+  };
 
   const favRoutes = user?.role === 'commuter'
     ? favTransports
@@ -115,8 +130,21 @@ const DashboardFavouriteTransports = ({ favTransports = [], favLoading = false }
                       </p>
                     </div>
                   </div>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-50 text-slate-400 group-hover:text-blue-600 items-start group-hover:bg-blue-50 border border-slate-100 group-hover:border-blue-200 transition-colors shrink-0 mt-1">
-                    <ArrowRightIcon size={14} />
+                  <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                    {/* Remove favourite button */}
+                    <button
+                      onClick={(e) => handleRemove(e, r._id)}
+                      disabled={removing[r._id]}
+                      title="Remove from favourites"
+                      className="w-8 h-8 rounded-full flex items-center justify-center bg-rose-50 text-rose-400 hover:text-rose-600 hover:bg-rose-100 border border-rose-100 hover:border-rose-200 transition-all active:scale-90 disabled:opacity-50"
+                    >
+                      {removing[r._id]
+                        ? <span className="w-3.5 h-3.5 border-2 border-rose-300 border-t-rose-600 rounded-full animate-spin" />
+                        : <TrashIcon size={13} />}
+                    </button>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-50 text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50 border border-slate-100 group-hover:border-blue-200 transition-colors">
+                      <ArrowRightIcon size={14} />
+                    </div>
                   </div>
                 </div>
 

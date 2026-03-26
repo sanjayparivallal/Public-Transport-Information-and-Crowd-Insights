@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getRoutes, createRoute, updateRoute, deleteRoute } from '../../api/transportApi';
 import { EditIcon, CheckCircleIcon, AlertIcon, PlusIcon, TrashIcon, MapIcon, ChevronRightIcon } from '../../components/icons';
+import ConfirmModal from '../../components/ConfirmModal';
+import SearchableCombobox from '../../components/SearchableCombobox';
 
 const EMPTY_ROUTE = {
   routeNumber: '',
@@ -23,6 +25,7 @@ const TransportRoutesModal = ({ transport, onClose }) => {
   
   const [editingRoute, setEditingRoute] = useState(null);
   const [form, setForm] = useState(EMPTY_ROUTE);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
 
   useEffect(() => {
     if (transport) {
@@ -74,14 +77,16 @@ const TransportRoutesModal = ({ transport, onClose }) => {
     setForm(EMPTY_ROUTE);
   };
 
-  const handleDelete = async (routeId) => {
-    if (!window.confirm("Are you sure you want to delete this route?")) return;
+  const handleDelete = async () => {
+    if (!deleteTargetId) return;
     try {
-      await deleteRoute(transport._id, routeId);
-      setSuccess("Route deleted.");
+      await deleteRoute(transport._id, deleteTargetId);
+      setSuccess('Route deleted.');
+      setDeleteTargetId(null);
       fetchTransportRoutes();
     } catch (err) {
-      setError(err.message || "Failed to delete route.");
+      setError(err.message || 'Failed to delete route.');
+      setDeleteTargetId(null);
     }
   };
 
@@ -236,8 +241,8 @@ const TransportRoutesModal = ({ transport, onClose }) => {
                                 <EditIcon size={14} className="mr-1.5" /> Edit
                               </button>
                               <button
-                                className="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium inline-flex items-center transition-colors"
-                                onClick={() => handleDelete(r._id)}
+                                className="p-2 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors"
+                                onClick={() => setDeleteTargetId(r._id)}
                               >
                                 <TrashIcon size={14} />
                               </button>
@@ -258,67 +263,63 @@ const TransportRoutesModal = ({ transport, onClose }) => {
             </>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Route Number <span className="text-red-500">*</span>
-                  </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-2">
+                <div className="floating-group">
                   <input
-                    type="text"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder-slate-400"
+                    id="routeNumber" type="text"
+                    className="floating-input"
                     required
                     value={form.routeNumber}
                     onChange={set('routeNumber')}
                     placeholder="e.g. R-101"
                   />
+                  <label htmlFor="routeNumber" className="floating-label">Route Number <span className="text-red-500">*</span></label>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Route Name <span className="text-red-500">*</span>
-                  </label>
+                <div className="floating-group">
                   <input
-                    type="text"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder-slate-400"
+                    id="routeName" type="text"
+                    className="floating-input"
                     required
                     value={form.routeName}
                     onChange={set('routeName')}
                     placeholder="e.g. City Center Express"
                   />
+                  <label htmlFor="routeName" className="floating-label">Route Name <span className="text-red-500">*</span></label>
                 </div>
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Origin <span className="text-red-500">*</span>
-                  </label>
+                <div className="floating-group md:col-span-1">
                   <input
-                    type="text"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder-slate-400"
+                    id="origin" type="text"
+                    className="floating-input"
                     required
                     value={form.origin}
                     onChange={set('origin')}
+                    placeholder="Start Point"
                   />
+                  <label htmlFor="origin" className="floating-label">Origin <span className="text-red-500">*</span></label>
                 </div>
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Destination <span className="text-red-500">*</span>
-                  </label>
+                <div className="floating-group md:col-span-1">
                   <input
-                    type="text"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder-slate-400"
+                    id="destination" type="text"
+                    className="floating-input"
                     required
                     value={form.destination}
                     onChange={set('destination')}
+                    placeholder="End Point"
                   />
+                  <label htmlFor="destination" className="floating-label">Destination <span className="text-red-500">*</span></label>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Direction</label>
-                  <select
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
+                  <SearchableCombobox
+                    id="route-direction"
+                    label="Direction"
+                    allowCustom={false}
+                    options={[
+                      { label: 'Forward', value: 'forward' },
+                      { label: 'Return', value: 'return' },
+                    ]}
                     value={form.direction}
-                    onChange={set('direction')}
-                  >
-                    <option value="forward">Forward</option>
-                    <option value="return">Return</option>
-                  </select>
+                    onChange={(v) => setForm(p => ({ ...p, direction: v }))}
+                  />
                 </div>
                 <div className="md:col-span-2 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
                   <div className="flex items-center justify-between mb-3">
@@ -463,7 +464,16 @@ const TransportRoutesModal = ({ transport, onClose }) => {
             </form>
           )}
         </div>
-      </div>
+
+      <ConfirmModal
+        isOpen={!!deleteTargetId}
+        title="Delete Route?"
+        message="This route, all its stops, and fare table entries will be permanently removed."
+        confirmLabel="Delete Route"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTargetId(null)}
+      />
+    </div>
   );
 };
 

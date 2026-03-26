@@ -6,11 +6,13 @@ import {
   updateTransport,
   removeStaff,
 } from '../../api/adminApi';
-import { BusIcon, TrainIcon, EditIcon, WrenchIcon, AlertIcon, SearchIcon, TrashIcon, MapIcon, RefreshIcon, PlusIcon } from '../../components/icons';
+import { BusIcon, TrainIcon, EditIcon, WrenchIcon, AlertIcon, SearchIcon, TrashIcon, MapIcon, RefreshIcon, PlusIcon, UserIcon } from '../../components/icons';
 import TransportRoutesModal from './TransportRoutesModal';
 import TransportFormModal from './TransportFormModal';
 import AssignStaffModal from './AssignStaffModal';
 import DeleteModal from './DeleteModal';
+import ConfirmModal from '../../components/ConfirmModal';
+import SearchableCombobox from '../../components/SearchableCombobox';
 
 /* ── Status Badge ───────────────────────────────────────── */
 const StatusBadge = ({ isActive }) => {
@@ -47,6 +49,9 @@ const ManageTransport = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRoutesModal, setShowRoutesModal] = useState(false);
+
+  // Remove-staff confirm modal state
+  const [removeStaffConfirm, setRemoveStaffConfirm] = useState({ open: false, transportId: null, role: '' });
 
   // Selection for modals
   const [selectedTransport, setSelectedTransport] = useState(null);
@@ -89,8 +94,13 @@ const ManageTransport = () => {
     }
   }, [location.search, transports]);
 
-  const handleRemoveStaff = async (transportId, role) => {
-    if (!window.confirm(`Are you sure you want to remove the ${role}?`)) return;
+  const openRemoveStaffConfirm = (transportId, role) => {
+    setRemoveStaffConfirm({ open: true, transportId, role });
+  };
+
+  const handleRemoveStaffConfirmed = async () => {
+    const { transportId, role } = removeStaffConfirm;
+    setRemoveStaffConfirm({ open: false, transportId: null, role: '' });
     try {
       await removeStaff(transportId, role);
       fetchTransports();
@@ -174,20 +184,33 @@ const ManageTransport = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-12 font-sans">
-      {/* ── Page Header ── */}
-      <div className="bg-white border-b border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.01)] py-10 px-4 sm:px-6 lg:px-8 mb-8 sm:mb-10">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+    <div className="min-h-screen pb-12">
+      {/* ── Vivid Page Header ── */}
+      <div className="relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8"
+        style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #4f46e5 100%)' }}
+      >
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.07]"
+            style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+          <div className="absolute -top-24 -right-20 w-80 h-80 rounded-full blur-3xl" style={{ background: 'rgba(139,92,246,0.30)' }} />
+          <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full blur-2xl" style={{ background: 'rgba(6,182,212,0.18)' }} />
+        </div>
+        <div className="relative max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
           <div>
-            <p className="text-blue-600 font-bold uppercase tracking-widest text-[10px] mb-1.5 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+            <p className="text-blue-200 font-black uppercase tracking-widest text-[10px] mb-2 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
               Fleet Management
             </p>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">Manage Transport</h1>
-            <p className="text-slate-500 text-sm font-bold">Add, edit, assign staff and manage your entire fleet.</p>
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-none mb-2">Manage Transport</h1>
+            <p className="text-blue-100/70 text-sm font-medium">Add, edit, assign staff and manage your entire fleet.</p>
           </div>
-          <button className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex-shrink-0 border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600" onClick={openAddModal}>
-            <PlusIcon size={16} /> Add Transport
+          <button
+            className="inline-flex items-center gap-2.5 px-6 py-3 text-xs font-black uppercase tracking-widest rounded-2xl flex-shrink-0 border-2 border-white/40 text-white hover:bg-white hover:text-blue-700 transition-all duration-300 backdrop-blur-sm group"
+            style={{ background: 'rgba(255,255,255,0.15)' }}
+            onClick={openAddModal}
+          >
+            <PlusIcon size={16} />
+            Add Transport
           </button>
         </div>
       </div>
@@ -201,17 +224,24 @@ const ManageTransport = () => {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 mt-8">
           {[
-            { label: 'Total Transport', value: stats.total,  icon: WrenchIcon, color: 'text-blue-600',   bg: 'bg-blue-50', border: 'border-blue-100'   },
-            { label: 'Total Bus',       value: stats.buses,  icon: BusIcon,    color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
-            { label: 'Total Train',     value: stats.trains, icon: TrainIcon,  color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
-          ].map(({ label, value, icon: Icon, color, bg }) => (
-            <div className={`bg-white border-slate-200 border rounded-[2rem] p-6 sm:p-8 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all overflow-hidden relative flex items-center gap-5`} key={label}>
-              <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center shrink-0 border border-white shadow-sm`}>
-                <Icon size={26} className={color} />
+            { label: 'Total Transport', value: stats.total,  icon: WrenchIcon, from: '#3b82f6', to: '#6366f1', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.18)' },
+            { label: 'Total Buses',     value: stats.buses,  icon: BusIcon,    from: '#06b6d4', to: '#3b82f6', bg: 'rgba(6,182,212,0.08)',  border: 'rgba(6,182,212,0.18)'  },
+            { label: 'Total Trains',    value: stats.trains, icon: TrainIcon,  from: '#8b5cf6', to: '#d946ef', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.18)' },
+          ].map(({ label, value, icon: Icon, from, to, bg, border }) => (
+            <div
+              key={label}
+              className="relative rounded-[2rem] p-6 sm:p-8 overflow-hidden flex items-center gap-5 hover:-translate-y-1 transition-all duration-300"
+              style={{ background: bg, border: `1.5px solid ${border}` }}
+            >
+              <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full opacity-20"
+                style={{ background: `radial-gradient(circle, ${to}, transparent)` }} />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-md"
+                style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}>
+                <Icon size={26} className="text-white" />
               </div>
-              <div className="flex flex-col relative z-10 w-full">
+              <div className="relative z-10">
                 <p className="text-4xl sm:text-5xl font-black tracking-tight text-slate-800 leading-none">{value}</p>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1.5">{label}</p>
               </div>
@@ -241,17 +271,18 @@ const ManageTransport = () => {
               </div>
               
               <div className="w-full md:w-64 space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Category</label>
-                <select
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold text-slate-800 appearance-none bg-no-repeat cursor-pointer"
-                  style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2394a3b8\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundSize: '1.25rem' }}
+                <SearchableCombobox
+                  id="type-filter"
+                  label="Category"
+                  allowCustom={false}
+                  options={[
+                    { label: 'All Fleet', value: 'all' },
+                    { label: 'Buses', value: 'bus' },
+                    { label: 'Trains', value: 'train' },
+                  ]}
                   value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                >
-                  <option value="all">All Fleet</option>
-                  <option value="bus">Buses</option>
-                  <option value="train">Trains</option>
-                </select>
+                  onChange={setTypeFilter}
+                />
               </div>
               
               <button 
@@ -340,7 +371,7 @@ const ManageTransport = () => {
                             {t.assignedDriver ? (
                               <div className="flex items-center justify-between group/staff max-w-[140px]">
                                 <span className="text-xs font-bold text-slate-800 leading-none truncate">{t.assignedDriver.name || t.assignedDriver.email || 'Assigned'}</span>
-                                <button className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-all ml-2" onClick={() => handleRemoveStaff(t._id, 'driver')} title="Deassign Driver"><TrashIcon size={12}/></button>
+                                <button className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-all ml-2" onClick={() => openRemoveStaffConfirm(t._id, 'driver')} title="Deassign Driver"><TrashIcon size={12}/></button>
                               </div>
                             ) : (
                               <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600 text-left underline underline-offset-4 decoration-blue-200" onClick={() => openAssignModal(t)}>+ Assign Driver</button>
@@ -351,7 +382,7 @@ const ManageTransport = () => {
                             {t.assignedConductor ? (
                               <div className="flex items-center justify-between group/staff max-w-[140px]">
                                 <span className="text-xs font-bold text-slate-800 leading-none truncate">{t.assignedConductor.name || t.assignedConductor.email || 'Assigned'}</span>
-                                <button className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-all ml-2" onClick={() => handleRemoveStaff(t._id, 'conductor')} title="Deassign Conductor"><TrashIcon size={12}/></button>
+                                <button className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-all ml-2" onClick={() => openRemoveStaffConfirm(t._id, 'conductor')} title="Deassign Conductor"><TrashIcon size={12}/></button>
                               </div>
                             ) : (
                               <button className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 text-left underline underline-offset-4 decoration-indigo-200" onClick={() => openAssignModal(t)}>+ Assign Conductor</button>
@@ -442,6 +473,18 @@ const ManageTransport = () => {
           onClose={() => setShowDeleteModal(false)}
         />
       )}
+
+      {/* Remove Staff Confirm Modal */}
+      <ConfirmModal
+        isOpen={removeStaffConfirm.open}
+        variant="warning"
+        title={`Remove ${removeStaffConfirm.role === 'driver' ? 'Driver' : 'Conductor'}?`}
+        message={`This will unassign the ${removeStaffConfirm.role} from this transport. You can reassign another staff member at any time.`}
+        confirmLabel="Yes, Remove"
+        cancelLabel="Keep Assigned"
+        onConfirm={handleRemoveStaffConfirmed}
+        onCancel={() => setRemoveStaffConfirm({ open: false, transportId: null, role: '' })}
+      />
     </div>
   );
 };

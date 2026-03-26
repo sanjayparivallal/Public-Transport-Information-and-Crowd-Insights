@@ -13,14 +13,17 @@ const TransportInfo = ({ transport, crowdLevel, availableSeats }) => {
 
   return (
     <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 sm:p-10 mb-8 relative overflow-hidden">
+      {/* Top gradient stripe */}
+      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 p-8 opacity-5">
         <LocationIcon size={120} />
       </div>
 
-      <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100 gap-3 relative z-10">
+      <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100 gap-3 relative z-10 mt-2">
         <div className="flex items-center text-xl font-black text-slate-800 tracking-tight">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mr-4 shadow-sm border border-blue-100">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center mr-4 shadow-md shadow-blue-500/20">
             <LocationIcon size={20} />
           </div>
           Transport Identity

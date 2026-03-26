@@ -12,6 +12,8 @@ import FareCalculator from './FareCalculator';
 import ScheduleSection from './ScheduleSection';
 import TransportInfo from './TransportInfo';
 import { BusIcon, TrainIcon, UserIcon, AlertIcon, StarIcon, SearchIcon, ClockIcon, LocationIcon, ArrowRightIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, EditIcon, TrashIcon } from '../../components/icons';
+import ConfirmModal from '../../components/ConfirmModal';
+import Pagination from '../../components/Pagination';
 
 const TransportDetail = () => {
   const { id } = useParams();
@@ -54,6 +56,12 @@ const TransportDetail = () => {
     availableSeats: '',
     crowdLevel: 'average',
   });
+
+  // Confirm modal state
+  const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
+  const openConfirm = (title, message, onConfirm) => setConfirmState({ open: true, title, message, onConfirm });
+  const closeConfirm = () => setConfirmState({ open: false, title: '', message: '', onConfirm: null });
+  const [inlineMsg, setInlineMsg] = useState('');
 
   const fetchCrowdData = async (page) => {
     try {
@@ -152,21 +160,21 @@ const TransportDetail = () => {
     setFavMsg('');
     try {
       if (isFav) {
-        await removeFavourite(selectedRouteId);
+        const res = await removeFavourite(selectedRouteId);
         setIsFav(false);
         if (user) {
-          const updatedFavs = (user.favouriteRoutes || []).filter(x => String(typeof x === 'object' ? x._id : x) !== String(selectedRouteId));
-          const updatedUser = { ...user, favouriteRoutes: updatedFavs };
+          const updatedFavs = res.data?.data || (user.favouriteRoutes || []).filter(x => String(typeof x === 'object' ? x._id : x) !== String(selectedRouteId));
+          const updatedUser = { ...user, favouriteRoutes: Array.isArray(updatedFavs) ? updatedFavs : [] };
           setUser(updatedUser);
           localStorage.setItem('user', JSON.stringify(updatedUser));
         }
         setFavMsg('Removed from favourites.');
       } else {
-        await addFavourite(selectedRouteId);
+        const res = await addFavourite(selectedRouteId);
         setIsFav(true);
         if (user) {
-          const updatedFavs = [...(user.favouriteRoutes || []), selectedRouteId];
-          const updatedUser = { ...user, favouriteRoutes: updatedFavs };
+          const updatedFavs = res.data?.data || [...(user.favouriteRoutes || []), selectedRouteId];
+          const updatedUser = { ...user, favouriteRoutes: Array.isArray(updatedFavs) ? updatedFavs : [] };
           setUser(updatedUser);
           localStorage.setItem('user', JSON.stringify(updatedUser));
         }
@@ -180,26 +188,40 @@ const TransportDetail = () => {
     }
   };
 
-  const handleDeleteIncident = async (incidentId) => {
-    if (!window.confirm("Are you sure you want to delete this incident?")) return;
-    try {
-      await deleteIncident(incidentId);
-      const iRes = await getIncidentsByTransport(id, { status: 'open', limit: 10 });
-      const iPayload = iRes.data?.data || iRes.data;
-      setIncidents(iPayload?.incidents || []);
-    } catch (err) {
-      alert(err.message || 'Failed to delete incident.');
-    }
+  const handleDeleteIncident = (incidentId) => {
+    openConfirm(
+      'Delete Incident Report?',
+      'This incident will be permanently removed and authorities will no longer see it.',
+      async () => {
+        try {
+          await deleteIncident(incidentId);
+          const iRes = await getIncidentsByTransport(id, { status: 'open', limit: 10 });
+          const iPayload = iRes.data?.data || iRes.data;
+          setIncidents(iPayload?.incidents || []);
+        } catch (err) {
+          setInlineMsg(err.message || 'Failed to delete incident.');
+          setTimeout(() => setInlineMsg(''), 3500);
+        }
+        closeConfirm();
+      }
+    );
   };
 
-  const handleDeleteCrowdReport = async (reportId) => {
-    if (!window.confirm("Delete your crowd report?")) return;
-    try {
-      await deleteCrowdReport(reportId);
-      await fetchCrowdData(crowdPage);
-    } catch (err) {
-      alert(err.message || 'Failed to delete report.');
-    }
+  const handleDeleteCrowdReport = (reportId) => {
+    openConfirm(
+      'Delete Crowd Report?',
+      'Your crowd report will be permanently removed from this route.',
+      async () => {
+        try {
+          await deleteCrowdReport(reportId);
+          await fetchCrowdData(crowdPage);
+        } catch (err) {
+          setInlineMsg(err.message || 'Failed to delete report.');
+          setTimeout(() => setInlineMsg(''), 3500);
+        }
+        closeConfirm();
+      }
+    );
   };
 
   const handleCrowdSubmit = async (e) => {
@@ -209,11 +231,13 @@ const TransportDetail = () => {
       const route = transport?.routes?.find(r => r._id === selectedRouteId) || transport?.routes?.[0];
       await submitCrowdReport({ routeId: route?._id, ...crowdForm });
       setShowCrowdModal(false);
-      alert('Crowd reported successfully!');
+      setInlineMsg('✔ Crowd reported successfully!');
+      setTimeout(() => setInlineMsg(''), 3000);
       fetchCrowdData(1);
       setCrowdPage(1);
     } catch (err) {
-      alert(err.message || 'Failed to report crowd');
+      setInlineMsg(err.message || 'Failed to report crowd');
+      setTimeout(() => setInlineMsg(''), 3500);
     } finally {
       setReportLoading(false);
     }
@@ -240,11 +264,13 @@ const TransportDetail = () => {
       const route = transport?.routes?.find(r => r._id === selectedRouteId) || transport?.routes?.[0];
       await reportIncident({ transportId: id, routeId: route?._id, ...incidentForm });
       setShowIncidentModal(false);
-      alert('Incident reported successfully!');
+      setInlineMsg('✔ Incident reported successfully!');
+      setTimeout(() => setInlineMsg(''), 3000);
       fetchIncidentsData(1);
       setIncidentsPage(1);
     } catch (err) {
-      alert(err.message || 'Failed to report incident');
+      setInlineMsg(err.message || 'Failed to report incident');
+      setTimeout(() => setInlineMsg(''), 3500);
     } finally {
       setReportLoading(false);
     }
@@ -281,11 +307,13 @@ const TransportDetail = () => {
       setTransport(tPayload?.transport || tPayload);
 
       setShowLiveUpdateModal(false);
-      alert('Live position and crowd level updated successfully!');
+      setInlineMsg('✔ Live position and crowd level updated!');
+      setTimeout(() => setInlineMsg(''), 3000);
       await fetchCrowdData(1);
       setCrowdPage(1);
     } catch (err) {
-      alert(err.message || 'Failed to update live details');
+      setInlineMsg(err.message || 'Failed to update live details');
+      setTimeout(() => setInlineMsg(''), 3500);
     } finally {
       setReportLoading(false);
     }
@@ -365,9 +393,10 @@ const TransportDetail = () => {
   const canOperateLive = !!user && (isAuthorityTransport || isDriverTransport || isConductorTransport);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <>
+    <div className="min-h-screen pb-16">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pt-8 pb-4">
-        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
+        <div className="bg-white rounded-[2.5rem] border-2 border-slate-200/80 shadow-sm p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="space-y-4 max-w-3xl">
               <div className="flex flex-wrap items-center gap-3">
@@ -476,7 +505,7 @@ const TransportDetail = () => {
           <div className="lg:col-span-8 space-y-8">
 
             {(livePosition || canOperateLive) && (
-              <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 p-8 overflow-hidden relative">
+              <div className="bg-white rounded-[2.5rem] shadow-sm border-2 border-slate-200/80 p-8 overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-6">
                   <div className="flex h-3 w-3 relative">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -532,7 +561,7 @@ const TransportDetail = () => {
             )}
 
             {stops.length > 0 && (
-              <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 p-8">
+              <div className="bg-white rounded-[2.5rem] shadow-sm border-2 border-slate-200/80 p-8">
                 <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50">
                   <div className="flex items-center text-lg font-bold text-slate-800">
                     <ClockIcon size={24} className="mr-3 text-blue-500" />
@@ -555,8 +584,8 @@ const TransportDetail = () => {
           </div>
         </div>
 
-        {/* Row 2: Incidents Section */}
-        <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 p-8">
+        {/* Incidents Section */}
+        <div className="bg-white rounded-[2.5rem] shadow-sm border-2 border-slate-200/80 p-8">
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50 flex-wrap gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 flex items-center justify-center bg-red-50 rounded-2xl text-red-500">
@@ -604,9 +633,8 @@ const TransportDetail = () => {
                 </div>
               )}
             </div>
-
             {/* Crowd Reports */}
-            <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 p-8">
+            <div className="bg-white rounded-[2.5rem] shadow-sm border-2 border-slate-200/80 p-8">
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50 flex-wrap gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 flex items-center justify-center bg-blue-50 rounded-2xl text-blue-500">
@@ -775,16 +803,16 @@ const TransportDetail = () => {
                   </div>
                 </div>
                 
-                <div className="relative mt-6">
+                <div className="floating-group mt-6">
                   <input 
                     type="text" 
                     id="floating_boarding"
-                    className="block px-4 pb-2.5 pt-4 w-full text-sm font-bold text-slate-900 bg-transparent rounded-xl border-2 border-slate-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer transition-colors" 
-                    placeholder=" " 
+                    className="floating-input" 
+                    placeholder="Boarding Stop (Optional)" 
                     value={crowdForm.boardingStop} 
                     onChange={e => setCrowdForm({...crowdForm, boardingStop: e.target.value})} 
                   />
-                  <label htmlFor="floating_boarding" className="absolute text-[10px] font-black uppercase tracking-widest text-slate-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-2 pointer-events-none">Boarding Stop (Optional)</label>
+                  <label htmlFor="floating_boarding" className="floating-label">Boarding Stop (Optional)</label>
                 </div>
               </form>
             </div>
@@ -1010,27 +1038,27 @@ const TransportDetail = () => {
                   </div>
                 </div>
 
-                <div className="relative mt-6">
+                <div className="floating-group mt-6">
                   <input 
                     type="text" 
                     id="floating_location"
-                    className="block px-4 pb-2.5 pt-4 w-full text-sm font-bold text-slate-900 bg-transparent rounded-xl border-2 border-slate-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer transition-colors" 
-                    placeholder=" " 
+                    className="floating-input"
+                    placeholder="Location" 
                     value={incidentForm.location} 
                     onChange={e => setIncidentForm({...incidentForm, location: e.target.value})} 
                   />
-                  <label htmlFor="floating_location" className="absolute text-[10px] font-black uppercase tracking-widest text-slate-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-2 pointer-events-none">Location</label>
+                  <label htmlFor="floating_location" className="floating-label">Location</label>
                 </div>
 
-                <div className="relative mt-6">
+                <div className="floating-group mt-6">
                   <textarea 
                     id="floating_desc"
-                    className="block px-4 pb-2.5 pt-5 w-full text-sm font-bold text-slate-900 bg-transparent rounded-xl border-2 border-slate-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer transition-colors min-h-[100px]" 
-                    placeholder=" " 
+                    className="floating-input min-h-[100px]" 
+                    placeholder="Description (What happened...)" 
                     value={incidentForm.description} 
                     onChange={e => setIncidentForm({...incidentForm, description: e.target.value})}
                   />
-                  <label htmlFor="floating_desc" className="absolute text-[10px] font-black uppercase tracking-widest text-slate-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-4 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-2 pointer-events-none">Description (What happened...)</label>
+                  <label htmlFor="floating_desc" className="floating-label">Description (What happened...)</label>
                 </div>
               </form>
             </div>
@@ -1058,6 +1086,29 @@ const TransportDetail = () => {
         </div>
       )}
     </div>
+
+    {/* Inline toast-style message */}
+    {inlineMsg && (
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] animate-slide-up">
+        <div className={`px-5 py-3 rounded-2xl shadow-xl text-sm font-bold flex items-center gap-2 ${
+          inlineMsg.startsWith('✔')
+            ? 'bg-emerald-600 text-white'
+            : 'bg-red-600 text-white'
+        }`}>
+          {inlineMsg}
+        </div>
+      </div>
+    )}
+
+    {/* Confirm Modal */}
+    <ConfirmModal
+      isOpen={confirmState.open}
+      title={confirmState.title}
+      message={confirmState.message}
+      onConfirm={confirmState.onConfirm}
+      onCancel={closeConfirm}
+    />
+  </>
   );
 };
 

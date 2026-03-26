@@ -8,6 +8,9 @@ import DashboardAssignedTransport from './DashboardAssignedTransport';
 import DashboardFavouriteTransports from './DashboardFavouriteTransports';
 import DashboardMyIncidents from './DashboardMyIncidents';
 import DashboardMyCrowdReports from './DashboardMyCrowdReports';
+import DashboardLiveTracking from './DashboardLiveTracking';
+import DashboardAccountInfo from './DashboardAccountInfo';
+import DashboardAssignedIncidents from './DashboardAssignedIncidents';
 
 /* ── Time-based greeting ────────────────────────────── */
 const getGreeting = () => {
@@ -27,47 +30,48 @@ const CommuterDashboard = () => {
   const [assignedDetail, setAssignedDetail] = useState(null);
   const [favLoading,     setFavLoading]     = useState(false);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
-      try {
-        const res  = await getProfile();
-        const data = res.data?.data?.user || res.data?.user || res.data?.data || res.data;
-        setProfile(data);
+  const fetchAll = async () => {
+    setLoading(true);
+    try {
+      const res  = await getProfile();
+      const data = res.data?.data?.user || res.data?.user || res.data?.data || res.data;
+      setProfile(data);
 
-        // Favourite routes
-        const favRoutes = data?.favouriteRoutes || [];
-        if (favRoutes.length > 0) {
-          setFavLoading(true);
-          const valid = favRoutes.filter(r => r && r._id);
-          setFavTransports(valid);
+      // Favourite routes
+      const favRoutes = data?.favouriteRoutes || [];
+      if (favRoutes.length > 0) {
+        setFavLoading(true);
+        const valid = favRoutes.filter(r => r && r._id);
+        setFavTransports(valid);
 
-          const crowdResults = await Promise.all(
-            valid.map(r => r.transportId?._id ? getCrowd(r.transportId._id).catch(() => null) : null)
-          );
-          const map = {};
-          crowdResults.forEach((cr, i) => {
-            if (valid[i]?._id && cr) {
-              const d = cr.data?.data;
-              const routeOff = d?.official?.find(o => String(o.routeId) === String(valid[i]._id));
-              map[valid[i]._id] = routeOff?.crowdLevel || valid[i]?.crowdLevel || 'average';
-            }
-          });
-          setCrowdMap(map);
-          setFavLoading(false);
-        }
+        const crowdResults = await Promise.all(
+          valid.map(r => r.transportId?._id ? getCrowd(r.transportId._id).catch(() => null) : null)
+        );
+        const map = {};
+        crowdResults.forEach((cr, i) => {
+          if (valid[i]?._id && cr) {
+            const d = cr.data?.data;
+            const routeOff = d?.official?.find(o => String(o.routeId) === String(valid[i]._id));
+            map[valid[i]._id] = routeOff?.crowdLevel || valid[i]?.crowdLevel || 'average';
+          }
+        });
+        setCrowdMap(map);
+        setFavLoading(false);
+      } else {
+        setFavTransports([]);
+      }
 
-        // Assigned transport (driver / conductor)
-        const assignedId = data?.assignedTransport?._id || data?.assignedTransport;
-        if (assignedId) {
-          const tRes = await getTransportById(assignedId).catch(() => null);
-          if (tRes) setAssignedDetail(tRes.data?.data?.transport || tRes.data?.data || tRes.data);
-        }
-      } catch { /* ignore */ }
-      setLoading(false);
-    };
-    fetchAll();
-  }, []);
+      // Assigned transport (driver / conductor)
+      const assignedId = data?.assignedTransport?._id || data?.assignedTransport;
+      if (assignedId) {
+        const tRes = await getTransportById(assignedId).catch(() => null);
+        if (tRes) setAssignedDetail(tRes.data?.data?.transport || tRes.data?.data || tRes.data);
+      }
+    } catch { /* ignore */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchAll(); }, []);
 
   if (!user) {
     return (
@@ -88,37 +92,60 @@ const CommuterDashboard = () => {
   const favCount = favTransports.length;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
 
-      {/* ── Page Header (SaaS Style) ── */}
-      <div className="bg-white border-b border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.01)] py-10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+    <div className="min-h-screen pb-16">
+
+      {/* ── Vivid Gradient Header ── */}
+      <div className="relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8"
+        style={{
+          background: isStaff
+            ? 'linear-gradient(135deg, #164e63 0%, #0891b2 50%, #3b82f6 100%)'
+            : 'linear-gradient(135deg, #134e4a 0%, #0f766e 50%, #14b8a6 80%, #06b6d4 100%)'
+        }}
+      >
+        {/* Decorations */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.07]"
+            style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+          <div className="absolute -top-24 -right-20 w-80 h-80 rounded-full blur-3xl"
+            style={{ background: isStaff ? 'rgba(59,130,246,0.30)' : 'rgba(20,184,166,0.30)' }} />
+          <div className="absolute bottom-0 -left-20 w-64 h-64 rounded-full blur-2xl"
+            style={{ background: 'rgba(255,255,255,0.08)' }} />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div>
-            <p className="text-blue-600 font-bold uppercase tracking-widest text-[10px] mb-2 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+            <p className="text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-1.5"
+              style={{ color: isStaff ? '#bae6fd' : '#a7f3d0' }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-current" />
               {isStaff ? `Duty Dashboard · ${user.role}` : 'Commuter Portal'}
             </p>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
               {getGreeting()},{' '}
-              <span className="text-blue-600">
+              <span style={{
+                background: isStaff ? 'linear-gradient(90deg, #bae6fd, #c7d2fe)' : 'linear-gradient(90deg, #a7f3d0, #bae6fd)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>
                 {displayName}
               </span>
             </h1>
-            <p className="mt-2 text-slate-500 font-medium text-sm max-w-lg">
+            <p className="mt-2 text-sm font-medium max-w-lg" style={{ color: 'rgba(255,255,255,0.70)' }}>
               {isStaff
                 ? `You're logged in as a ${user.role}. Manage your assigned transport below.`
-                : 'Your travel hub. Track favourite routes, stay updated with crowd levels, and manage incident alerts efficiently.'}
+                : 'Your travel hub. Track favourite routes, stay updated with crowd levels, and manage incident alerts.'}
             </p>
           </div>
 
-          {/* Quick stats chips */}
           {!loading && !isStaff && (
             <div className="flex items-center self-start sm:self-end">
-              <div className="flex flex-col bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Saved Routes</span>
+              <div className="flex flex-col rounded-2xl px-5 py-3 shadow-sm"
+                style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}>
+                <span className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Saved Routes</span>
                 <div className="flex items-center gap-2">
-                  <span className="flex w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></span>
-                  <span className="text-3xl font-black text-slate-900 leading-none">{favCount}</span>
+                  <span className="flex w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
+                  <span className="text-3xl font-black text-white leading-none">{favCount}</span>
                 </div>
               </div>
             </div>
@@ -136,26 +163,22 @@ const CommuterDashboard = () => {
         ) : (
           <div className="space-y-10">
 
-            {/* ── Staff: Assigned Transport + Incidents for assigned transport ── */}
+            {/* ── Staff: Account Info, Live Tracking, Assigned Transport + Incidents ── */}
             {isStaff && (
               <>
+                <DashboardAccountInfo profile={profile} user={user} />
+                
+                {assignedDetail && (
+                  <DashboardLiveTracking transport={assignedDetail} />
+                )}
+
                 <DashboardAssignedTransport
                   assignedDetail={assignedDetail}
                   profile={profile}
                   assignedTransportFallback={assignedTransportFallback}
                 />
 
-                {/* Incidents for allotted transport */}
-                {assignedDetail && (
-                  <section>
-                    <h2 className="mb-4">Incidents on Assigned Route</h2>
-                    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 text-sm text-slate-500">
-                      <Link to={`/transport/${assignedDetail._id}`} className="text-blue-600 font-semibold hover:underline">
-                        View all incidents for {assignedDetail.name || assignedDetail.transportNumber} →
-                      </Link>
-                    </div>
-                  </section>
-                )}
+                <DashboardAssignedIncidents assignedDetail={assignedDetail} />
               </>
             )}
 
@@ -163,8 +186,9 @@ const CommuterDashboard = () => {
             {!isStaff && (
               <DashboardFavouriteTransports
                 favLoading={favLoading}
-                favRoutes={favTransports}
+                favTransports={favTransports}
                 crowdMap={crowdMap}
+                onRemove={fetchAll}
               />
             )}
 

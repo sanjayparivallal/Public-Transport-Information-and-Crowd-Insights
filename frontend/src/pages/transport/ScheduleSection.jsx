@@ -5,8 +5,11 @@ const ScheduleSection = ({ schedule }) => {
 
   return (
     <div className="bg-white rounded-[2rem] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 mb-8 relative overflow-hidden group">
-      <div className="flex items-center text-lg font-black text-slate-800 mb-8 pb-4 border-b border-slate-50">
-        <div className="p-2 bg-indigo-50 rounded-xl mr-3 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
+      {/* Top gradient stripe */}
+      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+
+      <div className="flex items-center text-lg font-black text-slate-800 mb-8 pb-4 border-b border-slate-50 mt-2">
+        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mr-4 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 transition-all duration-500 group-hover:scale-105 group-hover:shadow-indigo-500/40">
           <ClockIcon size={20} />
         </div>
         Operational Schedule

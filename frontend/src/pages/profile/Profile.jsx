@@ -98,19 +98,34 @@ const Profile = () => {
   const initials = (profile?.name || user.email || 'U').charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen pb-16">
 
-      {/* ── Page Header ── */}
-      <div className="bg-white border-b border-slate-200 px-4 py-8 sm:px-6 lg:px-8 mb-8 sm:mb-10 shadow-sm shadow-slate-100/50">
-        <div className="max-w-7xl mx-auto flex items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-bold">
-              {initials}
-            </div>
-            <div>
-              <h1>My Profile</h1>
-              <p className="mt-0.5 capitalize">{user.role} account</p>
-            </div>
+      {/* ── Vivid Gradient Header ── */}
+      <div className="relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8 mb-8 sm:mb-12 shadow-md shadow-blue-500/10"
+        style={{
+          background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 50%, #06b6d4 100%)'
+        }}
+      >
+        {/* Decorations */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.07]"
+            style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+          <div className="absolute -top-24 -right-20 w-80 h-80 rounded-full blur-3xl bg-blue-400/30" />
+          <div className="absolute bottom-0 -left-20 w-64 h-64 rounded-full blur-2xl bg-white/10" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto flex items-center gap-5">
+          <div className="w-16 h-16 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-sm shadow-xl flex items-center justify-center text-3xl font-black text-white">
+            {initials}
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest mb-1.5 flex items-center gap-1.5 text-blue-100">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-200" />
+              {user.role} Account
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight m-0">
+              My Profile
+            </h1>
           </div>
         </div>
       </div>
@@ -137,7 +152,7 @@ const Profile = () => {
         ) : (
           <div className="max-w-3xl mx-auto">
             {/* ── Main card ── */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8">
+            <div className="bg-white rounded-[2.5rem] shadow-sm border-2 border-slate-200/80 p-6 sm:p-8">
               <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-100">
                 <h2>Account Information</h2>
                 <div className="flex gap-3">

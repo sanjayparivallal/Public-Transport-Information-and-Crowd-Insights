@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { getAllCrowdReports, deleteCrowdReport } from '../../api/crowdApi';
 import CrowdBadge from '../../components/CrowdBadge';
+import ConfirmModal from '../../components/ConfirmModal';
 import { UsersIcon, ClockIcon, TrashIcon, ActivityIcon } from '../../components/icons';
 
 const DashboardMyCrowdReports = () => {
   const [reports, setReports]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     fetchMyReports();
@@ -25,13 +27,15 @@ const DashboardMyCrowdReports = () => {
     }
   };
 
-  const handleDeleteReport = async (id) => {
-    if (!window.confirm("Delete this crowd report?")) return;
+  const handleDeleteReport = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteCrowdReport(id);
-      await fetchMyReports();
+      await deleteCrowdReport(deleteTarget);
+      setReports(p => p.filter(r => r._id !== deleteTarget));
     } catch (err) {
-      alert(err.message || "Failed to delete report.");
+      setError(err.message || 'Failed to delete report.');
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -112,7 +116,7 @@ const DashboardMyCrowdReports = () => {
 
                 <div className="shrink-0">
                   <button
-                    onClick={() => handleDeleteReport(r._id)}
+                    onClick={() => setDeleteTarget(r._id)}
                     className="p-2 border-2 border-slate-100 text-slate-400 hover:border-red-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95"
                     title="Delete Report"
                   >
@@ -124,6 +128,15 @@ const DashboardMyCrowdReports = () => {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Crowd Report?"
+        message="This crowd report will be permanently removed and will no longer count towards transport analytics."
+        confirmLabel="Delete Report"
+        onConfirm={handleDeleteReport}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </section>
   );
 };
