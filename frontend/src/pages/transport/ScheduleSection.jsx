@@ -4,7 +4,7 @@ const ScheduleSection = ({ schedule }) => {
   if (!schedule || schedule.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-8 mb-8 relative overflow-hidden group">
+    <div className="bg-white rounded-[2rem] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 mb-8 relative overflow-hidden group">
       <div className="flex items-center text-lg font-black text-slate-800 mb-8 pb-4 border-b border-slate-50">
         <div className="p-2 bg-indigo-50 rounded-xl mr-3 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500">
           <ClockIcon size={20} />

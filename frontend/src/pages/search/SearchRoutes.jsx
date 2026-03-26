@@ -83,36 +83,43 @@ const SearchRoutes = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* ── Page Header ── */}
-      <div className="bg-white border-b border-slate-200 px-4 py-5 sm:px-6 lg:px-8 mb-6 sm:mb-8 shadow-sm shadow-slate-100/50">
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
-          <SearchIcon size={20} className="text-blue-600" />
+    <div className="min-h-screen bg-gray-50 font-sans">
+      {/* ── Page Header (SaaS Style) ── */}
+      <div className="bg-white border-b border-gray-200 shadow-[0_4px_20px_rgb(0,0,0,0.01)] py-10 px-4 sm:px-6 lg:px-8 mb-8 sm:mb-12">
+        <div className="max-w-7xl mx-auto flex items-start gap-5">
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+            <SearchIcon size={28} className="text-blue-600" />
+          </div>
           <div>
-            <h1>Search Routes</h1>
-            <p className="mt-0.5">Find routes by name, number, origin, destination or type.</p>
+            <p className="text-blue-600 font-bold uppercase tracking-widest text-[10px] mb-2 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              Transit Finder
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Search Routes</h1>
+            <p className="mt-2 text-gray-500 font-medium text-sm max-w-lg">
+              Find routes by name, number, origin, destination or type.
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-20">
         <div className="max-w-5xl mx-auto">
           {/* Search Form Card */}
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 sm:p-6 mb-8">
-            <h2 className="mb-4 flex items-center gap-2">
-              <LocationIcon size={18} className="text-blue-600" /> Search Parameters
+          <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-200 p-6 sm:p-8 mb-10 relative overflow-hidden">
+            <h2 className="mb-6 flex items-center gap-2 text-xl font-black text-gray-900 tracking-tight">
+              <LocationIcon size={20} className="text-blue-600" /> Search Parameters
             </h2>
 
-              
               <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Origin District</label>
-                    <div className="relative">
-                      <LocationIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Origin District</label>
+                    <div className="relative group">
+                      <LocationIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
                       <input
                         name="origin" type="text" list="origins"
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700 shadow-inner"
+                        className="w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border-2 border-gray-200/60 rounded-[1.25rem] focus:bg-white focus:border-blue-600 focus:ring-0 outline-none transition-all placeholder-gray-400 font-bold text-gray-800 hover:border-gray-300"
                         placeholder="e.g. Salem"
                         value={filters.origin}
                         onChange={handleChange}
@@ -125,12 +132,12 @@ const SearchRoutes = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Destination</label>
-                    <div className="relative">
-                      <LocationIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Destination</label>
+                    <div className="relative group">
+                      <LocationIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
                       <input
                         name="destination" type="text" list="destinations"
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700 shadow-inner"
+                        className="w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border-2 border-gray-200/60 rounded-[1.25rem] focus:bg-white focus:border-blue-600 focus:ring-0 outline-none transition-all placeholder-gray-400 font-bold text-gray-800 hover:border-gray-300"
                         placeholder="e.g. Chennai"
                         value={filters.destination}
                         onChange={handleChange}
@@ -143,12 +150,12 @@ const SearchRoutes = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Transport Name or No.</label>
-                    <div className="relative">
-                      <BuildingIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Transport Name or No.</label>
+                    <div className="relative group">
+                      <BuildingIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
                       <input
                         name="busNo" type="text" list="identifiers"
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all placeholder-slate-300 font-bold text-slate-700 shadow-inner"
+                        className="w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border-2 border-gray-200/60 rounded-[1.25rem] focus:bg-white focus:border-blue-600 focus:ring-0 outline-none transition-all placeholder-gray-400 font-bold text-gray-800 hover:border-gray-300"
                         placeholder="e.g. Express or 12A"
                         value={filters.busNo}
                         onChange={handleChange}
@@ -161,12 +168,12 @@ const SearchRoutes = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vehicle Type</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Vehicle Type</label>
                     <div className="relative">
                       <select 
                         name="type" 
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-no-repeat shadow-inner"
-                        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2394a3b8\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1.25rem center', backgroundSize: '1.25rem' }}
+                        className="w-full px-4 py-3.5 bg-gray-50/50 border-2 border-gray-200/60 rounded-[1.25rem] focus:bg-white focus:border-blue-600 focus:ring-0 outline-none transition-all font-bold text-gray-800 hover:border-gray-300 appearance-none bg-no-repeat cursor-pointer"
+                        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2394a3b8\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'3\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1.25rem center', backgroundSize: '1rem' }}
                         value={filters.type} 
                         onChange={handleChange}
                       >
@@ -178,30 +185,30 @@ const SearchRoutes = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Earliest Departure</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Earliest Departure</label>
                     <input
                       name="departureTime" type="time"
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-slate-100 focus:border-slate-500 outline-none transition-all font-bold text-slate-700 shadow-inner"
+                      className="w-full px-4 py-3.5 bg-gray-50/50 border-2 border-gray-200/60 rounded-[1.25rem] focus:bg-white focus:border-blue-600 focus:ring-0 outline-none transition-all font-bold text-gray-800 hover:border-gray-300"
                       value={filters.departureTime}
                       onChange={handleChange}
                     />
                   </div>
 
-                  <div className="flex items-end gap-3 lg:col-span-1">
-                    <button 
-                      type="submit" 
-                      className="grow py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2" 
+                  <div className="flex items-end gap-3 lg:col-span-1 pt-2">
+                    <button
+                      type="submit"
+                      className="grow py-3.5 px-6 font-black tracking-widest uppercase text-xs rounded-[1.25rem] flex items-center justify-center gap-2 border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600 group"
                       disabled={loading}
                     >
                       {loading ? (
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <div className="w-5 h-5 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
                       ) : (
-                        <><SearchIcon size={18} className="group-hover:rotate-12 transition-transform" /> Search</>
+                        <><SearchIcon size={16} /> Search</>
                       )}
                     </button>
-                    <button 
-                      type="button" 
-                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition-all active:scale-95 whitespace-nowrap" 
+                    <button
+                      type="button"
+                      className="px-6 py-3.5 border-2 border-gray-200 text-gray-500 bg-transparent hover:bg-gray-50 hover:text-gray-800 hover:border-gray-300 font-black tracking-widest uppercase text-xs rounded-[1.25rem] transition-all active:scale-95 whitespace-nowrap"
                       onClick={handleClear}
                     >
                       Reset
@@ -212,19 +219,42 @@ const SearchRoutes = () => {
             </div>
 
           {/* Results Section */}
-          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <section className="bg-white border-2 border-gray-200/80 rounded-[2.5rem] p-6 sm:p-10 shadow-sm mt-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {searched && (
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b-2 border-gray-100 pb-8 mb-8">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-800 tracking-tight m-0">
+                  <h2 className="text-2xl sm:text-3xl font-black text-gray-800 tracking-tight m-0">
                     Search Results
                   </h2>
-                  <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">Live from global transport index</p>
+                  <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-1">Live from global transport index</p>
                 </div>
-                <div className="px-6 py-2 bg-white border border-slate-200 rounded-full text-xs font-black text-slate-500 uppercase tracking-widest shadow-sm">
-                  {results.length === 0
-                    ? 'No matches found'
-                    : `${pagination?.total ?? results.length} transport(s) identified`}
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                  <div className="px-5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[10px] font-black text-gray-500 uppercase tracking-widest shadow-inner whitespace-nowrap">
+                    {results.length === 0 ? 'No matches found' : `${pagination?.total ?? results.length} transport(s)`}
+                  </div>
+                  {pagination && pagination.pages > 1 && (
+                    <div className="flex items-center gap-3 shrink-0 bg-white border border-gray-200 rounded-xl px-2 py-1 shadow-sm">
+                      <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap pl-2">
+                        <span className="text-blue-600">{page}</span> / {pagination.pages}
+                      </span>
+                      <div className="flex items-center gap-1 border-l border-gray-100 pl-2">
+                        <button
+                          onClick={() => doSearch(page - 1)}
+                          disabled={page === 1 || loading}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 hover:text-blue-600 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                        >
+                          <ArrowLeftIcon size={14} />
+                        </button>
+                        <button
+                          onClick={() => doSearch(page + 1)}
+                          disabled={page >= pagination.pages || loading}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 hover:text-blue-600 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                        >
+                          <ArrowRightIcon size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -232,28 +262,28 @@ const SearchRoutes = () => {
             {loading ? (
               <div className="grid grid-cols-1 gap-6">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-white rounded-[2rem] p-10 border border-slate-100 animate-pulse flex flex-col md:flex-row justify-between gap-8">
+                  <div key={i} className="bg-white rounded-[2rem] p-10 border border-gray-100 animate-pulse flex flex-col md:flex-row justify-between gap-8">
                     <div className="space-y-4 grow">
-                      <div className="h-6 bg-slate-100 rounded-lg w-1/4"></div>
-                      <div className="h-10 bg-slate-100 rounded-lg w-1/2"></div>
-                      <div className="h-6 bg-slate-100 rounded-lg w-3/4"></div>
+                      <div className="h-6 bg-gray-100 rounded-lg w-1/4"></div>
+                      <div className="h-10 bg-gray-100 rounded-lg w-1/2"></div>
+                      <div className="h-6 bg-gray-100 rounded-lg w-3/4"></div>
                     </div>
-                    <div className="h-24 bg-slate-100 rounded-[1.5rem] w-full md:w-32"></div>
+                    <div className="h-24 bg-gray-100 rounded-[1.5rem] w-full md:w-32"></div>
                   </div>
                 ))}
               </div>
             ) : searched ? (
               results.length === 0 ? (
-                <div className="bg-white rounded-3xl p-16 text-center shadow-xl shadow-slate-200/40 border border-slate-100">
+                <div className="bg-white rounded-3xl p-16 text-center shadow-xl shadow-gray-200/40 border border-gray-100">
                   <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
                     <AlertIcon size={32} />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-800 mb-4 tracking-tight">No Results</h3>
-                  <p className="text-slate-500 font-medium max-w-lg mx-auto mb-8 text-base leading-relaxed text-balance">
+                  <h3 className="text-2xl font-black text-gray-800 mb-4 tracking-tight">No Results</h3>
+                  <p className="text-gray-500 font-medium max-w-lg mx-auto mb-8 text-base leading-relaxed text-balance">
                     We couldn't find any fleets currently servicing this operational sector. Try broadening your geographic parameters.
                   </p>
                   <button 
-                    className="px-4 py-2 bg-slate-900 border border-slate-800 text-white font-bold rounded-lg hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                    className="px-4 py-2 bg-gray-900 border border-gray-800 text-white font-bold rounded-lg hover:bg-gray-800 transition-all shadow-sm active:scale-95"
                     onClick={handleClear}
                   >
                     Reset
@@ -264,33 +294,10 @@ const SearchRoutes = () => {
                   {results.map(t => (
                     <TransportCard key={t._id} transport={t} />
                   ))}
-
-                  {/* Pagination */}
-                  {pagination && pagination.pages > 1 && (
-                    <div className="flex items-center justify-center gap-6 mt-16 bg-white px-8 py-5 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/20 w-fit mx-auto border-b-4 border-b-primary-600">
-                      <button
-                        className="p-3 bg-slate-50 hover:bg-primary-50 hover:text-primary-600 text-slate-400 rounded-2xl disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-90"
-                        disabled={page === 1}
-                        onClick={() => doSearch(page - 1)}
-                      >
-                        <ArrowLeftIcon size={24} />
-                      </button>
-                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-8 border-x border-slate-100 whitespace-nowrap">
-                        Index <span className="text-primary-600 text-xl font-black ml-1 mr-1">{page}</span> / {pagination.pages}
-                      </div>
-                      <button
-                        className="p-3 bg-slate-50 hover:bg-primary-50 hover:text-primary-600 text-slate-400 rounded-2xl disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-90"
-                        disabled={page >= pagination.pages}
-                        onClick={() => doSearch(page + 1)}
-                      >
-                        <ArrowRightIcon size={24} />
-                      </button>
-                    </div>
-                  )}
                 </div>
               )
             ) : (
-                <div className="bg-white rounded-3xl p-16 text-center shadow-xl shadow-slate-200/40 border border-slate-100 relative overflow-hidden group">
+                <div className="bg-white rounded-3xl p-16 text-center shadow-xl shadow-gray-200/40 border border-gray-100 relative overflow-hidden group">
                 {/* Background decorative spot */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary-50/50 rounded-full blur-[100px] pointer-events-none"></div>
                 
@@ -298,14 +305,14 @@ const SearchRoutes = () => {
                   <div className="w-16 h-16 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm transition-transform duration-700 group-hover:rotate-12">
                     <LocationIcon size={32} />
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-4 tracking-tight">Your Network, <span className="text-primary-600">Unveiled</span></h3>
-                  <p className="text-slate-500 text-lg font-medium max-w-xl mx-auto leading-relaxed text-balance">
+                  <h3 className="text-2xl md:text-3xl font-black text-gray-800 mb-4 tracking-tight">Your Network, <span className="text-primary-600">Unveiled</span></h3>
+                  <p className="text-gray-500 text-lg font-medium max-w-xl mx-auto leading-relaxed text-balance">
                     Initialize your journey parameters above to synchronize with the global transit grid and real-time crowd dynamics.
                   </p>
                 </div>
               </div>
             )}
-          </div>
+          </section>
         </div>
       </div>
     </div>

@@ -273,6 +273,7 @@ const TransportDetail = () => {
         routeId,
         crowdLevel: liveForm.crowdLevel,
         currentStop: liveForm.currentStop || null,
+        manualSeats: liveForm.availableSeats === '' ? null : Number(liveForm.availableSeats),
       });
 
       const tRes = await getTransportById(id);
@@ -364,16 +365,16 @@ const TransportDetail = () => {
   const canOperateLive = !!user && (isAuthorityTransport || isDriverTransport || isConductorTransport);
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pt-8 pb-4">
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8">
+        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="space-y-4 max-w-3xl">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="px-3 py-1 bg-slate-100 border border-slate-200 rounded-full text-sm font-bold tracking-wider text-slate-700">
                   {transport.transportNumber}
                 </span>
-                <span className="flex items-center gap-1.5 px-3 py-1 bg-primary-50 border border-primary-100 rounded-full text-sm font-medium capitalize text-primary-600">
+                <span className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full text-sm font-medium capitalize text-blue-600">
                   {transport.type === 'bus' ? <BusIcon size={14} /> : <TrainIcon size={14} />} 
                   {transport.type}
                 </span>
@@ -385,19 +386,19 @@ const TransportDetail = () => {
 
               {transport.routes?.length > 1 ? (
                 <div className="flex flex-col gap-3">
-                  <div className="flex flex-wrap gap-2 p-1 bg-slate-100/80 rounded-xl w-fit border border-slate-200/50">
+                  <div className="flex flex-wrap gap-2 p-1.5 bg-slate-50 rounded-2xl w-fit border border-slate-200">
                     {transport.routes.map((route) => (
                       <button
                         key={route._id}
                         onClick={() => setSelectedRouteId(route._id)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                           selectedRouteId === route._id
-                            ? 'bg-white text-primary-600 shadow-sm border border-slate-200/50'
-                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                            ? 'bg-white text-blue-600 shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-slate-200'
+                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                         }`}
                       >
                         <span>{route.origin}</span>
-                        <ArrowRightIcon size={14} className={selectedRouteId === route._id ? "text-primary-400" : "text-slate-400"} />
+                        <ArrowRightIcon size={14} className={selectedRouteId === route._id ? "text-blue-400" : "text-slate-400"} />
                         <span>{route.destination}</span>
                       </button>
                     ))}
@@ -475,8 +476,8 @@ const TransportDetail = () => {
           <div className="lg:col-span-8 space-y-8">
 
             {(livePosition || canOperateLive) && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-4">
+              <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 p-8 overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-6">
                   <div className="flex h-3 w-3 relative">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
@@ -531,10 +532,10 @@ const TransportDetail = () => {
             )}
 
             {stops.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+              <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 p-8">
                 <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50">
                   <div className="flex items-center text-lg font-bold text-slate-800">
-                    <ClockIcon size={24} className="mr-3 text-primary-500" />
+                    <ClockIcon size={24} className="mr-3 text-blue-500" />
                     Stops Timeline
                   </div>
                   {primaryRoute && (
@@ -555,21 +556,21 @@ const TransportDetail = () => {
         </div>
 
         {/* Row 2: Incidents Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+        <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 p-8">
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50 flex-wrap gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-red-50 rounded-xl text-red-500">
+                  <div className="w-12 h-12 flex items-center justify-center bg-red-50 rounded-2xl text-red-500">
                     <AlertIcon size={24} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-slate-800 m-0">Recent Incidents</h4>
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{incidentsPagination.total} reports found</span>
+                    <h4 className="text-lg font-bold text-slate-900 m-0">Recent Incidents</h4>
+                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">{incidentsPagination.total} reports found</span>
                   </div>
                 </div>
                 
                 {canReportIncident && (
                   <button 
-                    className="inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-md active:scale-95" 
+                    className="inline-flex items-center justify-center px-5 py-2.5 font-bold rounded-xl bg-red-50 border-2 border-red-600 text-red-600 hover:bg-white focus:ring-4 focus:ring-red-100 transition-all active:scale-95" 
                     onClick={() => setShowIncidentModal(true)}
                   >
                     <PlusIcon size={18} className="mr-2" /> 
@@ -605,21 +606,21 @@ const TransportDetail = () => {
             </div>
 
             {/* Crowd Reports */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+            <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 p-8">
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50 flex-wrap gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-primary-50 rounded-xl text-primary-500">
+                  <div className="w-12 h-12 flex items-center justify-center bg-blue-50 rounded-2xl text-blue-500">
                     <UserIcon size={24} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-slate-800 m-0">Crowd Reports</h4>
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{crowdPagination.total} recent updates</span>
+                    <h4 className="text-lg font-bold text-slate-900 m-0">Crowd Reports</h4>
+                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">{crowdPagination.total} recent updates</span>
                   </div>
                 </div>
                 
                 {canReportCrowd && (
                   <button 
-                    className="inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md active:scale-95" 
+                    className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600" 
                     onClick={() => setShowCrowdModal(true)}
                   >
                     <PlusIcon size={18} className="mr-2" /> 
@@ -650,7 +651,7 @@ const TransportDetail = () => {
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
                             <UserIcon size={20} />
                           </div>
                           <div className="min-w-0 flex-1">
@@ -721,39 +722,69 @@ const TransportDetail = () => {
             <div className="p-6">
               <form id="crowdForm" onSubmit={handleCrowdSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Crowd Level</label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {['empty', 'average', 'crowded'].map((level) => (
-                      <label 
-                        key={level}
-                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${crowdForm.crowdLevel === level ? 'bg-blue-50 border-blue-300' : 'bg-white border-slate-200 hover:border-slate-300'}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input 
-                            type="radio" 
-                            name="crowdLevel" 
-                            value={level} 
-                            checked={crowdForm.crowdLevel === level}
-                            onChange={e => setCrowdForm({...crowdForm, crowdLevel: e.target.value})}
-                            className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-                          />
-                          <span className="font-bold text-slate-700 capitalize">{level === 'empty' ? 'Seats Available' : level === 'average' ? 'Standing Room' : 'Full / Crowded'}</span>
-                        </div>
-                        <CrowdBadge level={level} />
-                      </label>
-                    ))}
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Crowd Level Estimate</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['empty', 'average', 'crowded'].map((level) => {
+                       const isSelected = crowdForm.crowdLevel === level;
+                       return (
+                         <label 
+                           key={level}
+                           className={`relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${isSelected ? 'bg-blue-50 border-blue-600 shadow-md shadow-blue-500/10' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
+                         >
+                           <input 
+                             type="radio" 
+                             name="crowdLevel" 
+                             value={level} 
+                             checked={isSelected}
+                             onChange={e => setCrowdForm({...crowdForm, crowdLevel: e.target.value})}
+                             className="sr-only"
+                           />
+                           
+                           {/* Conditional Icons based on Crowd Level */}
+                           {level === 'empty' && (
+                             <div className={`mb-2 transition-colors ${isSelected ? 'text-emerald-500' : 'text-slate-400'}`}>
+                               <UserIcon size={32} />
+                             </div>
+                           )}
+                           {level === 'average' && (
+                             <div className={`flex items-center justify-center mb-2 transition-colors ${isSelected ? 'text-amber-500' : 'text-slate-400'}`}>
+                               <UserIcon size={24} className="-mr-2 opacity-80"/>
+                               <UserIcon size={28} className="z-10"/>
+                             </div>
+                           )}
+                           {level === 'crowded' && (
+                             <div className={`flex items-center justify-center mb-2 transition-colors ${isSelected ? 'text-rose-500' : 'text-slate-400'}`}>
+                               <UserIcon size={20} className="-mr-2 opacity-60"/>
+                               <UserIcon size={24} className="z-10 opacity-90"/>
+                               <UserIcon size={28} className="-ml-3 z-20"/>
+                             </div>
+                           )}
+                           
+                           <span className={`text-[10px] font-black uppercase tracking-widest text-center mt-2 ${isSelected ? 'text-blue-700' : 'text-slate-500'}`}>
+                              {level === 'empty' ? 'Seats Avail' : level === 'average' ? 'Standing' : 'Crowded'}
+                           </span>
+                           
+                           {isSelected && (
+                             <div className="absolute top-2 right-2 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                             </div>
+                           )}
+                         </label>
+                       );
+                    })}
                   </div>
                 </div>
                 
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Boarding Stop (Optional)</label>
+                <div className="relative mt-6">
                   <input 
                     type="text" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800" 
-                    placeholder="Where did you board?" 
+                    id="floating_boarding"
+                    className="block px-4 pb-2.5 pt-4 w-full text-sm font-bold text-slate-900 bg-transparent rounded-xl border-2 border-slate-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer transition-colors" 
+                    placeholder=" " 
                     value={crowdForm.boardingStop} 
                     onChange={e => setCrowdForm({...crowdForm, boardingStop: e.target.value})} 
                   />
+                  <label htmlFor="floating_boarding" className="absolute text-[10px] font-black uppercase tracking-widest text-slate-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-2 pointer-events-none">Boarding Stop (Optional)</label>
                 </div>
               </form>
             </div>
@@ -769,11 +800,11 @@ const TransportDetail = () => {
               <button 
                 type="submit" 
                 form="crowdForm" 
-                className="flex-1 inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md active:scale-95" 
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 font-black uppercase tracking-widest text-[11px] rounded-xl bg-transparent border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95" 
                 disabled={reportLoading}
               >
                 {reportLoading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin"></div>
                 ) : 'Post Report'}
               </button>
             </div>
@@ -979,25 +1010,27 @@ const TransportDetail = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Location</label>
+                <div className="relative mt-6">
                   <input 
                     type="text" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800" 
-                    placeholder="E.g. Near Teynampet station" 
+                    id="floating_location"
+                    className="block px-4 pb-2.5 pt-4 w-full text-sm font-bold text-slate-900 bg-transparent rounded-xl border-2 border-slate-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer transition-colors" 
+                    placeholder=" " 
                     value={incidentForm.location} 
                     onChange={e => setIncidentForm({...incidentForm, location: e.target.value})} 
                   />
+                  <label htmlFor="floating_location" className="absolute text-[10px] font-black uppercase tracking-widest text-slate-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-2 pointer-events-none">Location</label>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Description</label>
+                <div className="relative mt-6">
                   <textarea 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800 min-h-25" 
-                    placeholder="Tell us what happened..." 
+                    id="floating_desc"
+                    className="block px-4 pb-2.5 pt-5 w-full text-sm font-bold text-slate-900 bg-transparent rounded-xl border-2 border-slate-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer transition-colors min-h-[100px]" 
+                    placeholder=" " 
                     value={incidentForm.description} 
                     onChange={e => setIncidentForm({...incidentForm, description: e.target.value})}
                   />
+                  <label htmlFor="floating_desc" className="absolute text-[10px] font-black uppercase tracking-widest text-slate-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-4 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-2 pointer-events-none">Description (What happened...)</label>
                 </div>
               </form>
             </div>
@@ -1013,11 +1046,11 @@ const TransportDetail = () => {
               <button 
                 type="submit" 
                 form="incidentForm" 
-                className="flex-1 inline-flex items-center justify-center px-4 py-2 font-bold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-md active:scale-95" 
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 font-black uppercase tracking-widest text-[11px] rounded-xl bg-transparent border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95" 
                 disabled={reportLoading}
               >
                 {reportLoading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-red-600/30 border-t-red-600 rounded-full animate-spin"></div>
                 ) : 'Submit Report'}
               </button>
             </div>

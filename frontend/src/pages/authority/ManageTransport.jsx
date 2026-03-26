@@ -174,16 +174,20 @@ const ManageTransport = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-12">
+    <div className="min-h-screen bg-slate-50 pb-12 font-sans">
       {/* ── Page Header ── */}
-      <div className="bg-white border-b border-slate-200 px-4 py-8 sm:px-6 lg:px-8 mb-8 sm:mb-10 shadow-sm shadow-slate-100/50">
+      <div className="bg-white border-b border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.01)] py-10 px-4 sm:px-6 lg:px-8 mb-8 sm:mb-10">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3"><span className="p-2 bg-blue-50 text-blue-600 rounded-xl"><WrenchIcon size={24} /></span> Manage Transport</h1>
-            <p className="mt-2 text-sm font-medium text-slate-500">Add, edit, assign staff and manage your entire fleet.</p>
+            <p className="text-blue-600 font-bold uppercase tracking-widest text-[10px] mb-1.5 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              Fleet Management
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">Manage Transport</h1>
+            <p className="text-slate-500 text-sm font-bold">Add, edit, assign staff and manage your entire fleet.</p>
           </div>
-          <button className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all hover:-translate-y-0.5 shrink-0" onClick={openAddModal}>
-            <PlusIcon size={18} /> Add Transport
+          <button className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex-shrink-0 border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600" onClick={openAddModal}>
+            <PlusIcon size={16} /> Add Transport
           </button>
         </div>
       </div>
@@ -202,71 +206,73 @@ const ManageTransport = () => {
             { label: 'Total Transport', value: stats.total,  icon: WrenchIcon, color: 'text-blue-600',   bg: 'bg-blue-50', border: 'border-blue-100'   },
             { label: 'Total Bus',       value: stats.buses,  icon: BusIcon,    color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
             { label: 'Total Train',     value: stats.trains, icon: TrainIcon,  color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
-          ].map(({ label, value, icon: Icon, color, bg, border }) => (
-            <div className={`bg-white border ${border} rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex items-center gap-4 sm:gap-5`} key={label}>
-              <div className={`p-3.5 rounded-xl shrink-0 ${bg}`}><Icon size={24} className={color} /></div>
-              <div>
-                <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{value}</p>
-                <p className="text-xs sm:text-sm text-slate-500 font-bold uppercase tracking-wider mt-0.5">{label}</p>
+          ].map(({ label, value, icon: Icon, color, bg }) => (
+            <div className={`bg-white border-slate-200 border rounded-[2rem] p-6 sm:p-8 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all overflow-hidden relative flex items-center gap-5`} key={label}>
+              <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center shrink-0 border border-white shadow-sm`}>
+                <Icon size={26} className={color} />
+              </div>
+              <div className="flex flex-col relative z-10 w-full">
+                <p className="text-4xl sm:text-5xl font-black tracking-tight text-slate-800 leading-none">{value}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1.5">{label}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Advanced Filters */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 mb-8">
-          <div className="flex flex-col md:flex-row items-end gap-6">
-            <div className="flex-grow space-y-2 w-full">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5 mb-2">
-                <SearchIcon size={14}/> Find Vehicle
-              </label>
-              <div className="relative">
-                <SearchIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
-                  placeholder="ID, Name or Operator..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+        {/* Unified Fleet Management Section */}
+        <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 overflow-hidden relative flex flex-col">
+          
+          <div className="p-6 sm:p-8 border-b border-indigo-100 bg-gradient-to-br from-indigo-50/40 via-white to-blue-50/20">
+            <div className="flex flex-col md:flex-row items-end gap-6">
+              <div className="flex-grow space-y-2 w-full">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5 mb-2">
+                  <SearchIcon size={14}/> Find Vehicle
+                </label>
+                <div className="relative">
+                  <SearchIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-semibold text-slate-800"
+                    placeholder="ID, Name or Operator..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
-            
-            <div className="w-full md:w-64 space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Category</label>
-              <select
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold text-slate-800 appearance-none bg-no-repeat cursor-pointer"
-                style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2394a3b8\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundSize: '1.25rem' }}
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
+              
+              <div className="w-full md:w-64 space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Category</label>
+                <select
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold text-slate-800 appearance-none bg-no-repeat cursor-pointer"
+                  style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2394a3b8\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundSize: '1.25rem' }}
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                >
+                  <option value="all">All Fleet</option>
+                  <option value="bus">Buses</option>
+                  <option value="train">Trains</option>
+                </select>
+              </div>
+              
+              <button 
+                onClick={fetchTransports}
+                className="p-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-blue-600 rounded-xl transition-all shadow-sm active:scale-95 shrink-0"
+                title="Refresh Fleet Data"
               >
-                <option value="all">All Fleet</option>
-                <option value="bus">Buses</option>
-                <option value="train">Trains</option>
-              </select>
+                <RefreshIcon size={20} className={loading ? 'animate-spin' : ''} />
+              </button>
             </div>
-            
-            <button 
-              onClick={fetchTransports}
-              className="p-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-blue-600 rounded-xl transition-all shadow-sm active:scale-95 shrink-0"
-              title="Refresh Fleet Data"
-            >
-              <RefreshIcon size={20} className={loading ? 'animate-spin' : ''} />
-            </button>
           </div>
-        </div>
 
-        {/* Fleet Table */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Vehicle Identity</th>
-                  <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Route Strategy</th>
-                  <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Active Personnel</th>
-                  <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Ops Status</th>
-                  <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                <tr className="bg-gradient-to-r from-slate-50 to-indigo-50/30 border-b-2 border-indigo-100/50">
+                  <th className="px-6 py-6 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Vehicle Identity</th>
+                  <th className="px-6 py-5 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Route Strategy</th>
+                  <th className="px-6 py-5 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Active Personnel</th>
+                  <th className="px-6 py-5 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Ops Status</th>
+                  <th className="px-6 py-5 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -301,7 +307,7 @@ const ManageTransport = () => {
                     <tr 
                       key={t._id} 
                       id={`transport-${t._id}`}
-                      className={`transition-all group ${highlightedId === t._id ? 'bg-blue-50/50 ring-2 ring-blue-200 ring-inset' : 'hover:bg-slate-50/50'}`}
+                      className={`transition-all group border-l-[3px] border-l-transparent ${highlightedId === t._id ? 'bg-blue-50/50 border-l-blue-500 ring-1 ring-blue-200 ring-inset' : 'hover:bg-indigo-50/30 hover:border-l-indigo-400'}`}
                     >
                       <td className="px-6 py-5">
                         <Link to={`/transport/${t._id}`} className="flex items-center gap-4 group/link">
@@ -321,10 +327,10 @@ const ManageTransport = () => {
                       </td>
                       <td className="px-6 py-5">
                         <button 
-                          className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-800 group-hover:bg-slate-800 hover:text-white group-hover:text-white text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-sm group-hover:shadow-md"
+                          className="flex items-center gap-2 px-4 py-2 border-2 border-slate-200 bg-white hover:border-slate-800 hover:text-slate-800 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 group"
                           onClick={() => openRoutesModal(t)}
                         >
-                          <MapIcon size={14} /> Update Routes &amp; Fares
+                          <MapIcon size={14} className="group-hover:text-blue-600 transition-colors" /> Update Routes &amp; Fares
                         </button>
                       </td>
                       <td className="px-6 py-5">

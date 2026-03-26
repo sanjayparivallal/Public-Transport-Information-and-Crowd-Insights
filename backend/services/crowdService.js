@@ -3,6 +3,7 @@ const CrowdReport = require('../models/CrowdReport');
 const Transport = require('../models/Transport');
 const User = require('../models/User');
 const Route = require('../models/Route');
+const LivePosition = require('../models/LivePosition');
 
 const validateTransportUpdateAccess = async (userId, userRole, transportId) => {
   const transport = await Transport.findById(transportId)
@@ -52,7 +53,7 @@ const validateTransportUpdateAccess = async (userId, userRole, transportId) => {
  * Staff (driver/conductor/authority) updates the official crowd level.
  * Uses upsert so only one live record exists per route.
  */
-const updateCrowdLevel = async (userId, userRole, { transportId, routeId, crowdLevel, currentStop }) => {
+const updateCrowdLevel = async (userId, userRole, { transportId, routeId, crowdLevel, currentStop, manualSeats }) => {
   const allowed = ['driver', 'conductor', 'authority'];
   if (!allowed.includes(userRole)) {
     const err = new Error('Only driver, conductor, or authority can update crowd levels');
@@ -74,24 +75,24 @@ const updateCrowdLevel = async (userId, userRole, { transportId, routeId, crowdL
   // If crowd level is updated, we should estimate available seats if not manually provided
   const transport = await Transport.findById(transportId);
   if (transport && transport.totalSeats) {
-    let estimatedSeats = transport.availableSeats;
-    
-    if (crowdLevel === 'empty') {
-      estimatedSeats = Math.floor(transport.totalSeats * 0.9); // 90% full of hope/seats
-    } else if (crowdLevel === 'average') {
-      estimatedSeats = Math.floor(transport.totalSeats * 0.2); // 20% seats left
-    } else if (crowdLevel === 'crowded') {
-      estimatedSeats = 0; // No seats
+    if (manualSeats === undefined || manualSeats === null) {
+      let estimatedSeats;
+      if (crowdLevel === 'empty') {
+        estimatedSeats = Math.floor(transport.totalSeats * 0.9); // 90% full of hope/seats
+      } else if (crowdLevel === 'average') {
+        estimatedSeats = Math.floor(transport.totalSeats * 0.2); // 20% seats left
+      } else if (crowdLevel === 'crowded') {
+        estimatedSeats = 0; // No seats
+      }
+
+      if (estimatedSeats !== undefined) {
+        // Update Route
+        await Route.findByIdAndUpdate(routeId, { availableSeats: estimatedSeats });
+      }
+    } else {
+        // Optionally update the manual seats here to ensure atomicity, although updateLivePosition primarily handles it
+        await Route.findByIdAndUpdate(routeId, { availableSeats: manualSeats });
     }
-
-    // Update Route
-    await Route.findByIdAndUpdate(routeId, { availableSeats: estimatedSeats });
-
-    // Update LivePosition if exists
-    await LivePosition.findOneAndUpdate(
-      { transportId, routeId },
-      { availableSeats: estimatedSeats }
-    );
   }
 
   return level;

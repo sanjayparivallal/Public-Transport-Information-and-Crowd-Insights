@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAllIncidents, deleteIncident } from '../../api/incidentApi';
 import IncidentList from '../../components/IncidentList';
-import { ClipboardIcon } from '../../components/icons';
+import { ClipboardIcon, BellIcon, ActivityIcon } from '../../components/icons';
 
 const DashboardMyIncidents = () => {
   const [incidents, setIncidents] = useState([]);
@@ -34,43 +34,50 @@ const DashboardMyIncidents = () => {
   };
 
   return (
-    <section className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden auto-rows-max mb-8">
-      <div className="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
-          <span className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">
-            <ClipboardIcon size={18} />
+    <section className="bg-white border border-slate-200 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden mb-10">
+      {/* Crisp Header */}
+      <div className="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
+        <h2 className="text-xl font-black text-slate-900 flex items-center gap-3 m-0 tracking-tight">
+          <span className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 shrink-0">
+            <ClipboardIcon size={20} />
           </span>
           My Incident Reports
         </h2>
-        <span className="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold border border-slate-200 shadow-sm">
-          {incidents.length} Records
-        </span>
+        
+        <div className="flex items-center gap-2">
+          {incidents.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest bg-indigo-50 border border-indigo-200 text-indigo-700">
+              <BellIcon size={14} />
+              {incidents.length} Records
+            </span>
+          )}
+        </div>
       </div>
 
-      {loading ? (
-        <div className="p-5 space-y-4">
-          {[1, 2].map(i => <div key={i} className="bg-slate-50 border border-slate-100 rounded-2xl h-24 animate-pulse" />)}
-        </div>
-      ) : error ? (
-        <div className="p-5">
-          <div className="flex items-center gap-3 p-4 text-red-700 bg-red-50 border border-red-200 rounded-xl">
-            <ClipboardIcon size={20} className="text-red-500" />
-            <p className="text-sm font-semibold">{error}</p>
+      <div className="p-6">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="rounded-3xl h-64 bg-slate-50 animate-pulse border border-slate-100" />
+            ))}
           </div>
-        </div>
-      ) : incidents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-16 text-center bg-slate-50/50">
-          <div className="w-16 h-16 bg-white shadow-sm border border-slate-200 rounded-2xl flex items-center justify-center mb-4">
-            <ClipboardIcon size={32} className="text-slate-300" />
+        ) : error ? (
+          <div className="flex items-center gap-3 p-5 text-red-600 bg-white border-2 border-red-100 rounded-2xl shadow-sm">
+            <ClipboardIcon size={24} className="text-red-500" />
+            <p className="font-bold">{error}</p>
           </div>
-          <p className="text-base font-bold text-slate-700">No incident reports yet</p>
-          <p className="text-sm text-slate-500 mt-1 max-w-sm">Reports you submit will appear here. They help authorities manage active issues.</p>
-        </div>
-      ) : (
-        <div className="p-0 sm:p-2 bg-slate-50/50">
+        ) : incidents.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm text-center">
+            <div className="w-20 h-20 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-5">
+              <ClipboardIcon size={32} />
+            </div>
+            <p className="text-xl font-black text-slate-900 mb-2 tracking-tight">No incident reports yet</p>
+            <p className="text-sm font-bold text-slate-500 max-w-sm">Reports you submit will appear here. They help authorities manage active issues.</p>
+          </div>
+        ) : (
           <IncidentList incidents={incidents} onDelete={handleDelete} />
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 };

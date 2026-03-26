@@ -14,19 +14,19 @@ const IncidentList = ({ incidents = [], onDelete, onAction, actionLabel = 'Manag
 
   if (!incidents.length) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-8 bg-slate-50/50 rounded-[2.5rem] border-2 border-dashed border-slate-100 shadow-inner">
-        <div className="w-20 h-20 bg-white text-emerald-500 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-emerald-50 border border-emerald-50">
+      <div className="flex flex-col items-center justify-center py-20 px-8 bg-white rounded-[2rem] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-6">
           <CheckCircleIcon size={36} />
         </div>
-        <h4 className="text-xl font-black text-slate-800 mb-2 tracking-tight">System Status: Clear</h4>
-        <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">No active incidents reported at this time</p>
+        <h4 className="text-xl font-black text-slate-900 mb-2 tracking-tight">System Status: Clear</h4>
+        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No active incidents reported</p>
       </div>
     );
   }
 
   return (
     <>
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {incidents.map((inc) => {
         const cfg = typeIcons[inc.incidentType] || typeIcons.other;
         const date = inc.reportedAt
@@ -36,32 +36,38 @@ const IncidentList = ({ incidents = [], onDelete, onAction, actionLabel = 'Manag
           : null;
 
         return (
-          <div key={inc._id} className="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden relative">
-            <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: cfg.color }}></div>
-
-            <div className="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-[10px] font-black border border-white shadow-sm shrink-0">
+          <div key={inc._id} className="group bg-white rounded-3xl p-6 border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 relative flex flex-col">
+            {/* Header: User & Actions */}
+            <div className="flex items-start justify-between gap-3 mb-5 mt-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-black shrink-0"
+                  style={{ backgroundColor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
                   {inc.reportedBy?.name?.charAt(0) || inc.reporterRole?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
-                <div className="text-sm font-black text-slate-800 truncate">
-                  {inc.reportedBy?.name || inc.reporterRole || 'Unknown'}
+                <div className="min-w-0">
+                  <div className="text-[13px] font-black text-slate-900 truncate">
+                    {inc.reportedBy?.name || inc.reporterRole || 'Unknown'}
+                  </div>
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                    Reporter
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 {onAction && (
                   <button
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 text-primary-600 hover:bg-primary-600 hover:text-white border border-primary-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-90"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600"
                     onClick={() => onAction(inc)}
                   >
-                    <WrenchIcon size={12}/> {actionLabel}
+                    <WrenchIcon size={14}/> {actionLabel}
                   </button>
                 )}
                 {onDelete && (
                   <button
-                    className="p-2 bg-white text-slate-300 hover:bg-rose-50 hover:text-rose-600 border border-slate-100 rounded-xl transition-all shadow-sm active:scale-90"
+                    className="p-1.5 border-2 border-red-100 text-red-500 hover:border-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95"
                     onClick={() => onDelete(inc._id)}
+                    title="Delete"
                   >
                     <TrashIcon size={16}/>
                   </button>
@@ -69,63 +75,63 @@ const IncidentList = ({ incidents = [], onDelete, onAction, actionLabel = 'Manag
               </div>
             </div>
 
+            {/* Transport context */}
             {inc.transportId && (
-              <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
-                <div className={`p-1.5 rounded-lg ${inc.transportId.type === 'train' ? 'bg-indigo-50 text-indigo-500' : 'bg-blue-50 text-blue-500'}`}>
-                  {inc.transportId.type === 'train' ? <TrainIcon size={14} /> : <BusIcon size={14} />}
+              <div className="flex items-center gap-2 mb-4">
+                <div className={`text-${inc.transportId.type === 'train' ? 'violet' : 'blue'}-600`}>
+                  {inc.transportId.type === 'train' ? <TrainIcon size={16} /> : <BusIcon size={16} />}
                 </div>
-                <div className="min-w-0">
-                  <div className="text-[11px] font-black text-slate-800 leading-none truncate mb-1">{inc.transportId.name}</div>
-                  <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">#{inc.transportId.transportNumber}</div>
-                </div>
+                <div className="text-sm font-black text-slate-800 truncate">{inc.transportId.name}</div>
+                <div className="text-xs font-bold text-slate-400">#{inc.transportId.transportNumber}</div>
               </div>
             )}
 
-            <div className="overflow-hidden rounded-xl border border-slate-100 bg-slate-50 mb-3">
+            {/* Image or Icon placeholder */}
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 mb-5 relative group-hover:border-slate-300 transition-colors">
               {inc.img ? (
                 <img
                   src={inc.img}
                   alt="Incident evidence"
-                  className="w-full h-44 object-contain bg-slate-100 cursor-zoom-in"
+                  className="w-full h-48 object-contain cursor-zoom-in"
                   onClick={() => setPreviewImage(inc.img)}
                 />
               ) : (
-                <div className="h-28 flex items-center justify-center text-slate-300">
-                  <cfg.Icon size={24} />
+                <div className="h-32 flex items-center justify-center opacity-50" style={{ color: cfg.color }}>
+                  <cfg.Icon size={32} />
                 </div>
               )}
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="text-lg font-black text-slate-800 capitalize tracking-tight m-0">
+            {/* Details */}
+            <div className="flex-1 flex flex-col">
+              <div className="flex items-center gap-2 flex-wrap mb-3">
+                <h4 className="text-lg font-black text-slate-900 capitalize tracking-tight m-0 mr-2">
                   {inc.incidentType}
                 </h4>
-                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${inc.severity === 'high' || inc.severity === 'critical' ? 'bg-rose-50 text-rose-600 border-rose-100' : inc.severity === 'medium' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${inc.severity === 'high' || inc.severity === 'critical' ? 'bg-white text-red-600 border-red-200' : inc.severity === 'medium' ? 'bg-white text-amber-600 border-amber-200' : 'bg-white text-emerald-600 border-emerald-200'}`}>
                   {inc.severity}
                 </span>
-                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${inc.status === 'open' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${inc.status === 'open' ? 'bg-white text-indigo-600 border-indigo-200' : 'bg-white text-slate-500 border-slate-200'}`}>
                   {inc.status}
                 </span>
               </div>
 
               {inc.description && (
-                <p className="text-slate-600 text-sm font-medium leading-snug">
+                <p className="text-slate-600 text-sm font-medium leading-relaxed mb-4">
                   {inc.description}
                 </p>
               )}
 
-              <div className="pt-3 border-t border-slate-50 space-y-2">
+              <div className="mt-auto pt-4 border-t border-slate-100 grid grid-cols-2 gap-3">
                 {inc.location && (
-                  <div className="flex items-center gap-2 text-xs font-black text-slate-600">
-                    <LocationIcon size={12} className="text-primary-500" />
-                    {inc.location}
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                    <LocationIcon size={14} className="text-slate-400" />
+                    <span className="truncate">{inc.location}</span>
                   </div>
                 )}
-
                 {date && (
-                  <div className="flex items-center gap-2 text-xs font-black text-slate-500">
-                    <CalendarIcon size={12} className="text-primary-500" />
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-500 justify-end">
+                    <CalendarIcon size={14} className="text-slate-400" />
                     {date}
                   </div>
                 )}
@@ -138,19 +144,19 @@ const IncidentList = ({ incidents = [], onDelete, onAction, actionLabel = 'Manag
 
     {previewImage && (
       <div
-        className="fixed inset-0 z-120 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4"
+        className="fixed inset-0 z-120 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4"
         onClick={() => setPreviewImage(null)}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === 'Escape' && setPreviewImage(null)}
       >
         <div
-          className="relative w-[75vw] h-[75vh] max-w-300 bg-slate-950 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden"
+          className="relative w-full max-w-4xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden p-2"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             type="button"
-            className="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-black uppercase tracking-wider"
+            className="absolute top-4 right-4 z-10 px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900 bg-white text-xs font-black uppercase tracking-wider transition-all"
             onClick={() => setPreviewImage(null)}
           >
             Close
@@ -158,7 +164,7 @@ const IncidentList = ({ incidents = [], onDelete, onAction, actionLabel = 'Manag
           <img
             src={previewImage}
             alt="Incident evidence preview"
-            className="w-full h-full object-contain"
+            className="w-full max-h-[85vh] object-contain rounded-2xl"
           />
         </div>
       </div>
@@ -168,3 +174,4 @@ const IncidentList = ({ incidents = [], onDelete, onAction, actionLabel = 'Manag
 };
 
 export default IncidentList;
+

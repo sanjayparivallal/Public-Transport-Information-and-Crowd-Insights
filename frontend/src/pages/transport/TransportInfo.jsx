@@ -12,58 +12,76 @@ const TransportInfo = ({ transport, crowdLevel, availableSeats }) => {
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6">
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-50 gap-3">
-        <div className="flex items-center text-lg font-bold text-slate-800">
-          <LocationIcon size={24} className="mr-3 text-primary-500" />
-          Transport Information
+    <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 sm:p-10 mb-8 relative overflow-hidden">
+      {/* Decorative background element */}
+      <div className="absolute top-0 right-0 p-8 opacity-5">
+        <LocationIcon size={120} />
+      </div>
+
+      <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100 gap-3 relative z-10">
+        <div className="flex items-center text-xl font-black text-slate-800 tracking-tight">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mr-4 shadow-sm border border-blue-100">
+            <LocationIcon size={20} />
+          </div>
+          Transport Identity
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Current Crowd</div>
-          <CrowdBadge level={crowdLevel || 'unknown'} />
-        </div>
-
-        <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Available Seats</div>
-          <div className={`text-lg font-black ${hasSeatData ? (availableSeats > 10 ? 'text-emerald-600' : 'text-rose-600') : 'text-slate-500'}`}>
-            {hasSeatData ? `${availableSeats} seats` : 'No live data'}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8 relative z-10">
+        <div className="rounded-2xl border-2 border-slate-100 bg-white px-5 py-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all">
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+             <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Live Crowd status
+          </div>
+          <div className="mt-1">
+             <CrowdBadge level={crowdLevel || 'unknown'} />
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Total Capacity</div>
-          <div className="text-lg font-black text-slate-700">{transport.totalSeats || 'N/A'}</div>
+        <div className="rounded-2xl border-2 border-slate-100 bg-white px-5 py-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all">
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${hasSeatData ? 'bg-emerald-400' : 'bg-slate-300'}`}></span> Available Seats
+          </div>
+          <div className={`text-2xl tracking-tight font-black ${hasSeatData ? (availableSeats > 10 ? 'text-emerald-600' : 'text-rose-600') : 'text-slate-400'}`}>
+            {hasSeatData ? `${availableSeats} seats` : 'Offline'}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border-2 border-slate-100 bg-white px-5 py-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all">
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Total Capacity
+          </div>
+          <div className="text-2xl font-black text-slate-800 tracking-tight">{transport.totalSeats || 'N/A'}</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5 relative z-10">
         {infoKpis.map((kpi) => (
-          <div key={kpi.label} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{kpi.label}</div>
-            <div className="text-lg font-black text-slate-700 wrap-break-word">{kpi.value}</div>
+          <div key={kpi.label} className="rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
+            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{kpi.label}</div>
+            <div className="text-sm font-black text-slate-800 break-words">{kpi.value}</div>
           </div>
         ))}
+      </div>
 
-        <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 sm:col-span-2 lg:col-span-3">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Amenities</div>
-          {transport.amenities?.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {transport.amenities.map((amenity, i) => (
-                <span key={i} className="px-2.5 py-1 bg-white text-slate-600 rounded-lg text-xs font-medium border border-slate-200">
-                  {amenity}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <div className="text-lg font-black text-slate-500">N/A</div>
-          )}
+      <div className="mt-8 pt-6 border-t border-slate-100 relative z-10">
+        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Onboard Amenities
         </div>
+        {transport.amenities?.length > 0 ? (
+          <div className="flex flex-wrap gap-2.5">
+            {transport.amenities.map((amenity, i) => (
+              <span key={i} className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-black border border-slate-200 shadow-sm flex items-center gap-1">
+                {amenity}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm font-black text-slate-400">No amenities listed</div>
+        )}
       </div>
     </div>
   );
 };
 
 export default TransportInfo;
+

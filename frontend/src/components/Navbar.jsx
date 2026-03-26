@@ -44,7 +44,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white/80 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] sticky top-0 z-50 transition-all">
+    <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 

@@ -85,32 +85,56 @@ const CommuterDashboard = () => {
       : String(profile.assignedTransport))
     : null;
 
-  return (
-    <div className="min-h-screen bg-slate-50">
+  const favCount = favTransports.length;
 
-      {/* ── Page Header ── */}
-      <div className="bg-white border-b border-slate-200 px-4 py-8 sm:px-6 lg:px-8 shadow-sm shadow-slate-100/50">
-        <div className="max-w-7xl mx-auto">
-          <h1>
-            {getGreeting()}, <span className="text-blue-600">{displayName}</span>
-          </h1>
-          <p className="mt-1">
-            {isStaff
-              ? `You're logged in as a ${user.role}. Manage your assigned transport below.`
-              : 'Your travel hub — track favourite routes and stay updated with crowd & incident alerts.'}
-          </p>
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans">
+
+      {/* ── Page Header (SaaS Style) ── */}
+      <div className="bg-white border-b border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.01)] py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+          <div>
+            <p className="text-blue-600 font-bold uppercase tracking-widest text-[10px] mb-2 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              {isStaff ? `Duty Dashboard · ${user.role}` : 'Commuter Portal'}
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              {getGreeting()},{' '}
+              <span className="text-blue-600">
+                {displayName}
+              </span>
+            </h1>
+            <p className="mt-2 text-slate-500 font-medium text-sm max-w-lg">
+              {isStaff
+                ? `You're logged in as a ${user.role}. Manage your assigned transport below.`
+                : 'Your travel hub. Track favourite routes, stay updated with crowd levels, and manage incident alerts efficiently.'}
+            </p>
+          </div>
+
+          {/* Quick stats chips */}
+          {!loading && !isStaff && (
+            <div className="flex items-center self-start sm:self-end">
+              <div className="flex flex-col bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Saved Routes</span>
+                <div className="flex items-center gap-2">
+                  <span className="flex w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                  <span className="text-3xl font-black text-slate-900 leading-none">{favCount}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* ── Content ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <span className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-            <p className="text-sm text-slate-400">Loading dashboard…</p>
+            <span className="w-8 h-8 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin" />
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading dashboard…</p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-10">
 
             {/* ── Staff: Assigned Transport + Incidents for assigned transport ── */}
             {isStaff && (

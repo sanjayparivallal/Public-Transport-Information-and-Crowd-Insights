@@ -10,7 +10,6 @@ const EMPTY_FORM = {
   operator: '',
   vehicleNumber: '',
   totalSeats: '',
-  availableSeats: '',
   amenities: '',
 };
 
@@ -21,7 +20,6 @@ const formFromTransport = (t) => ({
   operator: t.operator || '',
   vehicleNumber: t.vehicleNumber || '',
   totalSeats: t.totalSeats != null ? String(t.totalSeats) : '',
-  availableSeats: t.availableSeats != null ? String(t.availableSeats) : '',
   amenities: (t.amenities || []).join(', '),
 });
 
@@ -34,7 +32,6 @@ const toPayload = (form) => {
   if (form.operator.trim())     p.operator      = form.operator.trim();
   if (form.vehicleNumber.trim()) p.vehicleNumber = form.vehicleNumber.trim();
   if (form.totalSeats.trim())   p.totalSeats    = Number(form.totalSeats);
-  if (form.availableSeats.trim()) p.availableSeats = Number(form.availableSeats);
   if (form.amenities.trim()) {
     p.amenities = form.amenities.split(',').map((s) => s.trim()).filter(Boolean);
   }
@@ -78,8 +75,8 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
     }
   };
 
-  const inputClass = "w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400 font-medium text-slate-800 text-sm";
-  const labelClass = "text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1.5 block";
+  const inputClass = "block px-4 pb-2.5 pt-4 w-full text-sm font-bold text-slate-900 bg-transparent rounded-xl border-2 border-slate-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer transition-colors";
+  const labelClass = "absolute text-[10px] font-black uppercase tracking-widest text-slate-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-2 pointer-events-none";
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
@@ -102,34 +99,36 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
             )}
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Transport Number *</label>
+              <div className="relative mt-2">
                 <input
                   type="text"
+                  id="floating_transport"
                   className={inputClass}
-                  placeholder="e.g. SLM-001"
+                  placeholder=" "
                   value={form.transportNumber}
                   onChange={set('transportNumber')}
                   required
                 />
+                <label htmlFor="floating_transport" className={labelClass}>Transport Number *</label>
               </div>
               
-              <div>
-                <label className={labelClass}>Name *</label>
+              <div className="relative mt-2">
                 <input
                   type="text"
+                  id="floating_name"
                   className={inputClass}
-                  placeholder="e.g. Salem–Chennai Exp"
+                  placeholder=" "
                   value={form.name}
                   onChange={set('name')}
                   required
                 />
+                <label htmlFor="floating_name" className={labelClass}>Name *</label>
               </div>
               
-              <div>
-                <label className={labelClass}>Type</label>
+              <div className="relative mt-2">
                 <select 
-                  className={`${inputClass} appearance-none bg-no-repeat`}
+                  id="floating_type"
+                  className={`${inputClass} bg-no-repeat`}
                   style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2394a3b8\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem' }}
                   value={form.type} 
                   onChange={set('type')}
@@ -137,73 +136,65 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
                   <option value="bus">Bus</option>
                   <option value="train">Train</option>
                 </select>
+                <label htmlFor="floating_type" className={labelClass}>Type</label>
               </div>
               
-              <div>
-                <label className={labelClass}>Operator</label>
+              <div className="relative mt-2">
                 <input
                   type="text"
+                  id="floating_operator"
                   className={inputClass}
-                  placeholder="e.g. TNSTC"
+                  placeholder=" "
                   value={form.operator}
                   onChange={set('operator')}
                 />
+                <label htmlFor="floating_operator" className={labelClass}>Operator</label>
               </div>
               
-              <div>
-                <label className={labelClass}>Vehicle Reg No.</label>
+              <div className="relative mt-2">
                 <input
                   type="text"
+                  id="floating_vehicle"
                   className={inputClass}
-                  placeholder="e.g. TN 33 AB 1234"
+                  placeholder=" "
                   value={form.vehicleNumber}
                   onChange={set('vehicleNumber')}
                 />
+                <label htmlFor="floating_vehicle" className={labelClass}>Vehicle Reg No.</label>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>Total Seats</label>
-                  <input
-                    type="number"
-                    className={inputClass}
-                    placeholder="e.g. 52"
-                    min="1"
-                    value={form.totalSeats}
-                    onChange={set('totalSeats')}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Available</label>
-                  <input
-                    type="number"
-                    className={inputClass}
-                    placeholder="e.g. 40"
-                    min="0"
-                    value={form.availableSeats}
-                    onChange={set('availableSeats')}
-                  />
-                </div>
+              <div className="relative mt-2">
+                <input
+                  type="number"
+                  id="floating_totalseats"
+                  className={inputClass}
+                  placeholder=" "
+                  min="1"
+                  value={form.totalSeats}
+                  onChange={set('totalSeats')}
+                />
+                <label htmlFor="floating_totalseats" className={labelClass}>Total Seats</label>
               </div>
               
-              <div className="sm:col-span-2">
-                <label className={labelClass}>Amenities</label>
+              <div className="relative sm:col-span-2 mt-2">
                 <input
                   type="text"
+                  id="floating_amenities"
                   className={inputClass}
-                  placeholder="e.g. AC, WiFi, Sleeper (comma separated)"
+                  placeholder=" "
                   value={form.amenities}
                   onChange={set('amenities')}
                 />
+                <label htmlFor="floating_amenities" className={labelClass}>Amenities</label>
               </div>
             </div>
           </div>
           
-          <div className="p-4 sm:px-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3 mt-auto shrink-0">
-            <button type="button" className="px-5 py-2.5 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-xl transition-colors" onClick={onClose}>
+          <div className="p-4 sm:px-6 bg-white border-t border-slate-100 flex justify-end gap-3 mt-auto shrink-0">
+            <button type="button" className="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold text-sm rounded-xl transition-colors" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2" disabled={saving}>
+            <button type="submit" className="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600" disabled={saving}>
               {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : (transport ? 'Save Changes' : 'Add Transport')}
             </button>
           </div>

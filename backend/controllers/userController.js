@@ -33,7 +33,7 @@ const getProfile = async (req, res, next) => {
 const updateProfile = async (req, res, next) => {
   try {
     if (req.user.role === 'authority') {
-      const allowedAuthFields = ['name', 'phone'];
+      const allowedAuthFields = ['name', 'phone', 'organizationName', 'region', 'contactEmail', 'contactPhone', 'officeAddress'];
       const updates = {};
       allowedAuthFields.forEach((f) => {
         if (req.body[f] !== undefined) updates[f] = req.body[f];
