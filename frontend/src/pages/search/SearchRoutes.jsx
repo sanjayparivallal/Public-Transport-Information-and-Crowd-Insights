@@ -4,7 +4,8 @@ import { searchTransports } from '../../api/transportApi';
 import TransportCard from '../../components/TransportCard';
 import SearchableCombobox from '../../components/SearchableCombobox';
 import Pagination from '../../components/Pagination';
-import { SearchIcon, LocationIcon, AlertIcon, BuildingIcon, BusIcon, TrainIcon } from '../../components/icons';
+import Skeleton from '../../components/Skeleton';
+import { SearchIcon, LocationIcon, AlertIcon, BusIcon, TrainIcon } from '../../components/icons';
 
 const SearchRoutes = () => {
   const [filters, setFilters] = useState({
@@ -244,17 +245,8 @@ const SearchRoutes = () => {
 
             {/* Loading skeletons */}
             {loading ? (
-              <div className="space-y-5">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="rounded-[2rem] p-8 border border-slate-100 animate-pulse flex gap-6">
-                    <div className="w-14 h-14 bg-slate-100 rounded-2xl shrink-0" />
-                    <div className="flex-1 space-y-3">
-                      <div className="h-4 bg-slate-100 rounded w-1/4" />
-                      <div className="h-6 bg-slate-100 rounded w-1/2" />
-                      <div className="h-4 bg-slate-100 rounded w-3/4" />
-                    </div>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[0,1,2,3].map(i => <Skeleton key={i} variant="transport-card" />)}
               </div>
             ) : searched ? (
               results.length === 0 ? (

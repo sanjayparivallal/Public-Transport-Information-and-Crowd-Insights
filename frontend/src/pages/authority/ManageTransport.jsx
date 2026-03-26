@@ -6,7 +6,7 @@ import {
   updateTransport,
   removeStaff,
 } from '../../api/adminApi';
-import { BusIcon, TrainIcon, EditIcon, WrenchIcon, AlertIcon, SearchIcon, TrashIcon, MapIcon, RefreshIcon, PlusIcon, UserIcon } from '../../components/icons';
+import { BusIcon, TrainIcon, EditIcon, WrenchIcon, AlertIcon, SearchIcon, TrashIcon, MapIcon, RefreshIcon, PlusIcon } from '../../components/icons';
 import TransportRoutesModal from './TransportRoutesModal';
 import TransportFormModal from './TransportFormModal';
 import AssignStaffModal from './AssignStaffModal';

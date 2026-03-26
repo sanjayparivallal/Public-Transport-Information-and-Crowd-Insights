@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getProfile, updateProfile } from '../../api/userApi';
 import { getManagedTransports } from '../../api/adminApi';
-import { BuildingIcon, UserIcon, EditIcon, CheckCircleIcon, AlertIcon, BusIcon, TrainIcon, WrenchIcon, UsersIcon, PauseIcon, KeyIcon, PlusIcon, ShieldIcon, MapPinIcon, GlobeIcon } from '../../components/icons';
+import { BuildingIcon, UserIcon, EditIcon, CheckCircleIcon, AlertIcon, PauseIcon, KeyIcon, PlusIcon, ShieldIcon, GlobeIcon } from '../../components/icons';
+import Skeleton from '../../components/Skeleton';
 
 /**
  * AuthorityProfile.jsx
@@ -14,11 +15,9 @@ import { BuildingIcon, UserIcon, EditIcon, CheckCircleIcon, AlertIcon, BusIcon, 
  * Route: to be wired by routing teammate (e.g. /profile/authority)
  */
 const AuthorityProfile = () => {
-  const { user, logout } = useAuth();
-  const navigate          = useNavigate();
+  const { user } = useAuth();
 
   const [profile,    setProfile]    = useState(null);
-  const [transports, setTransports] = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [editing,    setEditing]    = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -53,8 +52,8 @@ const AuthorityProfile = () => {
         });
 
         if (transportsRes) {
-          const d = transportsRes.data?.data;
-          setTransports(d?.results || d?.transports || (Array.isArray(d) ? d : []));
+          // Fetch succeeded — suppress lint, used in future transport grid
+          void transportsRes;
         }
       } catch {
         setError('Failed to load profile.');
@@ -154,9 +153,19 @@ const AuthorityProfile = () => {
           )}
 
           {loading ? (
-            <div className="bg-white rounded-2xl border border-blue-100 p-16 shadow-sm flex flex-col items-center justify-center">
-              <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-              <p className="text-blue-400 font-bold uppercase tracking-widest text-xs">Syncing Authority Data...</p>
+            <div className="bg-white rounded-2xl border border-blue-100 p-8 shadow-sm space-y-6">
+              <div className="flex items-center justify-between">
+                <Skeleton width={200} height={24} />
+                <Skeleton width={100} height={36} className="rounded-xl" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[0,1,2,3,4,5].map(i => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton width={80} height={10} />
+                    <Skeleton height={20} />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="max-w-4xl mx-auto space-y-6">

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BusIcon, TrainIcon, ArrowRightIcon, ClockIcon, UserIcon, MapPinIcon, IdCardIcon } from '../../components/icons';
+import { BusIcon, TrainIcon, ArrowRightIcon, MapPinIcon } from '../../components/icons';
 
 const InfoCell = ({ label, children }) => (
   <div>

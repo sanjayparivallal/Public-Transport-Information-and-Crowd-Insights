@@ -8,6 +8,7 @@ import DashboardAssignedTransport from './DashboardAssignedTransport';
 import DashboardFavouriteTransports from './DashboardFavouriteTransports';
 import DashboardMyIncidents from './DashboardMyIncidents';
 import DashboardMyCrowdReports from './DashboardMyCrowdReports';
+import Skeleton from '../../components/Skeleton';
 import DashboardLiveTracking from './DashboardLiveTracking';
 import DashboardAccountInfo from './DashboardAccountInfo';
 import DashboardAssignedIncidents from './DashboardAssignedIncidents';
@@ -156,9 +157,18 @@ const CommuterDashboard = () => {
       {/* ── Content ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <span className="w-8 h-8 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin" />
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading dashboard…</p>
+          <div className="space-y-10 py-4">
+            {/* Skeleton assigned transport */}
+            <div className="bg-white rounded-[2.5rem] border-2 border-slate-100 p-8">
+              <Skeleton variant="row" lines={2} className="mb-6" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[0,1,2,3].map(i => <Skeleton key={i} variant="card" height={100} />)}
+              </div>
+            </div>
+            {/* Skeleton fav transports */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {[0,1,2,3,4,5].map(i => <Skeleton key={i} variant="transport-card" />)}
+            </div>
           </div>
         ) : (
           <div className="space-y-10">

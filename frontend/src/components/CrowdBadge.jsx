@@ -1,4 +1,4 @@
-import { CircleIcon } from './icons';
+// No icon imports needed – uses inline SVG span
 
 const levelConfig = {
   empty:   {

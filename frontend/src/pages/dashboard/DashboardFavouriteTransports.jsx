@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCrowd } from '../../api/crowdApi';
 import { removeFavourite } from '../../api/userApi';
-import { BusIcon, TrainIcon, StarIcon, SearchIcon, MapPinIcon, ActivityIcon, ArrowRightIcon, HeartIcon, TrashIcon } from '../../components/icons';
+import { BusIcon, TrainIcon, StarIcon, SearchIcon, MapPinIcon, ActivityIcon, ArrowRightIcon, TrashIcon } from '../../components/icons';
 import CrowdBadge from '../../components/CrowdBadge';
 
 const DashboardFavouriteTransports = ({ favTransports = [], favLoading = false, onRemove }) => {

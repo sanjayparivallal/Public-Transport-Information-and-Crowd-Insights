@@ -9,11 +9,12 @@ import {
 import { deleteIncident } from '../../api/incidentApi';
 import {
   BusIcon, TrainIcon, AlertIcon, ClipboardIcon,
-  SearchIcon, WrenchIcon, ArrowLeftIcon, ArrowRightIcon,
+  SearchIcon, WrenchIcon, ArrowRightIcon,
 } from '../../components/icons';
 import IncidentList from '../../components/IncidentList';
 import ConfirmModal from '../../components/ConfirmModal';
 import Pagination from '../../components/Pagination';
+import Skeleton from '../../components/Skeleton';
 
 const getGreeting = () => {
   const h = new Date().getHours();
@@ -111,7 +112,7 @@ const AuthorityDashboard = () => {
     try {
       await deleteIncident(deleteIncidentId);
       setIncidents(p => p.filter(i => i._id !== deleteIncidentId));
-    } catch (err) { /* silent */ }
+    } catch { /* silent */ }
     finally { setDeleteIncidentId(null); }
   };
 
@@ -190,10 +191,18 @@ const AuthorityDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-10">
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <span className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
-            <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Loading dashboard…</p>
-          </div>
+          <>
+            {/* Skeleton stat cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+              {[0,1,2,3].map(i => <Skeleton key={i} variant="stat" />)}
+            </div>
+            {/* Skeleton fleet grid */}
+            <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] p-6 sm:p-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {[0,1,2,3,4,5].map(i => <Skeleton key={i} variant="transport-card" />)}
+              </div>
+            </div>
+          </>
         ) : (
           <>
             {/* ── Vivid Stat Cards ── */}

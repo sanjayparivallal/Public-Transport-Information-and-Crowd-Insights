@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getProfile, updateProfile } from '../../api/userApi';
 import { useAuth } from '../../context/AuthContext';
-import { UserIcon, CheckCircleIcon, AlertIcon, EditIcon, LogOutIcon, KeyIcon, PlusIcon, SaveIcon } from '../../components/icons';
+import { CheckCircleIcon, AlertIcon, EditIcon, KeyIcon, PlusIcon, SaveIcon } from '../../components/icons';
 import ProfileViewInfo from './ProfileViewInfo';
 import ProfileEditForm from './ProfileEditForm';
 
 const Profile = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [profile, setProfile]               = useState(null);
   const [loading, setLoading]               = useState(true);

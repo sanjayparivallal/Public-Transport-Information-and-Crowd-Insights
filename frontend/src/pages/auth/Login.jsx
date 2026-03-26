@@ -3,13 +3,13 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { loginUser } from '../../api/authApi';
 import { useAuth } from '../../context/AuthContext';
-import { MailIcon, LockIcon, EyeIcon, EyeOffIcon, LogInIcon, UserIcon, BuildingIcon } from '../../components/icons';
+import { MailIcon, LockIcon, EyeIcon, EyeOffIcon, LogInIcon } from '../../components/icons';
 import AuthLayout from '../../components/AuthLayout';
 
 const Login = () => {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { login, logout, user } = useAuth();
+  const { login, user } = useAuth();
 
   const [form, setForm]       = useState({ email: '', password: '' });
   const [showPw, setShowPw]   = useState(false);

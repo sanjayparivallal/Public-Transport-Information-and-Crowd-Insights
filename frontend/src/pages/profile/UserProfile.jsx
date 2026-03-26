@@ -7,8 +7,6 @@ import {
   UserIcon,
   EditIcon,
   CheckCircleIcon,
-  BusIcon,
-  TrainIcon,
   StarIcon,
   AlertIcon,
   ClipboardIcon,
@@ -17,17 +15,14 @@ import {
   SaveIcon,
   PhoneIcon,
   MailIcon,
-  LockIcon,
   EyeIcon,
   EyeOffIcon,
 } from "../../components/icons";
 
 const UserProfile = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [profile, setProfile] = useState(null);
-  const [assignedDetail, setAssignedDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [showPw, setShowPw] = useState(false);
@@ -54,9 +49,8 @@ const UserProfile = () => {
         if (assignedId) {
           const tRes = await getTransportById(assignedId).catch(() => null);
           if (tRes) {
-            setAssignedDetail(
-              tRes.data?.data?.transport || tRes.data?.data || tRes.data,
-            );
+            // Transport detail loaded, available for future assignment badge
+            void tRes;
           }
         }
       } catch {

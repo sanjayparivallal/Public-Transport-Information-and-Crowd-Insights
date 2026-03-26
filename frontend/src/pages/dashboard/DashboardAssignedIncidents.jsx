@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getIncidentsByTransport } from '../../api/incidentApi';
 import IncidentList from '../../components/IncidentList';
 import { AlertIcon, BellIcon } from '../../components/icons';
@@ -8,7 +8,7 @@ const DashboardAssignedIncidents = ({ assignedDetail }) => {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
 
-  const fetchIncidents = async () => {
+  const fetchIncidents = useCallback(async () => {
     if (!assignedDetail?._id) return;
     setLoading(true);
     try {
@@ -20,9 +20,9 @@ const DashboardAssignedIncidents = ({ assignedDetail }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [assignedDetail]);
 
-  useEffect(() => { fetchIncidents(); }, [assignedDetail]);
+  useEffect(() => { fetchIncidents(); }, [fetchIncidents]);
 
   if (!assignedDetail) return null;
 

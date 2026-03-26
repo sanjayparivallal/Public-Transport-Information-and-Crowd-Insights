@@ -9,11 +9,10 @@ import CrowdBadge from '../../components/CrowdBadge';
 import StopsTimeline from '../../components/StopsTimeline';
 import IncidentList from '../../components/IncidentList';
 import FareCalculator from './FareCalculator';
-import ScheduleSection from './ScheduleSection';
 import TransportInfo from './TransportInfo';
-import { BusIcon, TrainIcon, UserIcon, AlertIcon, StarIcon, SearchIcon, ClockIcon, LocationIcon, ArrowRightIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, EditIcon, TrashIcon } from '../../components/icons';
+import { BusIcon, TrainIcon, UserIcon, AlertIcon, StarIcon, ClockIcon, LocationIcon, ArrowRightIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, EditIcon, TrashIcon } from '../../components/icons';
 import ConfirmModal from '../../components/ConfirmModal';
-import Pagination from '../../components/Pagination';
+import Skeleton from '../../components/Skeleton';
 
 const TransportDetail = () => {
   const { id } = useParams();
@@ -321,10 +320,29 @@ const TransportDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-slate-100 border-t-primary-600 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-6 text-slate-500 font-bold uppercase tracking-widest text-xs animate-pulse">Synchronizing Fleet Data...</p>
+      <div className="min-h-screen pb-16">
+        {/* Skeleton Header */}
+        <div className="h-56 animate-pulse" style={{ background: 'linear-gradient(135deg, #1e40af 0%, #4f46e5 100%)' }}>
+          <div className="max-w-7xl mx-auto px-6 py-10 space-y-4">
+            <Skeleton width={100} height={12} className="!bg-white/20 rounded-full" />
+            <Skeleton width={260} height={28} className="!bg-white/20" />
+            <Skeleton width={180} height={14} className="!bg-white/15" />
+          </div>
+        </div>
+        {/* Skeleton Content */}
+        <div className="container mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pt-8">
+          <div className="bg-white rounded-[2.5rem] border-2 border-slate-100 p-8 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-8 space-y-6">
+                <Skeleton variant="card" height={220} />
+                <Skeleton variant="card" height={320} />
+              </div>
+              <div className="lg:col-span-4">
+                <Skeleton variant="card" height={460} />
+              </div>
+            </div>
+            <Skeleton variant="card" height={280} />
+          </div>
         </div>
       </div>
     );
@@ -356,9 +374,7 @@ const TransportDetail = () => {
   if (!transport) return null;
 
   const primaryRoute  = transport.routes?.find(r => r._id === selectedRouteId) || transport.routes?.[0];
-  const selectedLiveRoute = (transport.routes || []).find((r) => String(r._id) === String(liveForm.routeId)) || primaryRoute;
   const stops         = primaryRoute?.stops || [];
-  const schedule      = primaryRoute?.schedule || [];
   const fareTable     = primaryRoute?.fareTable || [];
   
   // Look for the most recent live position across all routes of this transport
