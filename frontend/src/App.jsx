@@ -79,7 +79,6 @@ const App = () => {
           {/* Dashboards */}
           <Route path="/dashboard"           element={<CommuterDashboard />} />
           <Route path="/dashboard/commuter"  element={<CommuterDashboard />} />
-          <Route path="/dashboard/authority" element={<AuthorityDashboard />} />
 
           {/* Search & Transport */}
           <Route path="/search"         element={<SearchRoutes />} />
@@ -92,6 +91,7 @@ const App = () => {
 
         {/* ── Authority-only routes ── */}
         <Route element={<AuthorityRoute />}>
+          <Route path="/dashboard/authority" element={<AuthorityDashboard />} />
           <Route path="/profile/authority" element={<AuthorityProfile />} />
           <Route path="/authority/manage"  element={<ManageTransport />} />
         </Route>

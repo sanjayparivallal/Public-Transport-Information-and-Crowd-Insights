@@ -5,6 +5,7 @@ const User       = require('../models/User');
 const CrowdLevel = require('../models/CrowdLevel');
 const CrowdReport = require('../models/CrowdReport');
 const LivePosition = require('../models/LivePosition');
+const Incident   = require('../models/Incident');
 
 /**
  * GET /api/transport/search
@@ -269,6 +270,7 @@ const deleteTransport = async (userId, transportId) => {
   
   await Promise.all([
     Route.deleteMany({ transportId: transport._id }),
+    Incident.deleteMany({ transportId: transport._id }),
     CrowdLevel.deleteMany({ routeId: { $in: routeIds } }),
     CrowdReport.deleteMany({ routeId: { $in: routeIds } }),
     LivePosition.deleteMany({ routeId: { $in: routeIds } }),

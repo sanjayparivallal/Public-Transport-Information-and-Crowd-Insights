@@ -1,6 +1,10 @@
 const Route     = require('../models/Route');
 const Transport = require('../models/Transport');
 const Authority = require('../models/Authority');
+const CrowdLevel   = require('../models/CrowdLevel');
+const CrowdReport  = require('../models/CrowdReport');
+const LivePosition = require('../models/LivePosition');
+const Incident     = require('../models/Incident');
 
 // Verify that the requesting authority owns the given transport
 const _verifyOwnership = async (userId, transportId) => {
@@ -56,6 +60,15 @@ const deleteRoute = async (userId, transportId, routeId) => {
     err.statusCode = 404;
     throw err;
   }
+
+  // Cascade delete all route-scoped data
+  await Promise.all([
+    CrowdLevel.deleteMany({ routeId: route._id }),
+    CrowdReport.deleteMany({ routeId: route._id }),
+    LivePosition.deleteMany({ routeId: route._id }),
+    Incident.deleteMany({ routeId: route._id }),
+  ]);
+
   return route;
 };
 

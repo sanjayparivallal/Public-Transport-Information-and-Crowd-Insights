@@ -5,6 +5,21 @@ import { registerCommuter } from '../../api/authApi';
 import { MailIcon, LockIcon, EyeIcon, EyeOffIcon, UserIcon } from '../../components/icons';
 import AuthLayout from '../../components/AuthLayout';
 
+const Field = ({ id, label, icon: Icon, error, children }) => (
+  <div className="group">
+    <label htmlFor={id} className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 group-focus-within:text-blue-600 transition-colors">
+      {label}
+    </label>
+    <div className="relative">
+      <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none group-focus-within:text-blue-500 transition-colors">
+        <Icon size={18} />
+      </span>
+      {children}
+    </div>
+    {error && <p className="mt-1.5 text-[10px] font-black uppercase tracking-tight text-red-500 animate-in fade-in slide-in-from-top-1">{error}</p>}
+  </div>
+);
+
 const SignupCommuter = () => {
   const navigate = useNavigate();
 
@@ -42,20 +57,7 @@ const SignupCommuter = () => {
     } finally { setLoading(false); }
   };
 
-  const Field = ({ id, label, icon: Icon, error, children }) => (
-    <div className="group">
-      <label htmlFor={id} className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 group-focus-within:text-blue-600 transition-colors">
-        {label}
-      </label>
-      <div className="relative">
-        <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none group-focus-within:text-blue-500 transition-colors">
-          <Icon size={18} />
-        </span>
-        {children}
-      </div>
-      {error && <p className="mt-1.5 text-[10px] font-black uppercase tracking-tight text-red-500 animate-in fade-in slide-in-from-top-1">{error}</p>}
-    </div>
-  );
+
 
   return (
     <AuthLayout title="Create Account" subtitle="Join to search routes & get crowd info" badge="Normal Commuter">
