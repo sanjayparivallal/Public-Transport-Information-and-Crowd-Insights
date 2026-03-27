@@ -29,52 +29,58 @@ const Navbar = () => {
   const dashboardPath = isAuthority ? '/dashboard/authority' : '/dashboard/commuter';
 
   const navItems = [
-    { to: dashboardPath,      label: 'Dashboard',       icon: HomeIcon   },
-    { to: '/search',          label: 'Search Routes',    icon: SearchIcon },
+    { to: dashboardPath,      label: 'Dashboard',      icon: HomeIcon   },
+    { to: '/search',          label: 'Search Routes',   icon: SearchIcon },
     ...(isAuthority ? [{ to: '/authority/manage', label: 'Fleet', icon: WrenchIcon }] : []),
     { to: isAuthority ? '/profile/authority' : '/profile', label: 'Profile', icon: UserIcon },
   ];
 
+  // ENHANCED: design system role color map
   const roleColors = {
-    authority: { pill: 'bg-amber-100 text-amber-700 border-amber-200', ring: 'ring-amber-400' },
-    driver:    { pill: 'bg-blue-100 text-blue-700 border-blue-200',     ring: 'ring-blue-400'  },
-    conductor: { pill: 'bg-violet-100 text-violet-700 border-violet-200', ring: 'ring-violet-400' },
-    commuter:  { pill: 'bg-emerald-100 text-emerald-700 border-emerald-200', ring: 'ring-emerald-400' },
+    authority: { pill: 'badge badge-cyan',    ring: 'ring-cyan-300' },
+    driver:    { pill: 'badge badge-blue',    ring: 'ring-blue-300' },
+    conductor: { pill: 'badge badge-purple',  ring: 'ring-purple-300' },
+    commuter:  { pill: 'badge badge-indigo',  ring: 'ring-indigo-300' },
   };
   const roleTheme = roleColors[user?.role] || roleColors.commuter;
 
   const initials = (user?.name || user?.email || 'U')
     .split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
+  // ENHANCED: indigo active state matching .btn-ghost style
   const navLinkCls = ({ isActive }) =>
     `flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${
       isActive
-        ? 'text-blue-600 bg-blue-50 shadow-sm border border-blue-100'
-        : 'text-slate-500 hover:text-blue-600 hover:bg-slate-50 border border-transparent'
+        ? 'text-indigo-700 bg-indigo-50 shadow-sm border border-indigo-200'
+        : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/60 border border-transparent'
     }`;
 
   return (
+    // ENHANCED: glass-strong on scroll, clean white at top
     <nav
       className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-white/90 backdrop-blur-xl border-b border-slate-200/80 shadow-lg shadow-slate-200/40'
-          : 'bg-white border-b border-slate-200'
+        scrolled ? 'glass-strong border-b border-white/60 shadow-lg shadow-slate-200/40' : 'bg-white border-b border-slate-100'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
-          {/* Brand */}
+          {/* ENHANCED: brand with gradient bg-gradient-blue icon box */}
           <Link
             to={user ? dashboardPath : '/login'}
             className="flex items-center gap-2.5 no-underline shrink-0 group"
           >
-            <div className="relative p-2 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md shadow-blue-500/30 group-hover:shadow-blue-500/50 group-hover:scale-105 transition-all duration-300">
-              <BusIcon size={20} className="text-white" />
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white animate-pulse" />
+            <div className="relative p-2 rounded-xl bg-gradient-blue shadow-md group-hover:scale-105 transition-all duration-300">
+              <BusIcon size={20} className="text-white relative z-10" />
+              {/* ENHANCED: pulsing live dot correctly positioned outside the normal document flow inside the relative container */}
+              <div className="absolute -top-1 -right-1 flex w-3 h-3 z-20">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white" />
+              </div>
             </div>
+            {/* ENHANCED: gradient-text brand name */}
             <span className="font-black text-xl tracking-tight text-slate-900">
-              Transit<span className="bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent font-black">Info</span>
+              Trans<span className="gradient-text-cool font-black">Info</span>
             </span>
           </Link>
 
@@ -94,16 +100,17 @@ const Navbar = () => {
           <div className="flex items-center gap-2.5 shrink-0">
             {user ? (
               <>
-                {/* User chip */}
-                <div className={`hidden md:flex items-center gap-2.5 pl-1.5 pr-3 py-1 bg-white border border-slate-200/80 rounded-full shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-default ring-2 ring-offset-1 ${roleTheme.ring}/20`}>
-                  <div className={`w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-black ring-2 ring-white shadow-sm`}>
+                {/* ENHANCED: glass user chip with badge-* role pill */}
+                <div className={`hidden md:flex items-center gap-2.5 pl-1.5 pr-3 py-1 glass border border-white/60 rounded-full shadow-sm hover:shadow-md transition-all cursor-default ring-2 ring-offset-1 ${roleTheme.ring}/20`}>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-black ring-2 ring-white shadow-sm">
                     {initials}
                   </div>
                   <div className="flex flex-col">
                     <span className="font-bold text-slate-800 text-[13px] leading-tight max-w-[110px] truncate">
                       {user.name || user.email}
                     </span>
-                    <span className={`px-1.5 py-0.5 mt-0.5 rounded text-[9px] font-black uppercase tracking-widest border w-fit leading-none ${roleTheme.pill}`}>
+                    {/* ENHANCED: .badge-* per role */}
+                    <span className={roleTheme.pill}>
                       {user.role}
                     </span>
                   </div>
@@ -137,10 +144,8 @@ const Navbar = () => {
                 <Link to="/login" className="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors">
                   Login
                 </Link>
-                <Link
-                  to="/signup/commuter"
-                  className="px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-500/25 transition-all hover:-translate-y-0.5 hover:shadow-blue-500/40"
-                >
+                {/* ENHANCED: .btn-primary for CTA */}
+                <Link to="/signup/commuter" className="btn-primary text-sm">
                   Get Started
                 </Link>
               </div>
@@ -151,17 +156,16 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {user && menuOpen && (
-        <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-xl px-4 py-4 space-y-2 absolute w-full shadow-2xl shadow-slate-300/30 animate-scale-in">
-          {/* User info */}
-          <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl mb-3">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-black shrink-0 shadow-md">
+        // ENHANCED: glass-strong mobile drawer with animate-scale-in
+        <div className="md:hidden border-t border-slate-100 glass-strong px-4 py-4 space-y-2 absolute w-full shadow-2xl animate-scale-in">
+          {/* ENHANCED: glass-card mobile user info */}
+          <div className="flex items-center gap-3 p-3 glass-card border border-indigo-100 rounded-2xl mb-3">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-black shrink-0 shadow-md">
               {initials}
             </div>
             <div className="min-w-0">
               <p className="font-bold text-slate-800 truncate">{user.name || user.email}</p>
-              <span className={`inline-flex px-2 py-0.5 mt-0.5 rounded text-[10px] font-black uppercase tracking-widest border ${roleTheme.pill}`}>
-                {user.role}
-              </span>
+              <span className={roleTheme.pill}>{user.role}</span>
             </div>
           </div>
 
@@ -175,9 +179,10 @@ const Navbar = () => {
           </div>
 
           <div className="pt-3 mt-2 border-t border-slate-100">
+            {/* ENHANCED: .btn-danger for sign out */}
             <button
               onClick={() => { setMenuOpen(false); handleLogout(); }}
-              className="flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-xl transition-colors"
+              className="btn-danger w-full"
             >
               <LogOutIcon size={17} />
               Sign Out

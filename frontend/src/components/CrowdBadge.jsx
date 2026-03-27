@@ -1,41 +1,53 @@
-// No icon imports needed – uses inline SVG span
-
-const levelConfig = {
-  empty:   {
-    label: 'Empty',
-    color: '#10b981',
-    gradient: 'from-emerald-400 to-teal-400',
-    cls: 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border-emerald-200',
-  },
-  average: {
-    label: 'Moderate',
-    color: '#f59e0b',
-    gradient: 'from-amber-400 to-orange-400',
-    cls: 'bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border-amber-200',
-  },
-  crowded: {
-    label: 'Crowded',
-    color: '#f43f5e',
-    gradient: 'from-rose-400 to-pink-400',
-    cls: 'bg-gradient-to-r from-rose-50 to-pink-50 text-rose-700 border-rose-200',
-  },
-};
+// ENHANCED: Uses .badge-* from index.scss for all status indicators
 
 const CrowdBadge = ({ level }) => {
-  const cfg = levelConfig[level] || {
-    label: 'Unknown',
-    color: '#94a3b8',
-    gradient: 'from-slate-300 to-slate-400',
-    cls: 'bg-slate-50 text-slate-500 border-slate-200',
-  };
+  // ENHANCED: Pulsing dot component per design system
+  const PulsingDot = ({ colorClass, pingClass }) => (
+    <div className="relative flex w-2.5 h-2.5 shrink-0">
+      <span className={`animate-ping absolute w-full h-full rounded-full ${pingClass} opacity-75`} />
+      <span className={`w-2.5 h-2.5 rounded-full ${colorClass}`} />
+    </div>
+  );
 
+  // ENHANCED: badge-* classes from index.scss — status → color map per design system
+  if (level === 'empty') {
+    return (
+      <span className="badge badge-emerald">
+        {/* ENHANCED: emerald pulsing live dot */}
+        <PulsingDot colorClass="bg-emerald-500" pingClass="bg-emerald-400" />
+        Empty
+      </span>
+    );
+  }
+
+  if (level === 'average') {
+    return (
+      <span className="badge badge-amber">
+        {/* ENHANCED: amber pulsing dot for moderate */}
+        <PulsingDot colorClass="bg-amber-500" pingClass="bg-amber-400" />
+        Moderate
+      </span>
+    );
+  }
+
+  if (level === 'crowded') {
+    return (
+      // ENHANCED: badge-red for CROWDED per design system status map
+      <span className="badge badge-red">
+        <div className="relative flex w-2.5 h-2.5 shrink-0">
+          <span className="animate-ping absolute w-full h-full rounded-full bg-red-400 opacity-75" />
+          <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+        </div>
+        Crowded
+      </span>
+    );
+  }
+
+  // Unknown / null level
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${cfg.cls}`}>
-      <span
-        className="w-2 h-2 rounded-full animate-pulse"
-        style={{ background: cfg.color, boxShadow: `0 0 6px ${cfg.color}60` }}
-      />
-      {cfg.label}
+    <span className="badge" style={{ background: 'rgba(148,163,184,0.1)', color: '#64748b', border: '1px solid rgba(148,163,184,0.2)' }}>
+      <span className="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0" />
+      Unknown
     </span>
   );
 };

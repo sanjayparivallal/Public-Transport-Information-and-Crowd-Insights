@@ -484,15 +484,16 @@ const TransportDetail = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <button
-                className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-sm active:scale-95 ${isFav ? 'bg-amber-400 text-slate-900 border border-amber-500/40' : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'}`}
-                onClick={handleFavourite}
-                disabled={favLoading || !user || user.role === 'authority'}
-              >
-                <StarIcon size={20} filled={isFav}/>
-                {isFav ? 'In Favourites' : 'Add to Favourites'}
-              </button>
-
+              {(!user || user.role === 'commuter') && (
+                <button
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-sm active:scale-95 ${isFav ? 'bg-amber-400 text-slate-900 border border-amber-500/40' : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'}`}
+                  onClick={handleFavourite}
+                  disabled={favLoading || !user}
+                >
+                  <StarIcon size={20} filled={isFav}/>
+                  {isFav ? 'In Favourites' : 'Add to Favourites'}
+                </button>
+              )}
               <button
                 className="p-3 bg-slate-100 border border-slate-200 text-slate-700 rounded-2xl hover:bg-slate-200 transition-all active:scale-95 group"
                 onClick={() => navigate(-1)}

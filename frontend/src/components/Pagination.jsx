@@ -2,6 +2,7 @@ import { ArrowLeftIcon, ArrowRightIcon } from './icons';
 
 /**
  * Pagination — numbered page navigation
+ * ENHANCED: .btn-ghost for active/hover, btn-primary gradient for current page
  *
  * Props:
  *  page         current page (1-based)
@@ -34,12 +35,13 @@ const Pagination = ({
   }
 
   return (
+    // ENHANCED: uses divider as border-top
     <div className={`flex items-center justify-center gap-1.5 pt-6 mt-6 border-t border-slate-100 ${className}`}>
-      {/* Prev */}
+      {/* ENHANCED: .btn-ghost for prev/next arrows */}
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1 || loading}
-        className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 disabled:opacity-30 disabled:pointer-events-none transition-all text-sm font-bold"
+        className="btn-ghost !px-3 !py-2 text-xs disabled:opacity-30 disabled:pointer-events-none"
         aria-label="Previous page"
       >
         <ArrowLeftIcon size={15} />
@@ -52,15 +54,14 @@ const Pagination = ({
             …
           </span>
         ) : (
+          // ENHANCED: .btn-primary for active, .btn-ghost for inactive pages
           <button
             key={p}
             onClick={() => onPageChange(p)}
             disabled={loading}
-            className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-black transition-all border ${
-              p === page
-                ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-transparent shadow-md shadow-blue-500/30 scale-105'
-                : 'border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
-            } disabled:opacity-40 disabled:pointer-events-none`}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-black transition-all disabled:opacity-40 disabled:pointer-events-none ${
+              p === page ? 'btn-primary !p-0 scale-105' : 'btn-ghost !p-0'
+            }`}
             aria-current={p === page ? 'page' : undefined}
           >
             {p}
@@ -68,11 +69,11 @@ const Pagination = ({
         )
       )}
 
-      {/* Next */}
+      {/* ENHANCED: .btn-ghost for next arrow */}
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages || loading}
-        className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 disabled:opacity-30 disabled:pointer-events-none transition-all text-sm font-bold"
+        className="btn-ghost !px-3 !py-2 text-xs disabled:opacity-30 disabled:pointer-events-none"
         aria-label="Next page"
       >
         <ArrowRightIcon size={15} />

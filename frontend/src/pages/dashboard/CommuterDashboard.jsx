@@ -10,15 +10,17 @@ import DashboardMyIncidents from './DashboardMyIncidents';
 import DashboardMyCrowdReports from './DashboardMyCrowdReports';
 import Skeleton from '../../components/Skeleton';
 import DashboardLiveTracking from './DashboardLiveTracking';
-import DashboardAccountInfo from './DashboardAccountInfo';
 import DashboardAssignedIncidents from './DashboardAssignedIncidents';
 
 /* ── Time-based greeting ────────────────────────────── */
-const getGreeting = () => {
+const getGreeting = (isStaff) => {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+  let time = 'evening';
+  if (h < 12) time = 'morning';
+  else if (h < 17) time = 'afternoon';
+  
+  if (isStaff) return `Ready for your shift this ${time}`;
+  return `Good ${time}`;
 };
 
 const CommuterDashboard = () => {
@@ -98,33 +100,28 @@ const CommuterDashboard = () => {
 
       {/* ── Vivid Gradient Header ── */}
       <div className="relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8"
-        style={{
-          background: isStaff
-            ? 'linear-gradient(135deg, #164e63 0%, #0891b2 50%, #3b82f6 100%)'
-            : 'linear-gradient(135deg, #134e4a 0%, #0f766e 50%, #14b8a6 80%, #06b6d4 100%)'
-        }}
+        style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 40%, #4f46e5 80%, #7c3aed 100%)' }}
       >
         {/* Decorations */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute inset-0 opacity-[0.07]"
             style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-          <div className="absolute -top-24 -right-20 w-80 h-80 rounded-full blur-3xl"
-            style={{ background: isStaff ? 'rgba(59,130,246,0.30)' : 'rgba(20,184,166,0.30)' }} />
+          <div className="absolute -top-24 -right-20 w-80 h-80 rounded-full blur-3xl shadow-none"
+            style={{ background: 'rgba(139,92,246,0.30)' }} />
           <div className="absolute bottom-0 -left-20 w-64 h-64 rounded-full blur-2xl"
-            style={{ background: 'rgba(255,255,255,0.08)' }} />
+            style={{ background: 'rgba(6,182,212,0.20)' }} />
         </div>
 
         <div className="relative max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div>
-            <p className="text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-1.5"
-              style={{ color: isStaff ? '#bae6fd' : '#a7f3d0' }}>
+            <p className="text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-1.5 text-blue-100">
               <span className="w-1.5 h-1.5 rounded-full bg-current" />
               {isStaff ? `Duty Dashboard · ${user.role}` : 'Commuter Portal'}
             </p>
             <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              {getGreeting()},{' '}
+              {getGreeting(isStaff)},{' '}
               <span style={{
-                background: isStaff ? 'linear-gradient(90deg, #bae6fd, #c7d2fe)' : 'linear-gradient(90deg, #a7f3d0, #bae6fd)',
+                background: 'linear-gradient(90deg, #bfdbfe, #c4b5fd)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -134,8 +131,8 @@ const CommuterDashboard = () => {
             </h1>
             <p className="mt-2 text-sm font-medium max-w-lg" style={{ color: 'rgba(255,255,255,0.70)' }}>
               {isStaff
-                ? `You're logged in as a ${user.role}. Manage your assigned transport below.`
-                : 'Your travel hub. Track favourite routes, stay updated with crowd levels, and manage incident alerts.'}
+                ? `You're logged in as a ${user.role}. View your assigned route and stay safe on the road.`
+                : 'Your travel hub. Track favourite routes, stay updated with live crowd levels, and get quick alerts.'}
             </p>
           </div>
 
@@ -173,11 +170,9 @@ const CommuterDashboard = () => {
         ) : (
           <div className="space-y-10">
 
-            {/* ── Staff: Account Info, Live Tracking, Assigned Transport + Incidents ── */}
+            {/* ── Staff: Live Tracking, Assigned Transport + Incidents ── */}
             {isStaff && (
               <>
-                <DashboardAccountInfo profile={profile} user={user} />
-                
                 {assignedDetail && (
                   <DashboardLiveTracking transport={assignedDetail} />
                 )}

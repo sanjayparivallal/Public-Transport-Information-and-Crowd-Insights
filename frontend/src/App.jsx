@@ -8,6 +8,7 @@ import './index.css';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import VantaBackground from './components/VantaBackground';
 
 import Login            from './pages/auth/Login';
 import SignupCommuter   from './pages/auth/SignupCommuter';
@@ -63,6 +64,8 @@ const App = () => {
 
   return (
     <>
+      {/* VANTA NET — global transport network animated background */}
+      <VantaBackground />
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop theme="light" />
       {showNavbar && <Navbar />}
       <Routes>

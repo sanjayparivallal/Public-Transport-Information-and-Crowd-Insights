@@ -29,10 +29,30 @@ const searchTransports = async ({
   const skip      = (safePage - 1) * safeLimit;
   const mongoose  = require('mongoose');
 
-  // Stage 1: filter routes
+  // Stage 1: filter routes — match origin/destination OR intermediate stopName
   const routeMatch = {};
-  if (origin)        routeMatch.origin      = { $regex: origin, $options: 'i' };
-  if (destination)   routeMatch.destination = { $regex: destination, $options: 'i' };
+  if (origin) {
+    routeMatch.$or = [
+      { origin:            { $regex: origin, $options: 'i' } },
+      { 'stops.stopName':  { $regex: origin, $options: 'i' } },
+    ];
+  }
+  if (destination) {
+    const destCond = [
+      { destination:       { $regex: destination, $options: 'i' } },
+      { 'stops.stopName':  { $regex: destination, $options: 'i' } },
+    ];
+    if (routeMatch.$or) {
+      // Both origin AND destination filters — wrap in $and so each condition must independently be satisfied
+      routeMatch.$and = [
+        { $or: routeMatch.$or },
+        { $or: destCond },
+      ];
+      delete routeMatch.$or;
+    } else {
+      routeMatch.$or = destCond;
+    }
+  }
   if (departureTime) routeMatch['schedule.departureTime'] = departureTime;
 
   const pipeline = [{ $match: routeMatch }];

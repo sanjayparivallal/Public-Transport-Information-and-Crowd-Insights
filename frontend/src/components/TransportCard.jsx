@@ -1,28 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import CrowdBadge from './CrowdBadge';
-import { BusIcon, TrainIcon, ClockIcon, BuildingIcon, ArrowRightIcon } from './icons';
+import { BusIcon, TrainIcon, ClockIcon, BuildingIcon, ArrowRightIcon, LocationIcon } from './icons';
 
-// Per-type color theme
-const typeTheme = {
-  bus: {
-    iconBg:    'from-blue-500 to-indigo-500',
-    iconText:  'text-white',
-    stripe:    'from-blue-500 to-indigo-500',
-    badgeBg:   'bg-blue-50 text-blue-600 border-blue-100',
-    hoverBorder: 'hover:border-blue-400',
-    btn:       'group-hover:bg-blue-600 group-hover:border-blue-600',
-  },
-  train: {
-    iconBg:    'from-violet-500 to-purple-600',
-    iconText:  'text-white',
-    stripe:    'from-violet-500 to-purple-600',
-    badgeBg:   'bg-violet-50 text-violet-600 border-violet-100',
-    hoverBorder: 'hover:border-violet-400',
-    btn:       'group-hover:bg-violet-600 group-hover:border-violet-600',
-  },
-};
-
-const TransportCard = ({ transport }) => {
+const TransportCard = ({ transport, index = 0 }) => {
   const navigate = useNavigate();
 
   const t = transport.transportId || transport;
@@ -42,69 +22,101 @@ const TransportCard = ({ transport }) => {
   const displayAvailableSeats = transport.availableSeats ?? t.availableSeats ?? t.totalSeats ?? '—';
   const displayTotalSeats     = t.totalSeats || 1;
   const isBus = displayType === 'bus';
-  const theme = typeTheme[displayType] || typeTheme.bus;
 
   const seatPct = Math.round(
     ((displayAvailableSeats === '—' ? 0 : displayAvailableSeats) / displayTotalSeats) * 100
   );
-  const seatColor = displayAvailableSeats === '—' ? '#cbd5e1'
-    : seatPct <= 20 ? '#f43f5e'
-    : seatPct >= 70 ? '#10b981'
-    : '#f59e0b';
+
+  // Seat bar gradient + text color
+  const seatBarClass = seatPct > 60
+    ? 'from-emerald-400 to-teal-500'
+    : seatPct >= 30
+    ? 'from-amber-400 to-orange-400'
+    : 'from-red-400 to-pink-500';
+
+  const seatTextClass = seatPct > 60 ? 'text-emerald-600' : seatPct >= 30 ? 'text-amber-500' : 'text-red-500';
+  const seatLabel = seatPct > 60 ? 'Available' : seatPct >= 30 ? 'Limited' : 'Almost Full';
+
+  // Type-specific accents
+  const typeAccent = isBus
+    ? { stripe: 'from-cyan-500 to-blue-600', iconBg: 'bg-gradient-to-br from-cyan-500 to-blue-600', routeBg: 'from-cyan-50/60 to-blue-50/40', routeBorder: 'border-cyan-100/60' }
+    : { stripe: 'from-violet-500 to-purple-600', iconBg: 'bg-gradient-to-br from-violet-500 to-purple-600', routeBg: 'from-violet-50/60 to-purple-50/40', routeBorder: 'border-violet-100/60' };
 
   return (
     <div
-      className={`group relative bg-white rounded-[2rem] border-2 border-slate-100 ${theme.hoverBorder} shadow-sm hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col`}
+      className="card hover-lift group relative overflow-hidden flex flex-col cursor-pointer animate-fade-in-up"
+      style={{ animationDelay: `${index * 80}ms` }}
       onClick={() => navigate(`/transport/${transportId}?routeId=${routeId}`)}
       role="button"
       tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && navigate(`/transport/${transportId}?routeId=${routeId}`)}
     >
-      {/* Gradient top stripe */}
-      <div className={`h-1.5 w-full bg-gradient-to-r ${theme.stripe}`} />
+      {/* Gradient top accent bar — thicker on hover */}
+      <div className={`absolute top-0 left-0 right-0 h-[3px] group-hover:h-[4px] rounded-t-2xl bg-gradient-to-r ${typeAccent.stripe} transition-all duration-300`} />
 
-      <div className="p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center gap-5">
+      {/* Shimmer sweep overlay on hover */}
+      <div className="absolute inset-0 -z-0 pointer-events-none overflow-hidden rounded-2xl">
+        <div
+          className="absolute top-0 -left-full h-full w-1/2 opacity-0 group-hover:opacity-100 group-hover:left-full transition-all duration-700 ease-in-out"
+          style={{
+            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%)',
+          }}
+        />
+      </div>
+
+      <div className="p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center gap-5 pt-7 relative z-10">
 
         {/* Left: Icon & Details */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className={`w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br ${theme.iconBg} ${theme.iconText} flex items-center justify-center shadow-md group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500`}>
-            {isBus ? <BusIcon size={26} /> : <TrainIcon size={26} />}
+          {/* Icon box with subtle glow on hover */}
+          <div className={`w-13 h-13 w-12 h-12 shrink-0 rounded-2xl ${typeAccent.iconBg} flex items-center justify-center shadow-md group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
+            {isBus ? <BusIcon size={22} className="text-white" /> : <TrainIcon size={22} className="text-white" />}
           </div>
           <div className="flex flex-col min-w-0 pr-2">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest uppercase border shadow-sm ${theme.badgeBg}`}>
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <span className={`badge ${isBus ? 'badge-cyan' : 'badge-purple'}`}>
                 {displayNumber}
               </span>
-              <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest uppercase border shadow-sm ${isBus ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-violet-50 text-violet-600 border-violet-100'}`}>
+              <span className={`badge ${isBus ? 'badge-blue' : 'badge-indigo'}`}>
                 {displayType}
               </span>
               {displayOp && (
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest uppercase border shadow-sm bg-slate-50 text-slate-500 border-slate-200 truncate max-w-[120px]">
-                  <BuildingIcon size={10} className="text-slate-400" />
+                <span className="badge badge-indigo hidden sm:inline-flex truncate max-w-[120px]">
+                  <BuildingIcon size={10} />
                   {displayOp}
                 </span>
               )}
             </div>
-            <h3 className="text-lg font-black text-slate-900 tracking-tight truncate group-hover:text-blue-600 transition-colors">
+            {/* Name grows on hover */}
+            <h3 className="text-base font-extrabold gradient-text-cool tracking-tight truncate group-hover:tracking-normal transition-all duration-300">
               {displayName}
             </h3>
           </div>
         </div>
 
-        {/* Center: Route */}
-        <div className="flex items-center justify-center gap-4 shrink-0 px-5 py-3 bg-slate-50 rounded-2xl border border-slate-100 w-full sm:w-auto">
-          <div className="text-right flex flex-col">
-            <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase mb-0.5">Origin</span>
-            <span className="text-sm font-black text-slate-800 truncate max-w-[90px] sm:max-w-none">{origin}</span>
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-10 h-px bg-gradient-to-r from-blue-200 via-indigo-300 to-violet-200 relative group-hover:w-14 transition-all duration-500">
-              <ArrowRightIcon size={11} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-indigo-400 bg-slate-50 px-0.5 group-hover:translate-x-1 transition-all duration-500" />
+        {/* Origin → Destination — enhanced border + hover tint */}
+        <div className={`flex items-center justify-between bg-gradient-to-r ${typeAccent.routeBg} rounded-2xl px-5 py-3.5 border ${typeAccent.routeBorder} group-hover:shadow-sm w-full sm:w-auto shrink-0 transition-all duration-300`}>
+          <div className="flex flex-col text-right gap-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">From</span>
+            <div className="flex items-center gap-1 justify-end">
+              <LocationIcon size={11} className="text-emerald-400" />
+              <span className="font-bold text-slate-800 text-sm truncate max-w-[90px]">{origin}</span>
             </div>
           </div>
-          <div className="text-left flex flex-col">
-            <span className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase mb-0.5">Destination</span>
-            <span className="text-sm font-black text-slate-800 truncate max-w-[90px] sm:max-w-none">{destination}</span>
+          <div className="flex items-center gap-2 mx-3">
+            <div className="h-px w-6 bg-gradient-to-r from-slate-200 via-cyan-300 to-slate-200 group-hover:w-8 transition-all duration-300" />
+            {/* Rotating arrow on hover */}
+            <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${typeAccent.stripe} flex items-center justify-center shadow-sm group-hover:rotate-45 group-hover:scale-110 transition-transform duration-300`}>
+              <ArrowRightIcon size={13} className="text-white" />
+            </div>
+            <div className="h-px w-6 bg-gradient-to-r from-slate-200 via-cyan-300 to-slate-200 group-hover:w-8 transition-all duration-300" />
+          </div>
+          <div className="flex flex-col text-left gap-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">To</span>
+            <div className="flex items-center gap-1">
+              <LocationIcon size={11} className="text-rose-400" />
+              <span className="font-bold text-slate-800 text-sm truncate max-w-[90px]">{destination}</span>
+            </div>
           </div>
         </div>
 
@@ -131,39 +143,42 @@ const TransportCard = ({ transport }) => {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-5 sm:px-6 pb-5 pt-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Live + Seat bar */}
-        <div className="flex items-center gap-5 flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-slate-400 group-hover:text-blue-500 transition-colors shrink-0">
-            <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
-            <span className="text-[10px] font-black tracking-widest uppercase hidden sm:block">Live</span>
+      {/* Footer — seat bar + status + button */}
+      <div className="px-5 sm:px-6 pb-5 pt-0 flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          {/* Pulsing live dot */}
+          <div className="relative flex w-3 h-3 shrink-0">
+            <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="w-3 h-3 rounded-full bg-emerald-500" />
           </div>
-          <div className="flex-1 flex items-center gap-3">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">Seats</span>
-            <div className="h-2 flex-1 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{
-                  width: `${Math.min(displayAvailableSeats === '—' ? 0 : seatPct, 100)}%`,
-                  background: `linear-gradient(90deg, ${seatColor}99, ${seatColor})`,
-                  boxShadow: `0 0 6px ${seatColor}40`,
-                }}
-              />
+          <div className="flex-1 flex flex-col gap-1">
+            {/* Seat bar */}
+            <div className="flex items-center gap-3">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">Seats</span>
+              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full bg-gradient-to-r ${seatBarClass} transition-all duration-700`}
+                  style={{ width: `${Math.min(displayAvailableSeats === '—' ? 0 : seatPct, 100)}%` }}
+                />
+              </div>
+              <span className="text-[11px] font-black whitespace-nowrap text-slate-600">
+                {displayAvailableSeats}<span className="text-slate-300"> / </span>{displayTotalSeats !== 1 ? displayTotalSeats : '?'}
+              </span>
             </div>
-            <span className="text-[11px] font-black whitespace-nowrap" style={{ color: seatColor }}>
-              {displayAvailableSeats}<span className="text-slate-300"> / </span>{displayTotalSeats !== 1 ? displayTotalSeats : '?'}
-            </span>
+            {/* Seat availability label */}
+            <div className="flex items-center gap-2 pl-8">
+              <span className={`text-[10px] font-extrabold tracking-wide ${seatTextClass}`}>{seatLabel}</span>
+              {seatPct > 0 && seatPct <= 30 && (
+                <span className="text-[9px] font-bold text-slate-400">— Book soon</span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Details button */}
-        <button
-          className={`flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-50 text-slate-600 border-2 border-slate-150 ${theme.btn} group-hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 shrink-0 w-full md:w-auto`}
-          tabIndex={-1}
-        >
+        {/* View Details button */}
+        <button className="btn-primary w-full md:w-auto overflow-hidden group/btn" tabIndex={-1}>
           View Details
-          <ArrowRightIcon size={14} className="group-hover:translate-x-1 transition-transform" />
+          <ArrowRightIcon size={14} className="group-hover/btn:translate-x-1 transition-transform duration-300" />
         </button>
       </div>
     </div>

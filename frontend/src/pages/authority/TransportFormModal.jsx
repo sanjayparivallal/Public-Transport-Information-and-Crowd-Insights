@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { createTransport, updateTransport } from '../../api/adminApi';
-import { EditIcon, PlusIcon, AlertIcon, BusIcon, TrainIcon, CheckCircleIcon } from '../../components/icons';
+import {
+  EditIcon, PlusIcon, AlertIcon, BusIcon, TrainIcon, CheckCircleIcon,
+  WrenchIcon, UserIcon, ClipboardIcon, ActivityIcon, StarIcon,
+} from '../../components/icons';
 
 /* ── Helpers ─────────────────────────────────────────────── */
 const EMPTY_FORM = {
@@ -48,6 +51,28 @@ const Field = ({ label, required, children }) => (
   </div>
 );
 
+/* ── ENHANCED: Icon-annotated floating group ─────────────── */
+// ENHANCED: Floating input with leading icon for better UX
+const FloatingField = ({ id, label, icon: Icon, required, children }) => (
+  <div className="floating-group">
+    {/* ENHANCED: icon prefix indicator */}
+    {Icon && (
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-slate-400">
+        <Icon size={15} />
+      </div>
+    )}
+    {/* Children is the input — clone with icon padding */}
+    <div className={Icon ? '[&_input]:pl-9 [&_select]:pl-9' : ''}>
+      {children}
+    </div>
+    {label && (
+      <label htmlFor={id} className={`floating-label ${Icon ? '!left-9' : ''}`}>
+        {label}{required && <span className="text-rose-500 ml-0.5">*</span>}
+      </label>
+    )}
+  </div>
+);
+
 /* ── Transport Form Modal (create / edit) ─────────────────── */
 const TransportFormModal = ({ transport, onSaved, onClose }) => {
   const [form, setForm]     = useState(EMPTY_FORM);
@@ -88,6 +113,7 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
   const inputCls = "floating-input";
 
   const isEdit = !!transport;
+  // ENHANCED: gradient header per add/edit mode
   const headerGradient = isEdit
     ? 'linear-gradient(135deg, #0f766e 0%, #0891b2 100%)'
     : 'linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%)';
@@ -98,8 +124,9 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
       style={{ background: 'rgba(15,23,42,0.55)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
+      {/* ENHANCED: animate-scale-in modal card */}
       <div className="bg-white rounded-[2rem] w-full max-w-xl shadow-2xl overflow-hidden animate-scale-in">
-        {/* Gradient header */}
+        {/* ENHANCED: gradient header with icon */}
         <div
           className="px-6 pt-6 pb-5 flex justify-between items-center relative overflow-hidden"
           style={{ background: headerGradient }}
@@ -129,13 +156,14 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
 
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[calc(100vh-8rem)]">
           <div className="p-6 space-y-5 overflow-y-auto">
+            {/* ENHANCED: error alert with icon */}
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-xs font-bold flex items-center gap-2">
                 <AlertIcon size={16} className="shrink-0" /> {error}
               </div>
             )}
 
-            {/* Type selector */}
+            {/* ENHANCED: Vehicle Type selector with gradient active state */}
             <Field label="Vehicle Type">
               <div className="grid grid-cols-2 gap-3">
                 {[
@@ -169,68 +197,98 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
               </div>
             </Field>
 
+            {/* ENHANCED: Input grid with icon-prefixed floating labels */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-2">
-              <div className="floating-group">
+              {/* ENHANCED: Transport Number — ClipboardIcon */}
+              <div className="relative floating-group">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-slate-400">
+                  <ClipboardIcon size={15} />
+                </div>
                 <input
-                  id="tf-number" type="text" className={inputCls} placeholder="e.g. 12A"
+                  id="tf-number" type="text" className={`${inputCls} !pl-9`} placeholder="e.g. 12A"
                   value={form.transportNumber} onChange={set('transportNumber')} required
                 />
-                <label htmlFor="tf-number" className="floating-label">Transport Number <span className="text-rose-500">*</span></label>
+                <label htmlFor="tf-number" className="floating-label !left-9">
+                  Transport Number <span className="text-rose-500">*</span>
+                </label>
               </div>
 
-              <div className="floating-group">
+              {/* ENHANCED: Name — BusIcon or TrainIcon based on type */}
+              <div className="relative floating-group">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-slate-400">
+                  {form.type === 'bus' ? <BusIcon size={15} /> : <TrainIcon size={15} />}
+                </div>
                 <input
-                  id="tf-name" type="text" className={inputCls} placeholder="e.g. Express Coimbatore"
+                  id="tf-name" type="text" className={`${inputCls} !pl-9`} placeholder="e.g. Express Coimbatore"
                   value={form.name} onChange={set('name')} required
                 />
-                <label htmlFor="tf-name" className="floating-label">Name <span className="text-rose-500">*</span></label>
+                <label htmlFor="tf-name" className="floating-label !left-9">
+                  Name <span className="text-rose-500">*</span>
+                </label>
               </div>
 
-              <div className="floating-group">
+              {/* ENHANCED: Operator — UserIcon */}
+              <div className="relative floating-group">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-slate-400">
+                  <UserIcon size={15} />
+                </div>
                 <input
-                  id="tf-operator" type="text" className={inputCls} placeholder="e.g. TNSTC"
+                  id="tf-operator" type="text" className={`${inputCls} !pl-9`} placeholder="e.g. TNSTC"
                   value={form.operator} onChange={set('operator')}
                 />
-                <label htmlFor="tf-operator" className="floating-label">Operator</label>
+                <label htmlFor="tf-operator" className="floating-label !left-9">Operator</label>
               </div>
 
-              <div className="floating-group">
+              {/* ENHANCED: Vehicle Number — WrenchIcon */}
+              <div className="relative floating-group">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-slate-400">
+                  <WrenchIcon size={15} />
+                </div>
                 <input
-                  id="tf-vehicleno" type="text" className={inputCls} placeholder="e.g. TN 01 AB 1234"
+                  id="tf-vehicleno" type="text" className={`${inputCls} !pl-9`} placeholder="e.g. TN 01 AB 1234"
                   value={form.vehicleNumber} onChange={set('vehicleNumber')}
                 />
-                <label htmlFor="tf-vehicleno" className="floating-label">Vehicle Reg No.</label>
+                <label htmlFor="tf-vehicleno" className="floating-label !left-9">Vehicle Reg No.</label>
               </div>
 
-              <div className="floating-group">
+              {/* ENHANCED: Total Seats — ActivityIcon */}
+              <div className="relative floating-group">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-slate-400">
+                  <ActivityIcon size={15} />
+                </div>
                 <input
-                  id="tf-seats" type="number" className={inputCls} placeholder="e.g. 48"
+                  id="tf-seats" type="number" className={`${inputCls} !pl-9`} placeholder="e.g. 48"
                   min="1" value={form.totalSeats} onChange={set('totalSeats')}
                 />
-                <label htmlFor="tf-seats" className="floating-label">Total Seats</label>
+                <label htmlFor="tf-seats" className="floating-label !left-9">Total Seats</label>
               </div>
 
-              <div className="floating-group sm:col-span-2">
+              {/* ENHANCED: Amenities — StarIcon, full width */}
+              <div className="relative floating-group sm:col-span-2">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-slate-400">
+                  <StarIcon size={15} />
+                </div>
                 <input
-                  id="tf-amenities" type="text" className={inputCls} placeholder="AC, USB, WiFi (comma separated)"
+                  id="tf-amenities" type="text" className={`${inputCls} !pl-9`} placeholder="AC, USB, WiFi (comma separated)"
                   value={form.amenities} onChange={set('amenities')}
                 />
-                <label htmlFor="tf-amenities" className="floating-label">Amenities</label>
+                <label htmlFor="tf-amenities" className="floating-label !left-9">Amenities</label>
               </div>
             </div>
           </div>
 
+          {/* ENHANCED: footer with .btn-ghost cancel + .btn-primary submit */}
           <div className="p-5 bg-slate-50/60 border-t border-slate-100 flex gap-3">
             <button
               type="button"
-              className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-sm"
+              className="btn-ghost flex-1"
               onClick={onClose}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-[1.6] btn-primary flex items-center justify-center gap-2"
+              className="btn-primary flex-[1.6]"
               disabled={saving}
             >
               {saving
