@@ -80,7 +80,7 @@ const Navbar = () => {
             </div>
             {/* ENHANCED: gradient-text brand name */}
             <span className="font-black text-xl tracking-tight text-slate-900">
-              Trans<span className="gradient-text-cool font-black">Info</span>
+              Transit<span className="gradient-text-cool font-black">Info</span>
             </span>
           </Link>
 

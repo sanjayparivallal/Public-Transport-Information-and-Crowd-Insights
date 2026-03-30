@@ -73,9 +73,12 @@ const searchTransports = async ({
   const transportMatch = { 'transportId.isActive': true };
   if (busNo) {
     if (!transportMatch.$or) transportMatch.$or = [];
+    const tokens = busNo.split(/\s+(?:and|&)\s+|\s*,\s*/i).map(t => t.trim()).filter(Boolean);
+    const regexPattern = tokens.length > 0 ? tokens.join('|') : busNo;
+    
     transportMatch.$or.push(
-      { 'transportId.transportNumber': { $regex: busNo, $options: 'i' } },
-      { 'transportId.name': { $regex: busNo, $options: 'i' } }
+      { 'transportId.transportNumber': { $regex: regexPattern, $options: 'i' } },
+      { 'transportId.name': { $regex: regexPattern, $options: 'i' } }
     );
   }
   if (type)  transportMatch['transportId.type'] = type;

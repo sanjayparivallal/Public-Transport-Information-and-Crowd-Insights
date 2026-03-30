@@ -21,8 +21,10 @@ const User          = require('../models/User');
 const Authority     = require('../models/Authority');
 const Incident      = require('../models/Incident');
 const CrowdReport   = require('../models/CrowdReport');
+const LivePosition  = require('../models/LivePosition');
 const transportSvc  = require('./transportService');
 const routeSvc      = require('./routeService');
+const crowdSvc      = require('./crowdService');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -52,9 +54,9 @@ function cleanDoc(doc) {
 
 // ─── HF Inference API ─────────────────────────────────────────────────────────
 
-const HF_API_URL = 'https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct/v1/chat/completions';
+const HF_API_URL = 'https://router.huggingface.co/v1/chat/completions';
 
-/** Call Hugging Face chat-completions endpoint, timeout 30 s */
+/** Call Hugging Face API */
 async function callHF(messages) {
   const controller = new AbortController();
   const timeout    = setTimeout(() => controller.abort(), 30_000);
@@ -63,13 +65,13 @@ async function callHF(messages) {
     const res = await fetch(HF_API_URL, {
       method:  'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.HF_API_KEY}`,
+        'Authorization': `Bearer ${process.env.HF_TOKEN || process.env.HF_API_KEY}`,
         'Content-Type':  'application/json',
       },
       body: JSON.stringify({
-        model:       'meta-llama/Meta-Llama-3-8B-Instruct',
+        model: 'meta-llama/Meta-Llama-3-70B-Instruct',
         messages,
-        max_tokens:  1024,
+        max_tokens: 1024,
         temperature: 0.1,
       }),
       signal: controller.signal,
@@ -107,8 +109,8 @@ function parseIntentResponse(raw) {
 
 // ─── Role-specific system prompts ─────────────────────────────────────────────
 
-function buildSystemPrompt(role) {
-  const base = `You are a transit information assistant for a Tamil Nadu public transport system.
+function buildSystemPrompt(role, userName) {
+  const base = `You are a transit information assistant for a Tamil Nadu public transport system, currently talking to a user named ${userName || 'Commuter'}.
 You MUST respond with a valid JSON object in EXACTLY this format (no extra text outside the JSON):
 {
   "intent": "<intent_name>",
@@ -118,11 +120,10 @@ You MUST respond with a valid JSON object in EXACTLY this format (no extra text 
 }
 
 STRICT RULES:
-- Never invent, assume, or hallucinate any transport, route, fare, or incident data.
-- If data is not found in the database context provided, say exactly: "No data found."
-- Never expose MongoDB ObjectIds or internal field names to the user.
+- Your ONLY job is to identify the intent and extract EVERY POSSIBLE ENTITY from the user's message.
+- "details of [BUS]" literally means intent="search_route" and busName="[BUS]". NEVER LEAVE ENTITIES EMPTY IF A TRANSPORT IS MENTIONED!
+- Do NOT attempt to answer transit questions in responseText unless you are asking to clarify a missing field or acknowledging a command.
 - If the user asks for unauthorized data or restricted actions (like managing fleets if they are a commuter), set intent to "unauthorized" and responseText to "no access to the data".
-- Use Indian Rupee symbol ₹ for fares.
 - Keep responseText concise and friendly.`;
 
   const rolePrompts = {
@@ -131,7 +132,7 @@ STRICT RULES:
 Your role is COMMUTER assistant.
 Valid intents: search_route, get_fare, get_stops, get_schedule, get_crowd_status, general_help, unknown.
 
-For search_route, extract: origin, destination (both optional but at least one needed).
+For search_route: Use this intent when the user asks for routes, "details", or "information" about specific buses or locations. Extract: origin, destination, busName (even if there are multiple buses, put them all in busName), routeNumber.
 For get_fare, extract: origin, destination, routeNumber (any combination).
 For get_stops, extract: routeNumber or busName.
 For get_schedule, extract: routeNumber or busName, departureTime (optional).
@@ -140,32 +141,36 @@ For get_crowd_status, extract: routeNumber or busName.`,
     driver: `${base}
 
 Your role is DRIVER/CONDUCTOR assistant.
-Valid intents: view_assigned_bus, submit_duty_update, search_route, get_fare, get_stops, get_schedule, get_crowd_status, report_incident, general_help, unknown.
+Valid intents: view_assigned_bus, update_live_tracking, search_route, get_fare, get_stops, get_schedule, get_crowd_status, report_incident, general_help, unknown.
 
-For submit_duty_update, extract: updateType (delay|shift_start|shift_end|at_stop), delayMinutes (if applicable), currentStop (if applicable), description.
+For update_live_tracking, required: origin, destination (to identify your current route direction). Optional: currentStop, availableSeats, crowdLevel, status (on-time|delayed), delayMinutes.
 For report_incident, extract: incidentType (delay|breakdown|accident|overcrowding|other), severity (low|medium|high|critical), description, location.`,
 
     conductor: `${base}
 
 Your role is CONDUCTOR assistant. Same as driver.
-Valid intents: view_assigned_bus, submit_duty_update, search_route, get_fare, get_stops, get_schedule, get_crowd_status, report_incident, general_help, unknown.
+Valid intents: view_assigned_bus, update_live_tracking, search_route, get_fare, get_stops, get_schedule, get_crowd_status, report_incident, general_help, unknown.
 
-For submit_duty_update, extract: updateType (delay|shift_start|shift_end|at_stop), delayMinutes (if applicable), currentStop (if applicable), description.
+For update_live_tracking, required: origin, destination (to identify your current route direction). Optional: currentStop, availableSeats, crowdLevel, status (on-time|delayed), delayMinutes.
 For report_incident, extract: incidentType (delay|breakdown|accident|overcrowding|other), severity (low|medium|high|critical), description, location.`,
 
     authority: `${base}
 
 Your role is TRANSPORT AUTHORITY assistant.
-Valid intents: view_incidents, view_crowd_reports, add_transport, update_transport, delete_transport, pause_transport, resume_transport, add_route, delete_route, delete_incident, search_route, get_fare, get_stops, general_help, unknown.
+Valid intents: view_incidents, view_crowd_reports, view_my_fleet, add_transport, update_transport, delete_transport, pause_transport, resume_transport, add_route, delete_route, delete_incident, update_live_tracking, search_route, get_fare, get_stops, general_help, unknown.
 
 For add_transport, required fields: transportNumber, name, type (bus|train). Optional: operator, totalSeats, vehicleNumber, amenities.
 For update_transport, required: transportNumber or name to identify transport. Include only fields to update.
 For delete_transport / pause_transport / resume_transport, required: transportNumber or name.
 For add_route, required: transportNumber or name (which transport), routeNumber, routeName, origin, destination. Optional: totalDistance, estimatedDuration, stops.
 For delete_route, required: routeNumber.
+For update_live_tracking, required: transportNumber or name, origin, destination (to identify the exact route). Optional: currentStop, availableSeats, crowdLevel, status (on-time|delayed), delayMinutes.
 For delete_incident, required: incidentId (user may refer by description — extract what they give).
 For view_incidents, extract: status (open|acknowledged|resolved), severity, transportNumber (all optional filters).
 For view_crowd_reports, extract: transportNumber (optional).
+For view_my_fleet, no extra entities are needed. Use this when the user asks about their own fleet, buses under their control, or transport count.
+For search_route: Use this intent when the user asks for routes, "details", or "information" about specific buses or locations. Extract: origin, destination, busName (even if there are multiple buses, put them all in busName), routeNumber.
+For get_fare / get_stops / get_schedule / get_crowd_status, extract: routeNumber or busName.
 
 When missingFields is non-empty, responseText must ask for the NEXT single missing field only (one at a time).
 When all fields are collected (missingFields is empty), set intent accordingly and ask for confirmation in responseText.`,
@@ -185,7 +190,32 @@ async function fetchRoutes({ origin, destination, busNo, routeNumber }) {
       page:  1,
       limit: 10,
     });
-    return result.results.map(cleanDoc);
+    // Shrink the payload massively to avoid LLM context overflow on massive stops arrays
+    return result.results.map((r) => {
+      const clean = cleanDoc(r);
+      const transportSnippet = clean.transportId ? {
+        transportNumber: clean.transportId.transportNumber,
+        name: clean.transportId.name,
+        type: clean.transportId.type,
+        amenities: (clean.transportId.amenities || []).slice(0, 3),
+        totalSeats: clean.transportId.totalSeats
+      } : null;
+      
+      const simpleStops = (clean.stops || []).map(s => s.stopName).slice(0, 10);
+      
+      return {
+        routeNumber: clean.routeNumber,
+        routeName: clean.routeName,
+        origin: clean.origin,
+        destination: clean.destination,
+        estimatedDuration: clean.estimatedDuration,
+        transport: transportSnippet,
+        stops: simpleStops.length > 0 ? simpleStops : undefined,
+        departureTime: clean.schedule?.departureTime,
+        availableSeats: clean.availableSeats,
+        crowdLevel: clean.crowdLevel
+      };
+    });
   } catch { return []; }
 }
 
@@ -211,7 +241,6 @@ async function fetchIncidents(authorityId, filters = {}) {
 
     const incidents = await Incident.find(query)
       .sort({ reportedAt: -1 })
-      .limit(20)
       .populate('transportId', 'transportNumber name')
       .populate('reportedBy',  'name role')
       .select('-img') // explicitly exclude image field at query level
@@ -231,7 +260,6 @@ async function fetchCrowdReports(authorityId, filters = {}) {
 
     const reports = await CrowdReport.find({ routeId: { $in: rIds } })
       .sort({ reportedAt: -1 })
-      .limit(30)
       .populate('reportedBy', 'name')
       .lean();
 
@@ -273,9 +301,8 @@ async function dispatchDriverConductor(intent, entities, userId) {
     const bus = await fetchAssignedBus(userId);
     return { dbData: bus, dataType: 'assigned_bus' };
   }
-  if (intent === 'submit_duty_update') {
-    // Just confirm — no DB write needed for simple duty updates in this scope
-    return { dbData: { updateType: entities.updateType, details: entities }, dataType: 'duty_update_ack' };
+  if (intent === 'update_live_tracking') {
+    return { dbData: null, dataType: 'multi_step', needsDB: false };
   }
   // Fall through to commuter intents
   return dispatchCommuter(intent, entities);
@@ -283,6 +310,12 @@ async function dispatchDriverConductor(intent, entities, userId) {
 
 async function dispatchAuthority(intent, entities, userId, pendingAction, userMessage) {
   switch (intent) {
+    case 'view_my_fleet': {
+      const fleet = await Transport.find({ authorityId: userId })
+        .sort({ isActive: -1, name: 1 })
+        .lean();
+      return { dbData: fleet.map(cleanDoc), dataType: 'my_fleet' };
+    }
     case 'view_incidents': {
       let tFilter = {};
       if (entities.transportNumber) {
@@ -310,6 +343,7 @@ async function dispatchAuthority(intent, entities, userId, pendingAction, userMe
       // Multi-step — delegate to pendingAction accumulation (handled in main flow)
       return { dbData: null, dataType: 'multi_step', needsDB: false };
     }
+    case 'update_transport':
     case 'delete_transport':
     case 'pause_transport':
     case 'resume_transport': {
@@ -363,11 +397,43 @@ async function executeAuthorityAction(actionIntent, collectedFields, userId) {
         await transportSvc.updateTransport(userId, String(t._id), { isActive: true });
         return { success: true, message: `Transport "${t.name}" has been resumed.` };
       }
+      case 'update_transport': {
+        const t = await findTransportByIdentifier(userId, collectedFields.transportNumber || collectedFields.name);
+        if (!t) return { success: false, message: 'Transport not found. Please specify the correct transport number or name.' };
+        
+        const updates = { ...collectedFields };
+        delete updates.transportNumber;
+        delete updates.name;
+        
+        await transportSvc.updateTransport(userId, String(t._id), updates);
+        return { success: true, message: `Transport "${t.name}" has been updated successfully.` };
+      }
       case 'delete_transport': {
         const t = await findTransportByIdentifier(userId, collectedFields.transportNumber || collectedFields.name);
         if (!t) return { success: false, message: 'Transport not found.' };
         await transportSvc.deleteTransport(userId, String(t._id));
         return { success: true, message: `Transport "${t.name}" and all associated routes, incidents, and crowd data have been permanently deleted.` };
+      }
+      case 'add_route': {
+        const t = await findTransportByIdentifier(userId, collectedFields.transportNumber || collectedFields.name);
+        if (!t) return { success: false, message: 'Transport not found. Please provide a valid transport name or number.' };
+        
+        await routeSvc.createRoute(userId, String(t._id), {
+          routeNumber:       collectedFields.routeNumber,
+          routeName:         collectedFields.routeName,
+          origin:            collectedFields.origin,
+          destination:       collectedFields.destination,
+          totalDistance:     collectedFields.totalDistance ? Number(collectedFields.totalDistance) : undefined,
+          estimatedDuration: collectedFields.estimatedDuration
+        });
+        return { success: true, message: `Route ${collectedFields.routeNumber} '${collectedFields.routeName}' has been successfully added to transport "${t.name}".` };
+      }
+      case 'delete_route': {
+        const route = await Route.findOne({ routeNumber: collectedFields.routeNumber }).lean();
+        if (!route) return { success: false, message: `Route ${collectedFields.routeNumber} not found.` };
+        
+        await routeSvc.deleteRoute(userId, String(route.transportId), String(route._id));
+        return { success: true, message: `Route ${collectedFields.routeNumber} has been deleted successfully.` };
       }
       case 'delete_incident': {
         if (!mongoose.isValidObjectId(collectedFields.incidentId)) {
@@ -385,18 +451,99 @@ async function executeAuthorityAction(actionIntent, collectedFields, userId) {
   }
 }
 
+async function executeLiveTrackingUpdate(collectedFields, userId, userRole) {
+  try {
+    let t;
+    if (userRole === 'authority') {
+      const ident = collectedFields.transportNumber || collectedFields.name || collectedFields.busName;
+      t = await Transport.findOne({
+        authorityId: userId,
+        isActive: true,
+        $or: [
+          { transportNumber: new RegExp(ident, 'i') },
+          { name: new RegExp(ident, 'i') }
+        ]
+      });
+      if (!t) return { success: false, message: 'Transport not found in your fleet.' };
+    } else {
+      const u = await User.findById(userId).select('assignedTransport').lean();
+      if (!u || !u.assignedTransport) return { success: false, message: 'You are not assigned to any transport.' };
+      t = await Transport.findById(u.assignedTransport);
+      if (!t) return { success: false, message: 'Assigned transport not found.' };
+    }
+
+    // Find the specific route matching origin/destination
+    const originRegex = new RegExp(collectedFields.origin, 'i');
+    const destRegex = new RegExp(collectedFields.destination, 'i');
+    
+    // Using the true Mongoose primitive ObjectId
+    const transportObjId = t._id;
+
+    const route = await Route.findOne({ 
+      transportId: transportObjId,
+      origin: originRegex, 
+      destination: destRegex 
+    });
+
+    if (!route) return { success: false, message: `Could not find a route from ${collectedFields.origin} to ${collectedFields.destination} for this transport.` };
+
+    const updatedByModel = userRole === 'authority' ? 'Authority' : 'User';
+    const routeObjId = route._id;
+
+    // 1. Update LivePosition
+    await LivePosition.findOneAndUpdate(
+      { transportId: transportObjId, routeId: routeObjId },
+      { 
+        transportId: transportObjId, routeId: routeObjId,
+        currentStop: collectedFields.currentStop,
+        status: collectedFields.status || 'on-time',
+        delayMinutes: collectedFields.delayMinutes || 0,
+        updatedBy: userId, updatedByModel, updatedByRole: userRole 
+      },
+      { upsert: true, setDefaultsOnInsert: true }
+    );
+
+    // 2. Update Crowd Level
+    if (collectedFields.crowdLevel) {
+      await crowdSvc.updateCrowdLevel(userId, userRole, {
+        transportId: transportObjId, routeId: routeObjId,
+        crowdLevel: collectedFields.crowdLevel,
+        currentStop: collectedFields.currentStop,
+        manualSeats: collectedFields.availableSeats
+      });
+    }
+
+    // 3. Update Available Seats
+    if (collectedFields.availableSeats) {
+        await Route.findByIdAndUpdate(routeObjId, { availableSeats: collectedFields.availableSeats });
+    }
+
+    return { success: true, message: `Live tracking successfully updated for ${t.name || t.transportNumber}.` };
+  } catch (err) {
+    return { success: false, message: err.message || 'Live tracking update failed.' };
+  }
+}
+
 // ─── Format DB data via LLM (text-only) ──────────────────────────────────────
 
 async function formatWithLLM(dbData, dataType, userMessage, role, conversationHistory) {
+  let displayData = dbData;
+  let summaryText = '';
+
+  if (Array.isArray(dbData) && dbData.length > 5) {
+    displayData = dbData.slice(0, 5);
+    summaryText = `Note: There are ${dbData.length} total results, but only the first 5 are provided below for context.\n`;
+  }
+
   const systemMsg = {
     role:    'system',
     content: `You are a friendly transit assistant. Format the database results below into a clear, helpful natural language response.
 Rules:
 - Use the data EXACTLY as provided — do not add or infer any extra information
-- Use ₹ for fares
 - Don't expose MongoDB IDs or internal field names
+- Only mention information that is explicitly present in the data. Do not apologize for missing fields (like fares or seats) if they are not there.
 - Keep the response concise (under 300 words)
-- Database results: ${JSON.stringify(dbData, null, 2)}
+- ${summaryText}Database results: ${JSON.stringify(displayData)}
 - Data type: ${dataType}`,
   };
 
@@ -406,10 +553,11 @@ Rules:
   try {
     const rawResponse = await callHF([systemMsg, ...history]);
     return rawResponse.trim();
-  } catch {
+  } catch (err) {
+    console.error('[Chatbot] formatWithLLM error:', err.message);
     // Fallback: return a simple text summary without LLM
     if (Array.isArray(dbData) && dbData.length > 0) {
-      return `Found ${dbData.length} result(s). Please check the details.`;
+      return `Found ${dbData.length} result(s). Please check the details in your dashboard.`;
     }
     return typeof dbData === 'object' && dbData ? 'Here are the details from our records.' : 'No data found.';
   }
@@ -434,14 +582,23 @@ async function processMessage({ userId, userRole, userName, userMessage }) {
 
   const pending = history.pendingAction || {};
 
-  // 2. Handle confirmation for pending authority actions
-  if (pending.awaitingConfirm && userRole === 'authority') {
+  // 2. Handle confirmation for pending multi-step actions
+  if (pending.awaitingConfirm) {
     const confirmYes = /\b(yes|confirm|ok|okay|proceed|sure|do it|yep|yeah)\b/i.test(userMessage);
     const confirmNo  = /\b(no|cancel|stop|abort|nevermind|nope)\b/i.test(userMessage);
 
     if (confirmYes) {
       history.addMessage('user', userMessage);
-      const result = await executeAuthorityAction(pending.intent, pending.collectedFields, userId);
+      
+      let result;
+      if (pending.intent === 'update_live_tracking') {
+        result = await executeLiveTrackingUpdate(pending.collectedFields, userId, userRole);
+      } else if (userRole === 'authority') {
+        result = await executeAuthorityAction(pending.intent, pending.collectedFields, userId);
+      } else {
+        result = { success: false, message: 'Action not supported for this role.' };
+      }
+
       history.pendingAction = {};
       history.addMessage('assistant', result.message);
       await history.save();
@@ -458,7 +615,7 @@ async function processMessage({ userId, userRole, userName, userMessage }) {
   }
 
   // 3. Build intent-parsing messages
-  const systemPrompt = buildSystemPrompt(userRole);
+  const systemPrompt = buildSystemPrompt(userRole, userName);
   const recentHistory = history.messages.slice(-8).map((m) => ({ role: m.role, content: m.content }));
 
   // If a pending multi-step flow is in progress, inject context into the system prompt
@@ -491,9 +648,9 @@ Extract any new values from the user's latest message and update missingFields a
 
   const roleValidIntents = {
     commuter: ['search_route', 'get_fare', 'get_stops', 'get_schedule', 'get_crowd_status', 'general_help', 'unknown'],
-    driver: ['view_assigned_bus', 'submit_duty_update', 'search_route', 'get_fare', 'get_stops', 'get_schedule', 'get_crowd_status', 'report_incident', 'general_help', 'unknown'],
-    conductor: ['view_assigned_bus', 'submit_duty_update', 'search_route', 'get_fare', 'get_stops', 'get_schedule', 'get_crowd_status', 'report_incident', 'general_help', 'unknown'],
-    authority: ['view_incidents', 'view_crowd_reports', 'add_transport', 'update_transport', 'delete_transport', 'pause_transport', 'resume_transport', 'add_route', 'delete_route', 'delete_incident', 'search_route', 'get_fare', 'get_stops', 'general_help', 'unknown']
+    driver: ['view_assigned_bus', 'update_live_tracking', 'search_route', 'get_fare', 'get_stops', 'get_schedule', 'get_crowd_status', 'report_incident', 'general_help', 'unknown'],
+    conductor: ['view_assigned_bus', 'update_live_tracking', 'search_route', 'get_fare', 'get_stops', 'get_schedule', 'get_crowd_status', 'report_incident', 'general_help', 'unknown'],
+    authority: ['view_incidents', 'view_crowd_reports', 'view_my_fleet', 'add_transport', 'update_transport', 'delete_transport', 'pause_transport', 'resume_transport', 'add_route', 'delete_route', 'delete_incident', 'update_live_tracking', 'search_route', 'get_fare', 'get_stops', 'general_help', 'unknown']
   };
 
   const allowed = roleValidIntents[userRole] || roleValidIntents.commuter;
@@ -506,8 +663,15 @@ Extract any new values from the user's latest message and update missingFields a
     return { reply: invalidReply, pendingAction: {} };
   }
 
-  // 5. For multi-step authority flows, merge collected fields
-  if (userRole === 'authority' && ['add_transport', 'delete_transport', 'pause_transport', 'resume_transport', 'delete_incident', 'add_route', 'delete_route'].includes(intent)) {
+  // 5. For multi-step flows, merge collected fields
+  const authorityFlows = ['add_transport', 'update_transport', 'delete_transport', 'pause_transport', 'resume_transport', 'delete_incident', 'add_route', 'delete_route'];
+  const liveFlow = ['update_live_tracking'];
+  
+  const isMultiStep = 
+    (userRole === 'authority' && authorityFlows.concat(liveFlow).includes(intent)) || 
+    ((userRole === 'driver' || userRole === 'conductor') && liveFlow.includes(intent));
+
+  if (isMultiStep) {
     const newPending = {
       intent,
       collectedFields: { ...((pending.intent === intent ? pending.collectedFields : {})), ...entities },
@@ -524,7 +688,7 @@ Extract any new values from the user's latest message and update missingFields a
       const summary = Object.entries(newPending.collectedFields)
         .map(([k, v]) => `• ${k}: ${v}`)
         .join('\n');
-      reply = responseText || `Here's a summary of what I'll do:\n${summary}\n\nShall I proceed? (Yes/No)`;
+      reply = `I have collected the following details:\n${summary}\n\nShall I execute this action? (Yes/No)`;
       newPending.awaitingConfirm = true;
     }
 
