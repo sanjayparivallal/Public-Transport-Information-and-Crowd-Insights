@@ -16,6 +16,7 @@ const transportRoutes     = require('./routes/transport');
 const routeScheduleRoutes = require('./routes/routeSchedule');
 const crowdRoutes         = require('./routes/crowd');
 const incidentRoutes      = require('./routes/incidents');
+const chatbotRoutes       = require('./routes/chatbot');
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/transport/:transportId/routes', routeScheduleRoutes);
 
 app.use('/api/crowd',      crowdRoutes);
 app.use('/api/incidents',  incidentRoutes);
+app.use('/api/chatbot',    chatbotRoutes);
 
 // ── Health check ─────────────────────────────────────────────────────
 app.get('/', (req, res) => {

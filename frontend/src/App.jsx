@@ -21,6 +21,7 @@ import Profile          from './pages/profile/Profile';
 import UserProfile      from './pages/profile/UserProfile';
 import AuthorityProfile from './pages/profile/AuthorityProfile';
 import ManageTransport  from './pages/authority/ManageTransport';
+import Chatbot          from './components/Chatbot';
 
 /* ── Auth pages (no Navbar) ─────────────────────────────── */
 const AUTH_ROUTES = ['/login', '/signup/commuter', '/signup/authority'];
@@ -68,6 +69,8 @@ const App = () => {
       <VantaBackground />
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop theme="light" />
       {showNavbar && <Navbar />}
+      {/* Chatbot — visible on all authenticated routes */}
+      {showNavbar && <Chatbot />}
       <Routes>
         {/* ── Public routes (no auth needed) ── */}
         <Route path="/login"            element={<Login />} />
