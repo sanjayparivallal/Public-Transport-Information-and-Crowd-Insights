@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { createTransport, updateTransport } from '../../api/adminApi';
 import {
   EditIcon, PlusIcon, AlertIcon, BusIcon, TrainIcon, CheckCircleIcon,
@@ -23,22 +24,19 @@ const formFromTransport = (t) => ({
   operator: t.operator || '',
   vehicleNumber: t.vehicleNumber || '',
   totalSeats: t.totalSeats != null ? String(t.totalSeats) : '',
-  amenities: (t.amenities || []).join(', '),
+  amenities: Array.isArray(t.amenities) ? t.amenities.join(', ') : (t.amenities || ''),
 });
 
 const toPayload = (form) => {
-  const p = {
+  return {
     transportNumber: form.transportNumber.trim(),
     name: form.name.trim(),
     type: form.type,
+    operator: form.operator.trim(),
+    vehicleNumber: form.vehicleNumber.trim(),
+    totalSeats: form.totalSeats.trim() ? Number(form.totalSeats) : null,
+    amenities: form.amenities.trim() ? form.amenities.split(',').map((s) => s.trim()).filter(Boolean) : [],
   };
-  if (form.operator.trim())     p.operator      = form.operator.trim();
-  if (form.vehicleNumber.trim()) p.vehicleNumber = form.vehicleNumber.trim();
-  if (form.totalSeats.trim())   p.totalSeats    = Number(form.totalSeats);
-  if (form.amenities.trim()) {
-    p.amenities = form.amenities.split(',').map((s) => s.trim()).filter(Boolean);
-  }
-  return p;
 };
 
 /* ── Field component (for non-floating complex inputs) ── */
@@ -91,6 +89,7 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
     setError('');
     if (!form.transportNumber.trim() || !form.name.trim()) {
       setError('Transport Number and Name are required.');
+      toast.error('Transport Number and Name are required.');
       return;
     }
     try {
@@ -98,13 +97,16 @@ const TransportFormModal = ({ transport, onSaved, onClose }) => {
       const payload = toPayload(form);
       if (transport) {
         await updateTransport(transport._id, payload);
+        toast.success('Transport updated successfully');
       } else {
         await createTransport(payload);
+        toast.success('Transport created successfully');
       }
       onSaved();
       onClose();
     } catch (err) {
       setError(err.message || 'Operation failed.');
+      toast.error(err.message || 'Operation failed.');
     } finally {
       setSaving(false);
     }

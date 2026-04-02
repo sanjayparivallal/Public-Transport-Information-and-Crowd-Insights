@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { getRoutes, createRoute, updateRoute, deleteRoute } from '../../api/transportApi';
 import {
   EditIcon, CheckCircleIcon, AlertIcon, PlusIcon, TrashIcon,
@@ -83,10 +84,12 @@ const TransportRoutesModal = ({ transport, onClose }) => {
     try {
       await deleteRoute(transport._id, deleteTargetId);
       setSuccess('Route deleted.');
+      toast.success('Route deleted successfully');
       setDeleteTargetId(null);
       fetchTransportRoutes();
     } catch (err) {
       setError(err.message || 'Failed to delete route.');
+      toast.error(err.message || 'Failed to delete route.');
       setDeleteTargetId(null);
     }
   };
@@ -118,13 +121,16 @@ const TransportRoutesModal = ({ transport, onClose }) => {
       if (editingRoute === 'new') {
         await createRoute(transport._id, payload);
         setSuccess("Route created successfully.");
+        toast.success("Route created successfully.");
       } else {
         await updateRoute(transport._id, editingRoute, payload);
         setSuccess("Route updated successfully.");
+        toast.success("Route updated successfully.");
       }
       fetchTransportRoutes();
     } catch (err) {
       setError(err.message || 'Operation failed.');
+      toast.error(err.message || 'Operation failed.');
     }
   };
 

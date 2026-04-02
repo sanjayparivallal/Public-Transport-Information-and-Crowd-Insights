@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-toastify';
 import {
   getManagedTransports,
   updateTransport,
@@ -104,8 +105,10 @@ const ManageTransport = () => {
     try {
       await removeStaff(transportId, role);
       fetchTransports();
+      toast.success(`${role.charAt(0).toUpperCase() + role.slice(1)} removed successfully`);
     } catch (err) {
       setError(err.message || `Failed to remove ${role}`);
+      toast.error(err.message || `Failed to remove ${role}`);
     }
   };
 
@@ -180,7 +183,10 @@ const ManageTransport = () => {
     try {
       await updateTransport(t._id, { isActive: t.isActive === false ? true : false });
       fetchTransports();
-    } catch (err) { alert(err.message || 'Failed to toggle status.'); }
+      toast.success(`Transport ${t.isActive === false ? 'resumed' : 'paused'} successfully`);
+    } catch (err) {
+      toast.error(err.message || 'Failed to toggle status.');
+    }
   };
 
   return (

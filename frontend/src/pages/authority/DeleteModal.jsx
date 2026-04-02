@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { deleteTransport } from '../../api/adminApi';
 import { AlertIcon, TrashIcon, PlusIcon, BusIcon, TrainIcon } from '../../components/icons';
 
@@ -14,10 +15,12 @@ const DeleteModal = ({ transport, onDeleted, onClose }) => {
     try {
       setDeleting(true);
       await deleteTransport(transport._id);
+      toast.success('Transport deleted successfully');
       onDeleted();
       onClose();
     } catch (err) {
       setError(err.message || 'Delete failed.');
+      toast.error(err.message || 'Delete failed.');
     } finally {
       setDeleting(false);
     }

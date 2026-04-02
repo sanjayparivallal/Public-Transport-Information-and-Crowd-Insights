@@ -242,7 +242,11 @@ const updateTransport = async (userId, transportId, updates) => {
   const allowed = ['transportNumber', 'name', 'type', 'operator', 'amenities', 'totalSeats', 'vehicleNumber', 'isActive'];
   allowed.forEach((f) => {
     if (updates[f] !== undefined) {
-      transport[f] = updates[f];
+      if (updates[f] === null || updates[f] === '') {
+        transport[f] = undefined;
+      } else {
+        transport[f] = updates[f];
+      }
     }
   });
 

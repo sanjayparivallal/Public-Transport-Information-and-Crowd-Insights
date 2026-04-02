@@ -271,6 +271,7 @@ async function fetchCrowdReports(authorityId, filters = {}) {
 }
 
 async function findTransportByIdentifier(authorityId, identifier) {
+  if (!identifier) return null;
   const query = {
     authorityId,
     $or: [
@@ -347,7 +348,7 @@ async function dispatchAuthority(intent, entities, userId, pendingAction, userMe
     case 'delete_transport':
     case 'pause_transport':
     case 'resume_transport': {
-      const identifier = entities.transportNumber || entities.name || entities.busName;
+      const identifier = entities.transportNumber || entities.name || entities.transportName || entities.busName;
       if (!identifier) return { dbData: null, dataType: 'multi_step', needsDB: false };
       const t = await findTransportByIdentifier(userId, identifier);
       if (!t) return { dbData: null, dataType: 'not_found' };
@@ -386,36 +387,43 @@ async function executeAuthorityAction(actionIntent, collectedFields, userId) {
         return { success: true, message: `Transport "${t.name}" (${t.transportNumber}) has been added successfully.` };
       }
       case 'pause_transport': {
-        const t = await findTransportByIdentifier(userId, collectedFields.transportNumber || collectedFields.name);
+        const ident = collectedFields.transportNumber || collectedFields.name || collectedFields.transportName || collectedFields.busName;
+        const t = await findTransportByIdentifier(userId, ident);
         if (!t) return { success: false, message: 'Transport not found.' };
         await transportSvc.updateTransport(userId, String(t._id), { isActive: false });
         return { success: true, message: `Transport "${t.name}" has been paused.` };
       }
       case 'resume_transport': {
-        const t = await findTransportByIdentifier(userId, collectedFields.transportNumber || collectedFields.name);
+        const ident = collectedFields.transportNumber || collectedFields.name || collectedFields.transportName || collectedFields.busName;
+        const t = await findTransportByIdentifier(userId, ident);
         if (!t) return { success: false, message: 'Transport not found.' };
         await transportSvc.updateTransport(userId, String(t._id), { isActive: true });
         return { success: true, message: `Transport "${t.name}" has been resumed.` };
       }
       case 'update_transport': {
-        const t = await findTransportByIdentifier(userId, collectedFields.transportNumber || collectedFields.name);
+        const ident = collectedFields.transportNumber || collectedFields.name || collectedFields.transportName || collectedFields.busName;
+        const t = await findTransportByIdentifier(userId, ident);
         if (!t) return { success: false, message: 'Transport not found. Please specify the correct transport number or name.' };
         
         const updates = { ...collectedFields };
         delete updates.transportNumber;
         delete updates.name;
+        delete updates.transportName;
+        delete updates.busName;
         
         await transportSvc.updateTransport(userId, String(t._id), updates);
         return { success: true, message: `Transport "${t.name}" has been updated successfully.` };
       }
       case 'delete_transport': {
-        const t = await findTransportByIdentifier(userId, collectedFields.transportNumber || collectedFields.name);
+        const ident = collectedFields.transportNumber || collectedFields.name || collectedFields.transportName || collectedFields.busName;
+        const t = await findTransportByIdentifier(userId, ident);
         if (!t) return { success: false, message: 'Transport not found.' };
         await transportSvc.deleteTransport(userId, String(t._id));
         return { success: true, message: `Transport "${t.name}" and all associated routes, incidents, and crowd data have been permanently deleted.` };
       }
       case 'add_route': {
-        const t = await findTransportByIdentifier(userId, collectedFields.transportNumber || collectedFields.name);
+        const ident = collectedFields.transportNumber || collectedFields.name || collectedFields.transportName || collectedFields.busName;
+        const t = await findTransportByIdentifier(userId, ident);
         if (!t) return { success: false, message: 'Transport not found. Please provide a valid transport name or number.' };
         
         await routeSvc.createRoute(userId, String(t._id), {
@@ -455,7 +463,7 @@ async function executeLiveTrackingUpdate(collectedFields, userId, userRole) {
   try {
     let t;
     if (userRole === 'authority') {
-      const ident = collectedFields.transportNumber || collectedFields.name || collectedFields.busName;
+      const ident = collectedFields.transportNumber || collectedFields.name || collectedFields.transportName || collectedFields.busName;
       t = await Transport.findOne({
         authorityId: userId,
         isActive: true,

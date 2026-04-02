@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { assignStaff, getStaffCandidates } from '../../api/adminApi';
 import SearchableCombobox from '../../components/SearchableCombobox';
 import { UserIcon, PlusIcon, AlertIcon, CheckCircleIcon, BusIcon, TrainIcon } from '../../components/icons';
@@ -27,10 +28,12 @@ const AssignStaffModal = ({ transport, onSaved, onClose }) => {
       setSaving(true);
       await assignStaff(transport._id, { email: email.trim(), assignRole: role });
       setSuccess(`Assigned as ${role} successfully!`);
+      toast.success(`Assigned ${email.trim()} as ${role} successfully!`);
       setEmail('');
       onSaved();
     } catch (err) {
       setError(err.message || 'Assignment failed.');
+      toast.error(err.message || 'Assignment failed.');
     } finally {
       setSaving(false);
     }
