@@ -104,7 +104,8 @@ const ChatPanel = ({ isOpen, onClose, user, onNewMessage }) => {
 
     try {
       const data = await sendChatMessage(text);
-      const botMsg = { role: 'assistant', content: data?.reply || 'No data found.', timestamp: new Date() };
+      const replyText = data?.reply || "I'm sorry, I couldn't find relevant data for your query. Please try rephrasing.";
+      const botMsg = { role: 'assistant', content: replyText, timestamp: new Date() };
       setMessages((prev) => [...prev, botMsg]);
       onNewMessage?.();
     } catch (err) {
@@ -128,7 +129,7 @@ const ChatPanel = ({ isOpen, onClose, user, onNewMessage }) => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      if (!isLoading) handleSend();
     }
   };
 
@@ -283,8 +284,13 @@ const ChatPanel = ({ isOpen, onClose, user, onNewMessage }) => {
               {isLoading ? <Loader size={16} className="animate-spin" /> : <Send size={16} />}
             </button>
           </div>
-          <p className="text-[10px] text-slate-600 mt-1 text-center">
-            Press Enter to send · Shift+Enter for new line
+          <p className="text-[10px] text-slate-600 mt-1 flex justify-between">
+            <span>Press Enter to send · Shift+Enter for new line</span>
+            {inputValue.length > 800 && (
+              <span className={inputValue.length >= 1000 ? 'text-red-400' : 'text-amber-400'}>
+                {inputValue.length}/1000
+              </span>
+            )}
           </p>
         </div>
       </div>
