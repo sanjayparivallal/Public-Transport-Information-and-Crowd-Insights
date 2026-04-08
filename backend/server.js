@@ -22,8 +22,14 @@ const app = express();
 
 // ── Core middleware ──────────────────────────────────────────────────
 app.use(morgan('dev')); // Logger added here 📝
+
+// Restrict CORS to the configured frontend origin (or localhost in development)
+const allowedOrigin =
+  process.env.FRONTEND_ORIGIN ||
+  (process.env.NODE_ENV !== 'production' ? 'http://localhost:5173' : null);
+
 app.use(cors({
-  origin: '*',
+  origin: allowedOrigin || false, // false = block all cross-origin in prod if not set
   credentials: false,
 }));
 app.use(express.json({ limit: '10mb' }));
