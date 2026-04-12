@@ -52,3 +52,9 @@ export const resolveIncident = (incidentId, data) => api.put(`/incidents/${incid
  */
 export const deleteIncident = (incidentId) => api.delete(`/incidents/${incidentId}`);
 
+/**
+ * Get incident base64 image
+ * @param {string} incidentId
+ */
+export const getIncidentImage = (incidentId) => api.get(`/incidents/${incidentId}/image`);
+

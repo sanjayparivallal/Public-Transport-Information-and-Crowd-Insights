@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ClockIcon, WrenchIcon, AlertIcon, UsersIcon, ClipboardIcon, CheckCircleIcon, TrashIcon, LocationIcon, CalendarIcon, BusIcon, TrainIcon } from './icons';
+import IncidentImage from './IncidentImage';
 
 const typeIcons = {
   delay:       { Icon: ClockIcon, color: '#f59e0b', bg: '#fffbeb', border: '#fef3c7' },
@@ -86,20 +87,14 @@ const IncidentList = ({ incidents = [], onDelete, onAction, actionLabel = 'Manag
               </div>
             )}
 
-            {/* Image or Icon placeholder */}
+            {/* Lazy Image or Icon placeholder */}
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 mb-5 relative group-hover:border-slate-300 transition-colors">
-              {inc.img ? (
-                <img
-                  src={inc.img}
-                  alt="Incident evidence"
-                  className="w-full h-48 object-contain cursor-zoom-in"
-                  onClick={() => setPreviewImage(inc.img)}
-                />
-              ) : (
-                <div className="h-32 flex items-center justify-center opacity-50" style={{ color: cfg.color }}>
-                  <cfg.Icon size={32} />
-                </div>
-              )}
+              <IncidentImage 
+                incidentId={inc._id}
+                FallbackIcon={cfg.Icon}
+                color={cfg.color}
+                onPreview={setPreviewImage}
+              />
             </div>
 
             {/* Details */}

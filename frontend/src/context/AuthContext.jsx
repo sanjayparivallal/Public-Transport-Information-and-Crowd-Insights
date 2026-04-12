@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -11,19 +11,19 @@ export const AuthProvider = ({ children }) => {
     } catch { return null; }
   });
 
-  const login = (userData, accessToken, refreshToken) => {
+  const login = useCallback((userData, accessToken, refreshToken) => {
     localStorage.setItem('token', accessToken);
     if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     setUser(null);
-  };
+  }, []);
 
   const isAuthenticated = !!user;
   const isAuthority     = user?.role === 'authority';

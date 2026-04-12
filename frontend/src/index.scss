@@ -655,10 +655,7 @@ body {
 }
 
 // ─── Keyframes ────────────────────────────────────────────────────────────────
-@keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
-}
+// shimmer defined above in the component section
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }

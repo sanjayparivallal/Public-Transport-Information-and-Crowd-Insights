@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import TransportCard from '../../components/TransportCard';
 import Pagination from '../../components/Pagination';
-import Skeleton from '../../components/Skeleton';
+import { SearchResultsSkeleton } from '../../components/skeletons/PageSkeletons';
 import { AlertIcon, LocationIcon } from '../../components/icons';
 
 /* ── Sub-components ─────────────────────────────────────────── */
@@ -59,15 +60,14 @@ const PreSearchEmpty = () => (
 /**
  * @param {{ results, loading, searched, pagination, page, onPageChange, onClear }} props
  */
-const SearchResultsPanel = ({ results, loading, searched, pagination, page, onPageChange, onClear }) => (
+const SearchResultsPanel = memo(({ results, loading, searched, pagination, page, onPageChange, onClear }) => (
   <div className="bg-white border-2 border-slate-200/80 rounded-[2.5rem] p-6 sm:p-10 shadow-sm">
 
     {searched && <ResultsHeader results={results} pagination={pagination} />}
 
     {loading ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {[0, 1, 2, 3].map(i => <Skeleton key={i} variant="transport-card" />)}
-      </div>
+      /* Skeleton matches the real TransportCard dimensions & layout */
+      <SearchResultsSkeleton rows={4} />
     ) : searched ? (
       results.length === 0 ? (
         <NoResults onClear={onClear} />
@@ -75,7 +75,7 @@ const SearchResultsPanel = ({ results, loading, searched, pagination, page, onPa
         <div className="space-y-5">
           {results.map((t, i) => (
             <div key={t._id} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.06}s` }}>
-              <TransportCard transport={t} />
+              <TransportCard transport={t} index={i} />
             </div>
           ))}
           <Pagination
@@ -91,6 +91,8 @@ const SearchResultsPanel = ({ results, loading, searched, pagination, page, onPa
     )}
 
   </div>
-);
+));
+
+SearchResultsPanel.displayName = 'SearchResultsPanel';
 
 export default SearchResultsPanel;

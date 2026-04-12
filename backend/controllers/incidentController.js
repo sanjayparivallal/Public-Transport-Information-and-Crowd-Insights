@@ -65,6 +65,7 @@ const getAllIncidents = async (req, res, next) => {
 
     const [incidents, total] = await Promise.all([
       Incident.find(filter)
+        .select('-img')
         .sort({ reportedAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -102,6 +103,7 @@ const getIncidentsByTransport = async (req, res, next) => {
 
     const [incidents, total] = await Promise.all([
       Incident.find(filter)
+        .select('-img')
         .sort({ reportedAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -160,4 +162,15 @@ const deleteIncident = async (req, res, next) => {
   }
 };
 
-module.exports = { reportIncident, getAllIncidents, getIncidentsByTransport, resolveIncident, deleteIncident };
+// GET /api/incidents/:id/image  — get full base64 image data
+const getIncidentImage = async (req, res, next) => {
+  try {
+    const incident = await Incident.findById(req.params.id).select('img').lean();
+    if (!incident) return sendError(res, 404, 'Incident not found');
+    return sendSuccess(res, 200, { img: incident.img || null });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { reportIncident, getAllIncidents, getIncidentsByTransport, resolveIncident, deleteIncident, getIncidentImage };

@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import SearchableCombobox from '../../components/SearchableCombobox';
 import { SearchIcon, LocationIcon, BusIcon, TrainIcon } from '../../components/icons';
 
 /**
  * @param {{ filters, options, loading, onFilterChange, onComboChange, onTypeChange, onSubmit, onClear }} props
  */
-const SearchForm = ({ filters, options, loading, onFilterChange, onComboChange, onTypeChange, onSubmit, onClear }) => (
+const SearchForm = memo(({ filters, options, loading, onFilterChange, onComboChange, onTypeChange, onSubmit, onClear }) => (
   <div className="bg-white rounded-[2rem] shadow-xl shadow-blue-500/8 border border-slate-200/80 overflow-hidden">
     {/* Card header */}
     <div
@@ -118,6 +119,8 @@ const SearchForm = ({ filters, options, loading, onFilterChange, onComboChange, 
       </div>
     </form>
   </div>
-);
+));
+
+SearchForm.displayName = 'SearchForm';
 
 export default SearchForm;

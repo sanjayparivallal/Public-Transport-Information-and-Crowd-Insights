@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import { SearchIcon } from '../../components/icons';
 
-const SearchPageHeader = () => (
+const SearchPageHeader = memo(() => (
   <div
     className="relative overflow-hidden"
     style={{ background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 40%, #7c3aed 100%)' }}
@@ -50,6 +51,8 @@ const SearchPageHeader = () => (
       </div>
     </div>
   </div>
-);
+));
+
+SearchPageHeader.displayName = 'SearchPageHeader';
 
 export default SearchPageHeader;

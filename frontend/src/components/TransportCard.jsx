@@ -39,38 +39,49 @@ const TransportCard = ({ transport, index = 0 }) => {
 
   // Type-specific accents
   const typeAccent = isBus
-    ? { stripe: 'from-cyan-500 to-blue-600', iconBg: 'bg-gradient-to-br from-cyan-500 to-blue-600', routeBg: 'from-cyan-50/60 to-blue-50/40', routeBorder: 'border-cyan-100/60' }
-    : { stripe: 'from-violet-500 to-purple-600', iconBg: 'bg-gradient-to-br from-violet-500 to-purple-600', routeBg: 'from-violet-50/60 to-purple-50/40', routeBorder: 'border-violet-100/60' };
+    ? { 
+        stripe: 'from-cyan-400 via-blue-500 to-indigo-600', 
+        iconBg: 'bg-gradient-to-br from-cyan-400 to-blue-600 shadow-cyan-500/30', 
+        routeBg: 'from-cyan-50/80 to-blue-50/60', 
+        routeBorder: 'border-cyan-200/60',
+        textColor: 'group-hover:text-blue-600'
+      }
+    : { 
+        stripe: 'from-fuchsia-400 via-purple-500 to-violet-600', 
+        iconBg: 'bg-gradient-to-br from-fuchsia-400 to-violet-600 shadow-purple-500/30', 
+        routeBg: 'from-fuchsia-50/80 to-violet-50/60', 
+        routeBorder: 'border-fuchsia-200/60',
+        textColor: 'group-hover:text-purple-600'
+      };
 
   return (
     <div
-      className="card hover-lift group relative overflow-hidden flex flex-col cursor-pointer animate-fade-in-up"
+      className="bg-white rounded-[2rem] border-2 border-transparent hover:border-slate-100/50 shadow-sm hover:shadow-xl transition-all duration-300 group relative overflow-hidden flex flex-col cursor-pointer animate-fade-in-up transform hover:-translate-y-1"
       style={{ animationDelay: `${index * 80}ms` }}
       onClick={() => navigate(`/transport/${transportId}?routeId=${routeId}`)}
       role="button"
       tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && navigate(`/transport/${transportId}?routeId=${routeId}`)}
     >
-      {/* Gradient top accent bar — thicker on hover */}
-      <div className={`absolute top-0 left-0 right-0 h-[3px] group-hover:h-[4px] rounded-t-2xl bg-gradient-to-r ${typeAccent.stripe} transition-all duration-300`} />
+      {/* Gradient top accent bar — thicker on hover, full gradient */}
+      <div className={`absolute top-0 left-0 right-0 h-1.5 group-hover:h-2 bg-gradient-to-r ${typeAccent.stripe} transition-all duration-300 opacity-90 group-hover:opacity-100`} />
 
       {/* Shimmer sweep overlay on hover */}
-      <div className="absolute inset-0 -z-0 pointer-events-none overflow-hidden rounded-2xl">
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-[2rem]">
         <div
-          className="absolute top-0 -left-full h-full w-1/2 opacity-0 group-hover:opacity-100 group-hover:left-full transition-all duration-700 ease-in-out"
-          style={{
-            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%)',
-          }}
+          className="absolute top-0 -left-[100%] w-[100%] h-full opacity-0 group-hover:opacity-20 group-hover:left-[100%] transition-all duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white to-transparent transform -skew-x-12"
         />
       </div>
 
       <div className="p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center gap-5 pt-7 relative z-10">
 
         {/* Left: Icon & Details */}
-        <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div className="flex items-center gap-5 flex-1 min-w-0">
           {/* Icon box with subtle glow on hover */}
-          <div className={`w-13 h-13 w-12 h-12 shrink-0 rounded-2xl ${typeAccent.iconBg} flex items-center justify-center shadow-md group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
-            {isBus ? <BusIcon size={22} className="text-white" /> : <TrainIcon size={22} className="text-white" />}
+          <div className={`w-14 h-14 shrink-0 rounded-2xl ${typeAccent.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 relative`}>
+            {/* Soft backdrop glow behind icon */}
+            <div className="absolute inset-0 rounded-2xl bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300 mix-blend-overlay"></div>
+            {isBus ? <BusIcon size={26} className="text-white drop-shadow-sm" /> : <TrainIcon size={26} className="text-white drop-shadow-sm" />}
           </div>
           <div className="flex flex-col min-w-0 pr-2">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -87,35 +98,35 @@ const TransportCard = ({ transport, index = 0 }) => {
                 </span>
               )}
             </div>
-            {/* Name grows on hover */}
-            <h3 className="text-base font-extrabold gradient-text-cool tracking-tight truncate group-hover:tracking-normal transition-all duration-300">
+            {/* Name shifts color on hover */}
+            <h3 className={`text-lg font-extrabold text-slate-800 tracking-tight truncate transition-colors duration-300 ${typeAccent.textColor}`}>
               {displayName}
             </h3>
           </div>
         </div>
 
         {/* Origin → Destination — enhanced border + hover tint */}
-        <div className={`flex items-center justify-between bg-gradient-to-r ${typeAccent.routeBg} rounded-2xl px-5 py-3.5 border ${typeAccent.routeBorder} group-hover:shadow-sm w-full sm:w-auto shrink-0 transition-all duration-300`}>
+        <div className={`flex items-center justify-between bg-gradient-to-r ${typeAccent.routeBg} rounded-[1.5rem] px-6 py-4 border-2 ${typeAccent.routeBorder} group-hover:shadow-md group-hover:border-transparent w-full sm:w-auto shrink-0 transition-all duration-300`}>
           <div className="flex flex-col text-right gap-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">From</span>
-            <div className="flex items-center gap-1 justify-end">
-              <LocationIcon size={11} className="text-emerald-400" />
-              <span className="font-bold text-slate-800 text-sm truncate max-w-[90px]">{origin}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">From</span>
+            <div className="flex items-center gap-1.5 justify-end">
+              <LocationIcon size={14} className="text-emerald-500" />
+              <span className="font-extrabold text-slate-800 text-base truncate max-w-[100px]">{origin}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 mx-3">
-            <div className="h-px w-6 bg-gradient-to-r from-slate-200 via-cyan-300 to-slate-200 group-hover:w-8 transition-all duration-300" />
+          <div className="flex items-center gap-3 mx-4">
+            <div className={`h-[2px] w-8 rounded-full bg-gradient-to-r ${typeAccent.stripe} opacity-40 group-hover:w-10 group-hover:opacity-80 transition-all duration-300`} />
             {/* Rotating arrow on hover */}
-            <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${typeAccent.stripe} flex items-center justify-center shadow-sm group-hover:rotate-45 group-hover:scale-110 transition-transform duration-300`}>
-              <ArrowRightIcon size={13} className="text-white" />
+            <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${typeAccent.stripe} flex items-center justify-center shadow-md group-hover:rotate-45 group-hover:scale-110 transition-transform duration-300`}>
+              <ArrowRightIcon size={14} className="text-white drop-shadow-sm" />
             </div>
-            <div className="h-px w-6 bg-gradient-to-r from-slate-200 via-cyan-300 to-slate-200 group-hover:w-8 transition-all duration-300" />
+            <div className={`h-[2px] w-8 rounded-full bg-gradient-to-r ${typeAccent.stripe} opacity-40 group-hover:w-10 group-hover:opacity-80 transition-all duration-300 flex-row-reverse`} />
           </div>
           <div className="flex flex-col text-left gap-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">To</span>
-            <div className="flex items-center gap-1">
-              <LocationIcon size={11} className="text-rose-400" />
-              <span className="font-bold text-slate-800 text-sm truncate max-w-[90px]">{destination}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">To</span>
+            <div className="flex items-center gap-1.5">
+              <LocationIcon size={14} className="text-rose-500" />
+              <span className="font-extrabold text-slate-800 text-base truncate max-w-[100px]">{destination}</span>
             </div>
           </div>
         </div>
@@ -154,10 +165,10 @@ const TransportCard = ({ transport, index = 0 }) => {
           <div className="flex-1 flex flex-col gap-1">
             {/* Seat bar */}
             <div className="flex items-center gap-3">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">Seats</span>
-              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest shrink-0">Seats</span>
+              <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden shadow-inner flex">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r ${seatBarClass} transition-all duration-700`}
+                  className={`h-full rounded-full bg-gradient-to-r ${seatBarClass} transition-all duration-1000 ease-out`}
                   style={{ width: `${Math.min(displayAvailableSeats === '—' ? 0 : seatPct, 100)}%` }}
                 />
               </div>
@@ -176,9 +187,9 @@ const TransportCard = ({ transport, index = 0 }) => {
         </div>
 
         {/* View Details button */}
-        <button className="btn-primary w-full md:w-auto overflow-hidden group/btn" tabIndex={-1}>
-          View Details
-          <ArrowRightIcon size={14} className="group-hover/btn:translate-x-1 transition-transform duration-300" />
+        <button className="btn-primary w-full md:w-auto overflow-hidden group/btn px-6 py-2.5" tabIndex={-1}>
+          <span className="relative z-10 font-bold">View Details</span>
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out" />
         </button>
       </div>
     </div>

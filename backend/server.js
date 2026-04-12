@@ -21,7 +21,13 @@ const chatbotRoutes       = require('./routes/chatbot');
 const app = express();
 
 // ── Core middleware ──────────────────────────────────────────────────
-app.use(morgan('dev')); // Logger added here 📝
+// Logger: dev format in dev, structured combined in production
+const skipImages = (req) => req.originalUrl.endsWith('/image');
+if (process.env.NODE_ENV !== 'production') {
+  app.use(morgan('dev', { skip: skipImages }));
+} else {
+  app.use(morgan('combined', { skip: skipImages }));
+}
 
 // Restrict CORS to the configured frontend origin (or localhost in development)
 const allowedOrigin =

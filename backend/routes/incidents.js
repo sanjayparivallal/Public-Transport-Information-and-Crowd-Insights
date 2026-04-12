@@ -8,6 +8,7 @@ const {
   getIncidentsByTransport,
   resolveIncident,
   deleteIncident,
+  getIncidentImage,
 } = require('../controllers/incidentController');
 
 router.use(protect);
@@ -23,6 +24,9 @@ router.put('/:incidentId/resolve', requireRole('authority'), resolveIncident);
 
 // DELETE /api/incidents/:id — authority or the reporter
 router.delete('/:id', deleteIncident);
+
+// GET /api/incidents/:id/image — fetch lazy-loaded base64 image
+router.get('/:id/image', getIncidentImage);
 
 // GET /api/incidents/:transportId  — incidents for a transport
 router.get('/:transportId', getIncidentsByTransport);

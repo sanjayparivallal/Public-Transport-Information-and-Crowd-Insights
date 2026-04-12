@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { searchTransports } from '../../api/transportApi';
 import SearchPageHeader from './SearchPageHeader';
@@ -38,7 +38,7 @@ const SearchRoutes = () => {
       .catch(() => {});
   }, []);
 
-  const doSearch = async (pageNum = 1) => {
+  const doSearch = useCallback(async (pageNum = 1) => {
     setLoading(true);
     try {
       const params = { page: pageNum, limit: 20 };
@@ -59,13 +59,13 @@ const SearchRoutes = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
-  const handleSubmit    = e  => { e.preventDefault(); doSearch(1); };
-  const handleClear     = () => { setFilters(INITIAL_FILTERS); setResults([]); setSearched(false); setPagination(null); };
-  const handleChange    = e  => setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  const handleCombo     = (key, val) => setFilters(prev => ({ ...prev, [key]: val }));
-  const handleTypeChange = val => setFilters(prev => ({ ...prev, type: val }));
+  const handleSubmit     = useCallback((e) => { e.preventDefault(); doSearch(1); }, [doSearch]);
+  const handleClear      = useCallback(() => { setFilters(INITIAL_FILTERS); setResults([]); setSearched(false); setPagination(null); }, []);
+  const handleChange     = useCallback((e) => setFilters(prev => ({ ...prev, [e.target.name]: e.target.value })), []);
+  const handleCombo      = useCallback((key, val) => setFilters(prev => ({ ...prev, [key]: val })), []);
+  const handleTypeChange = useCallback((val) => setFilters(prev => ({ ...prev, type: val })), []);
 
   return (
     <div className="min-h-screen pb-20">

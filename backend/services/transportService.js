@@ -116,21 +116,27 @@ const searchTransports = async ({
     $project: {
       'transportId.authorityId.passwordHash':     0,
       'transportId.authorityId.refreshTokenHash': 0,
+      'stops': 0,
+      'fareTable': 0,
     },
   });
 
   const routes = await Route.aggregate(pipeline);
 
-  // Attach latest crowd level for the SPECIFIC route
-  const results = await Promise.all(
-    routes.map(async (route) => {
-      const crowd = await CrowdLevel.findOne({ routeId: route._id })
-        .sort({ updatedAt: -1 })
-        .select('crowdLevel updatedAt')
-        .lean();
-      return { ...route, crowdLevel: crowd?.crowdLevel || null };
-    })
-  );
+  // Efficiently fetch latest crowd level for ALL resulting routes in one query instead of N+1
+  const routeIds = routes.map(r => r._id);
+  const crowds = await CrowdLevel.aggregate([
+    { $match: { routeId: { $in: routeIds } } },
+    { $sort: { updatedAt: -1 } },
+    { $group: { _id: '$routeId', crowdLevel: { $first: '$crowdLevel' } } }
+  ]);
+  
+  const crowdMap = new Map(crowds.map(c => [c._id.toString(), c.crowdLevel]));
+
+  const results = routes.map(route => ({
+    ...route,
+    crowdLevel: crowdMap.get(route._id.toString()) || null
+  }));
 
   return {
     results,
@@ -395,23 +401,36 @@ const getMyTransports = async (userId) => {
   // 2. Fetch all routes belonging to these transports
   const routes = await Route.find({ transportId: { $in: transportIds } }).lean();
 
-  // 3. Enrich each route with its transport, crowd, and live data
-  const enrichedRoutes = await Promise.all(routes.map(async (r) => {
+  // 3. Batch fetch crowd and live positions to avoid N+1 queries
+  const routeIds = routes.map(r => r._id);
+  const [crowds, lives] = await Promise.all([
+    CrowdLevel.aggregate([
+      { $match: { routeId: { $in: routeIds } } },
+      { $sort: { updatedAt: -1 } },
+      { $group: { _id: '$routeId', crowdLevel: { $first: '$crowdLevel' } } }
+    ]),
+    LivePosition.aggregate([
+      { $match: { routeId: { $in: routeIds } } },
+      { $sort: { updatedAt: -1 } },
+      { $group: { _id: '$routeId', doc: { $first: '$$ROOT' } } }
+    ])
+  ]);
+
+  const crowdMap = new Map(crowds.map(c => [c._id.toString(), c.crowdLevel]));
+  const liveMap = new Map(lives.map(l => [l._id.toString(), l.doc]));
+
+  // 4. Enrich each route in-memory
+  const enrichedRoutes = routes.map((r) => {
     const transport = transports.find(t => String(t._id) === String(r.transportId));
     
-    const [crowd, live] = await Promise.all([
-      CrowdLevel.findOne({ routeId: r._id }).sort({ updatedAt: -1 }).lean(),
-      LivePosition.findOne({ routeId: r._id }).sort({ updatedAt: -1 }).lean(),
-    ]);
-
     return {
       ...r,
-      transportId: transport, // Provide full transport info
-      crowdLevel: crowd?.crowdLevel || null,
-      livePosition: live || null,
+      transportId: transport,
+      crowdLevel: crowdMap.get(r._id.toString()) || null,
+      livePosition: liveMap.get(r._id.toString()) || null,
       isActive: transport?.isActive !== false,
     };
-  }));
+  });
 
   return { 
     routes: enrichedRoutes, 
