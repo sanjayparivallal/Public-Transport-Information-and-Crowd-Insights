@@ -190,8 +190,15 @@ STRICT RULES:
 Your role is COMMUTER assistant.
 Valid intents: search_route, get_fare, get_stops, get_schedule, get_crowd_status, general_help, unknown.
 
-For search_route: Use this intent when the user asks for routes, "details", or "information" about specific buses or locations. Extract: origin, destination, busName (even if there are multiple buses, put them all in busName), routeNumber.
-For get_fare, extract: origin, destination, routeNumber (any combination).
+CRITICAL ENTITY EXTRACTION RULES:
+- When the user says "bus" or "buses" or "train" or "trains" as a GENERIC WORD (not part of a specific bus name or number), set transportType to "bus" or "train" — DO NOT put it in busName.
+- Only put something in busName if the user names a SPECIFIC bus (e.g. "Chennai Express", "CHN-003", "Salem Super Deluxe").
+- If the user says "bus from Chennai to Salem", extract: origin="Chennai", destination="Salem", transportType="bus", busName=null.
+- If the user says "CHN-003 bus", extract: busName="CHN-003", transportType="bus".
+- Always extract city names as origin/destination even when spelled informally.
+
+For search_route: Extract: origin, destination, busName (specific bus name/number only), routeNumber, transportType (bus|train).
+For get_fare, extract: origin, destination, routeNumber, fareClass (general|AC|sleeper, optional).
 For get_stops, extract: routeNumber or busName.
 For get_schedule, extract: routeNumber or busName, departureTime (optional).
 For get_crowd_status, extract: routeNumber or busName.`,
@@ -239,40 +246,78 @@ When all fields are collected (missingFields is empty), set intent accordingly a
 
 // ─── DB data fetchers ─────────────────────────────────────────────────────────
 
-async function fetchRoutes({ origin, destination, busNo, routeNumber }) {
+// Generic single-word transport type keywords that should NOT be used as bus name/number searches
+const GENERIC_TRANSPORT_TYPES = new Set(['bus', 'buses', 'train', 'trains', 'transport']);
+
+/**
+ * Format a raw DB route result into a clean chatbot-friendly object.
+ */
+function formatRouteResult(r) {
+  const clean = cleanDoc(r);
+  const transportSnippet = clean.transportId ? {
+    transportNumber: clean.transportId.transportNumber,
+    name:            clean.transportId.name,
+    type:            clean.transportId.type,
+    amenities:       (clean.transportId.amenities || []).slice(0, 5),
+    totalSeats:      clean.transportId.totalSeats,
+  } : null;
+
+  const simpleStops = (clean.stops || []).map((s) => s.stopName).slice(0, 10);
+  const fareBreakdown = (clean.fareTable || []).map(f => `${f.fareClass}: ₹${f.fare}`).join(', ');
+
+  return {
+    routeNumber:       clean.routeNumber,
+    routeName:         clean.routeName,
+    origin:            clean.origin,
+    destination:       clean.destination,
+    direction:         clean.direction,
+    estimatedDuration: clean.estimatedDuration,
+    totalDistance:     clean.totalDistance,
+    transport:         transportSnippet,
+    stops:             simpleStops.length > 0 ? simpleStops : undefined,
+    fares:             fareBreakdown || 'Contact operator',
+    availableSeats:    clean.availableSeats,
+    crowdLevel:        clean.crowdLevel,
+  };
+}
+
+async function fetchRoutes({ origin, destination, busNo, routeNumber, type }) {
   try {
-    const result = await transportSvc.searchTransports({
+    // If busNo is just a generic transport type word (e.g. 'bus'), treat it as type filter
+    let effectiveBusNo = busNo || routeNumber;
+    let effectiveType  = type;
+    if (effectiveBusNo && GENERIC_TRANSPORT_TYPES.has(String(effectiveBusNo).toLowerCase().trim())) {
+      if (!effectiveType) effectiveType = String(effectiveBusNo).toLowerCase().replace(/es$/, '').replace(/s$/, '');
+      effectiveBusNo = undefined;
+    }
+
+    const searchParams = {
       origin,
       destination,
-      busNo: busNo || routeNumber,
-      page:  1,
-      limit: 10,
-    });
-    return result.results.map((r) => {
-      const clean = cleanDoc(r);
-      const transportSnippet = clean.transportId ? {
-        transportNumber: clean.transportId.transportNumber,
-        name:            clean.transportId.name,
-        type:            clean.transportId.type,
-        amenities:       (clean.transportId.amenities || []).slice(0, 3),
-        totalSeats:      clean.transportId.totalSeats,
-      } : null;
+      busNo:  effectiveBusNo,
+      type:   effectiveType,
+      page:   1,
+      limit:  10,
+      includeDetails: true,
+    };
 
-      const simpleStops = (clean.stops || []).map((s) => s.stopName).slice(0, 10);
+    let result = await transportSvc.searchTransports(searchParams);
 
-      return {
-        routeNumber:       clean.routeNumber,
-        routeName:         clean.routeName,
-        origin:            clean.origin,
-        destination:       clean.destination,
-        estimatedDuration: clean.estimatedDuration,
-        transport:         transportSnippet,
-        stops:             simpleStops.length > 0 ? simpleStops : undefined,
-        departureTime:     clean.schedule?.departureTime,
-        availableSeats:    clean.availableSeats,
-        crowdLevel:        clean.crowdLevel,
-      };
-    });
+    // Fallback: if no results with both origin+destination, try origin-only or destination-only
+    if (result.results.length === 0 && origin && destination) {
+      console.log('[Chatbot] No results for origin+destination, trying origin-only fallback');
+      const fallback = await transportSvc.searchTransports({
+        origin,
+        busNo: effectiveBusNo,
+        type:  effectiveType,
+        page:  1,
+        limit: 10,
+        includeDetails: true,
+      });
+      if (fallback.results.length > 0) result = fallback;
+    }
+
+    return result.results.map(formatRouteResult);
   } catch (err) {
     console.error('[Chatbot] fetchRoutes error:', err.message);
     return [];
@@ -398,8 +443,10 @@ async function dispatchCommuter(intent, entities) {
     const routes = await fetchRoutes({
       origin:      entities.origin,
       destination: entities.destination,
+      // Prefer specific busName; fall back to routeNumber; ignore generic type keywords
       busNo:       entities.busName || entities.routeNumber,
       routeNumber: entities.routeNumber,
+      type:        entities.transportType || entities.type,
     });
     return { dbData: routes, dataType: 'routes' };
   }
@@ -715,9 +762,12 @@ Rules:
     return rawResponse.trim() || MSG_NO_DATA;
   } catch (err) {
     console.error('[Chatbot] formatWithLLM error:', err.message);
+    if (Array.isArray(dbData) && dbData.length > 0) {
+      return `I found ${dbData.length} relevant record(s) matching your query! However, my natural language processor is temporarily offline, so I cannot summarize them here.`;
+    }
     return typeof dbData === 'object' && dbData && !Array.isArray(dbData)
-      ? 'Here are the details from our records.'
-      : MSG_NO_DATA;
+      ? 'I retrieved the specific record, but cannot format it nicely at this exact moment.'
+      : MSG_OFFLINE;
   }
 }
 
@@ -837,16 +887,26 @@ Extract any new values from the user's latest message and update missingFields a
     ((userRole === 'driver' || userRole === 'conductor') && liveFlow.includes(intent));
 
   if (isMultiStep) {
+    const mergedFields = { ...((pending.intent === intent ? pending.collectedFields : {})), ...entities };
+    
+    // Calculate strict missing fields from backend validator rather than trusting LLM
+    const validatorRes = validateCollectedFields(intent, mergedFields);
+    let strictMissingFields = [];
+    if (validatorRes && validatorRes.includes('Missing required field:')) {
+      const fieldName = validatorRes.replace('Missing required field: ', '').replace('. Please provide it before proceeding.', '');
+      strictMissingFields.push(fieldName);
+    }
+
     const newPending = {
       intent,
-      collectedFields: { ...((pending.intent === intent ? pending.collectedFields : {})), ...entities },
-      missingFields,
-      awaitingConfirm: missingFields.length === 0,
+      collectedFields: mergedFields,
+      missingFields: strictMissingFields,
+      awaitingConfirm: strictMissingFields.length === 0,
     };
 
     let reply;
-    if (missingFields.length > 0) {
-      reply = responseText || `Got it! What is the ${missingFields[0]}?`;
+    if (strictMissingFields.length > 0) {
+      reply = responseText || `Got it! What is the ${strictMissingFields[0]}?`;
     } else {
       const summary = Object.entries(newPending.collectedFields)
         .map(([k, v]) => `• ${k}: ${v}`)

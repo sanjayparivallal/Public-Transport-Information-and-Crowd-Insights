@@ -3,11 +3,11 @@ import React from 'react';
 /** Suggestion chips per role */
 const CHIPS = {
   commuter: [
-    'Which bus goes from Chennai to Vellore?',
+    'Tell me the bus from Chennai to Salem',
+    'Tell me the bus from Chennai to Karur',
     'What is the fare from Salem to Erode?',
     'Show stops for route CHN-001',
-    'What time does the bus depart from Madurai?',
-    'Is the Madurai–Dindigul bus crowded?',
+    'Are there any trains from Madurai to Dindigul?',
   ],
   driver: [
     'Show my assigned bus',

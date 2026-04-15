@@ -157,7 +157,14 @@ async function run() {
       assignedConductor: assignedConductor ? assignedConductor._id : null,
       totalSeats: isBus ? 50 : 800,
       vehicleNumber: `TN-${randInt(10, 99)}-XX-${randInt(1000, 9999)}`,
-      amenities: isBus ? ['AC'] : ['AC', 'Sleeper', 'Pantry'],
+      amenities: isBus ? randItem([
+        [], // Defaults to general
+        ['General', 'WiFi'],
+        ['AC'], 
+        ['AC', 'WiFi'], 
+        ['Sleeper'], 
+        ['AC', 'Sleeper', 'USB']
+      ]) : ['AC', 'Sleeper', 'Pantry', 'General'],
       __tempOrg: org,
       __tempDest: dest,
       __tempAssignedDriver: assignedDriver ? assignedDriver._id : null
@@ -214,6 +221,29 @@ async function run() {
       { stopName: dest, stopOrder: 2, distanceFromOrigin: dist, scheduledArrival: '10:00', scheduledDeparture: '10:00' },
     ];
 
+    const baseFare = dist * 1.2;
+    const fwdFares = [];
+    const retFares = [];
+    
+    const amStr = ref.amenities.map(a => a.toLowerCase());
+    const hasAC = amStr.includes('ac');
+    const hasSleeper = amStr.includes('sleeper');
+    const hasGeneral = amStr.includes('general') || (!hasAC && !hasSleeper);
+
+    if (hasGeneral) {
+      fwdFares.push({ fromStop: origin, toStop: dest, fare: Math.round(baseFare), fareClass: 'general' });
+      retFares.push({ fromStop: dest, toStop: origin, fare: Math.round(baseFare), fareClass: 'general' });
+    }
+    
+    if (hasAC) {
+      fwdFares.push({ fromStop: origin, toStop: dest, fare: Math.round(baseFare * 1.5), fareClass: 'AC' });
+      retFares.push({ fromStop: dest, toStop: origin, fare: Math.round(baseFare * 1.5), fareClass: 'AC' });
+    }
+    if (hasSleeper) {
+      fwdFares.push({ fromStop: origin, toStop: dest, fare: Math.round(baseFare * 2.0), fareClass: 'sleeper' });
+      retFares.push({ fromStop: dest, toStop: origin, fare: Math.round(baseFare * 2.0), fareClass: 'sleeper' });
+    }
+
     // forward
     routesToInsert.push({
       transportId: t._id,
@@ -227,7 +257,7 @@ async function run() {
       availableSeats: randInt(0, ref.totalSeats),
       stops: stopsFwd,
       schedule: [{ tripId: `${t.transportNumber}-T1`, departureTime: '06:10', arrivalTime: '10:00', isActive: true, daysOfOperation: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }],
-      fareTable: [{ fromStop: origin, toStop: dest, fare: dist * 1.2, fareClass: 'general' }]
+      fareTable: fwdFares
     });
 
     // return
@@ -248,7 +278,7 @@ async function run() {
       availableSeats: randInt(0, ref.totalSeats),
       stops: stopsRet,
       schedule: [{ tripId: `${t.transportNumber}-T2`, departureTime: '14:10', arrivalTime: '18:00', isActive: true, daysOfOperation: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }],
-      fareTable: [{ fromStop: dest, toStop: origin, fare: dist * 1.2, fareClass: 'general' }]
+      fareTable: retFares
     });
   });
 

@@ -90,7 +90,12 @@ const TransportDetail = () => {
       setLoading(true);
       setError('');
       try {
-        const tRes = await getTransportById(id);
+        const [tRes, cRes, iRes] = await Promise.all([
+          getTransportById(id),
+          getCrowd(id, { page: crowdPage, limit: 10 }).catch(e => { console.error('Crowd fetch failed:', e); return null; }),
+          getIncidentsByTransport(id, { limit: 10, page: incidentsPage }).catch(e => { console.error('Incident fetch failed:', e); return null; })
+        ]);
+        
         const tPayload = tRes.data?.data || tRes.data;
         const transportData = tPayload?.transport || tPayload;
         setTransport(transportData);
@@ -98,8 +103,18 @@ const TransportDetail = () => {
           setSelectedRouteId(transportData.routes[0]._id);
         }
         
-        await fetchCrowdData(crowdPage);
-        await fetchIncidentsData(incidentsPage);
+        if (cRes) {
+          const cPayload = cRes.data?.data || cRes.data;
+          setCrowd(cPayload);
+          setCrowdReports(cPayload?.reports || []);
+          if (cPayload?.pagination) setCrowdPagination(cPayload.pagination);
+        }
+        
+        if (iRes) {
+          const iPayload = iRes.data?.data || iRes.data;
+          setIncidents(iPayload?.incidents || []);
+          if (iPayload?.pagination) setIncidentsPagination(iPayload.pagination);
+        }
       } catch (err) {
         setError(err.message || 'Failed to load transport details.');
       } finally {
@@ -597,7 +612,7 @@ const TransportDetail = () => {
 
           {/* Right Split */}
           <div className="lg:col-span-4 space-y-8">
-            <FareCalculator fareTable={fareTable} />
+            <FareCalculator fareTable={fareTable} amenities={transport.amenities} />
           </div>
         </div>
 

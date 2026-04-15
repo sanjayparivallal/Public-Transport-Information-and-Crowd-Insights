@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import SearchableCombobox from '../../components/SearchableCombobox';
 import { SearchIcon, MapIcon } from '../../components/icons';
 
-const FareCalculator = ({ fareTable }) => {
+const FareCalculator = ({ fareTable, amenities = [] }) => {
   const [fareFrom, setFareFrom] = useState('');
   const [fareTo, setFareTo] = useState('');
   const [fareResult, setFareResult] = useState(null);
@@ -39,9 +39,19 @@ const FareCalculator = ({ fareTable }) => {
   }, [normalizedFares, fareFrom, fareTo]);
 
   const availableClasses = useMemo(() => {
-    const source = pairFares.length ? pairFares : normalizedFares;
-    return Array.from(new Set(source.map((f) => f._class)));
-  }, [pairFares, normalizedFares]);
+    const classes = [];
+    const amStr = (amenities || []).join(' ').toLowerCase();
+    const hasAC = amStr.includes('ac');
+    const hasSleeper = amStr.includes('sleeper');
+    
+    if (amStr.includes('general') || (!hasAC && !hasSleeper)) {
+        classes.push('general');
+    }
+    if (hasAC) classes.push('AC');
+    if (hasSleeper) classes.push('sleeper');
+    
+    return classes;
+  }, [amenities]);
 
   useEffect(() => {
     if (!availableClasses.length) {

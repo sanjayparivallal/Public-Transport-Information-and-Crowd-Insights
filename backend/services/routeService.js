@@ -31,24 +31,42 @@ const getRoutesByTransport = async (transportId) => {
 // POST /api/transport/:transportId/routes
 const createRoute = async (userId, transportId, data) => {
   await _verifyOwnership(userId, transportId);
-  const route = await Route.create({ ...data, transportId });
-  return route;
+  try {
+    const route = await Route.create({ ...data, transportId });
+    return route;
+  } catch (err) {
+    if (err.code === 11000) {
+      const error = new Error(`A route with number '${data.routeNumber || 'that name'}' already exists.`);
+      error.statusCode = 400;
+      throw error;
+    }
+    throw err;
+  }
 };
 
 // PUT /api/transport/:transportId/routes/:routeId
 const updateRoute = async (userId, transportId, routeId, data) => {
   await _verifyOwnership(userId, transportId);
-  const route = await Route.findOneAndUpdate(
-    { _id: routeId, transportId },
-    { $set: data },
-    { new: true, runValidators: true }
-  );
-  if (!route) {
-    const err = new Error('Route not found');
-    err.statusCode = 404;
+  try {
+    const route = await Route.findOneAndUpdate(
+      { _id: routeId, transportId },
+      { $set: data },
+      { new: true, runValidators: true }
+    );
+    if (!route) {
+      const err = new Error('Route not found');
+      err.statusCode = 404;
+      throw err;
+    }
+    return route;
+  } catch (err) {
+    if (err.code === 11000) {
+      const error = new Error(`A route with number '${data.routeNumber || 'that name'}' already exists.`);
+      error.statusCode = 400;
+      throw error;
+    }
     throw err;
   }
-  return route;
 };
 
 // DELETE /api/transport/:transportId/routes/:routeId

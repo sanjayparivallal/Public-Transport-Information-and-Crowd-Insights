@@ -66,11 +66,16 @@ const TransportRoutesModal = ({ transport, onClose }) => {
         stopName: s.stopName || '',
         distanceFromOrigin: s.distanceFromOrigin || 0,
       })) || [],
-      fares: rc.fareTable?.map(f => ({
-        fromStop: f.fromStop || '',
-        toStop: f.toStop || '',
-        fare: f.fare || 0,
-      })) || [],
+      fares: rc.fareTable?.reduce((acc, f) => {
+        const key = `${f.fromStop}|${f.toStop}`;
+        let entry = acc.find(e => e.key === key);
+        if (!entry) {
+          entry = { key, fromStop: f.fromStop, toStop: f.toStop, general: '', AC: '', sleeper: '' };
+          acc.push(entry);
+        }
+        entry[f.fareClass] = f.fare;
+        return acc;
+      }, []) || [],
     });
   };
 
@@ -110,12 +115,13 @@ const TransportRoutesModal = ({ transport, onClose }) => {
           stopOrder: i + 1,
           distanceFromOrigin: Number(s.distanceFromOrigin) || 0
         })),
-        fareTable: form.fares.map(f => ({
-          fromStop: f.fromStop || 'Unknown',
-          toStop: f.toStop || 'Unknown',
-          fare: Number(f.fare) || 0,
-          fareClass: 'general'
-        }))
+        fareTable: form.fares.flatMap(f => {
+          const entries = [];
+          if (f.general !== '') entries.push({ fromStop: f.fromStop || 'Unknown', toStop: f.toStop || 'Unknown', fare: Number(f.general), fareClass: 'general' });
+          if (f.AC !== '') entries.push({ fromStop: f.fromStop || 'Unknown', toStop: f.toStop || 'Unknown', fare: Number(f.AC), fareClass: 'AC' });
+          if (f.sleeper !== '') entries.push({ fromStop: f.fromStop || 'Unknown', toStop: f.toStop || 'Unknown', fare: Number(f.sleeper), fareClass: 'sleeper' });
+          return entries;
+        })
       };
 
       if (editingRoute === 'new') {
@@ -164,13 +170,18 @@ const TransportRoutesModal = ({ transport, onClose }) => {
   };
 
   // Fare Actions
-  const addFare = () => setForm(p => ({ ...p, fares: [...p.fares, { fromStop: '', toStop: '', fare: 0 }] }));
+  const addFare = () => setForm(p => ({ ...p, fares: [...p.fares, { fromStop: '', toStop: '', general: '', AC: '', sleeper: '' }] }));
   const updateFare = (index, field, value) => {
     const newFares = [...form.fares];
     newFares[index][field] = value;
     setForm(p => ({ ...p, fares: newFares }));
   };
   const removeFare = (index) => setForm(p => ({ ...p, fares: p.fares.filter((_, i) => i !== index) }));
+
+  const amenitiesStr = (transport?.amenities || []).join(' ').toLowerCase();
+  const hasAC = amenitiesStr.includes('ac');
+  const hasSleeper = amenitiesStr.includes('sleeper');
+  const hasGeneral = amenitiesStr.includes('general') || (!hasAC && !hasSleeper);
 
   return (
     // ENHANCED: .card base, animate-scale-in
@@ -495,9 +506,11 @@ const TransportRoutesModal = ({ transport, onClose }) => {
                 )}
                 {form.fares.length > 0 && (
                   <div className="flex gap-3 px-1 mb-2">
-                    <div className="flex-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">Source Stop</div>
-                    <div className="flex-1 text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Target Stop</div>
-                    <div className="w-28 text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Price</div>
+                    <div className="flex-[0.8] text-[10px] font-black text-slate-400 uppercase tracking-widest">Source Stop</div>
+                    <div className="flex-[0.8] text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Target Stop</div>
+                    {hasGeneral && <div className="flex-1 min-w-[70px] text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 text-center">General</div>}
+                    {hasAC && <div className="flex-1 min-w-[70px] text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 text-center">AC</div>}
+                    {hasSleeper && <div className="flex-1 min-w-[70px] text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 text-center">Sleeper</div>}
                     <div className="w-8"></div>
                   </div>
                 )}
@@ -505,7 +518,7 @@ const TransportRoutesModal = ({ transport, onClose }) => {
                   {form.fares.map((fare, i) => (
                     // ENHANCED: fare row as mini .card with amber accent
                     <div key={i} className="flex gap-3 items-start group bg-white rounded-xl border border-amber-100 p-2">
-                      <div className="flex-1">
+                      <div className="flex-[0.8]">
                         <input
                           type="text"
                           placeholder="From Stop"
@@ -515,7 +528,7 @@ const TransportRoutesModal = ({ transport, onClose }) => {
                           required
                         />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-[0.8]">
                         <input
                           type="text"
                           placeholder="To Stop"
@@ -525,19 +538,30 @@ const TransportRoutesModal = ({ transport, onClose }) => {
                           required
                         />
                       </div>
-                      <div className="w-28">
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-amber-500">₹</span>
-                          <input
-                            type="number"
-                            placeholder="0"
-                            className="form-field !py-2 !text-sm !pl-7"
-                            value={fare.fare}
-                            onChange={(e) => updateFare(i, 'fare', e.target.value)}
-                            required min="0"
-                          />
+                      {hasGeneral && (
+                        <div className="flex-1 min-w-[70px]">
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-black text-amber-500">₹</span>
+                            <input type="number" placeholder="0" className="form-field !py-2 !text-sm !pl-6 bg-white" value={fare.general} onChange={(e) => updateFare(i, 'general', e.target.value)} min="0" required />
+                          </div>
                         </div>
-                      </div>
+                      )}
+                      {hasAC && (
+                        <div className="flex-1 min-w-[70px]">
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-black text-amber-500">₹</span>
+                            <input type="number" placeholder="0" className="form-field !py-2 !text-sm !pl-6 bg-white" value={fare.AC} onChange={(e) => updateFare(i, 'AC', e.target.value)} min="0" />
+                          </div>
+                        </div>
+                      )}
+                      {hasSleeper && (
+                        <div className="flex-1 min-w-[70px]">
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-black text-amber-500">₹</span>
+                            <input type="number" placeholder="0" className="form-field !py-2 !text-sm !pl-6 bg-white" value={fare.sleeper} onChange={(e) => updateFare(i, 'sleeper', e.target.value)} min="0" />
+                          </div>
+                        </div>
+                      )}
                       <button type="button" onClick={() => removeFare(i)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-1">
                         <TrashIcon size={14} />
                       </button>

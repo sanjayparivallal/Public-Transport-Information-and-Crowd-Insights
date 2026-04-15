@@ -22,6 +22,7 @@ const searchTransports = async ({
   authorityId,
   myTransports,
   userId,
+  includeDetails = false,
   page  = 1,
   limit = 20,
 }) => {
@@ -112,14 +113,17 @@ const searchTransports = async ({
   pipeline.push({ $limit: safeLimit });
 
   // Stage 7: strip sensitive fields
-  pipeline.push({
-    $project: {
-      'transportId.authorityId.passwordHash':     0,
-      'transportId.authorityId.refreshTokenHash': 0,
-      'stops': 0,
-      'fareTable': 0,
-    },
-  });
+  const projectRules = {
+    'transportId.authorityId.passwordHash':     0,
+    'transportId.authorityId.refreshTokenHash': 0,
+  };
+  
+  if (!includeDetails) {
+    projectRules.stops = 0;
+    projectRules.fareTable = 0;
+  }
+
+  pipeline.push({ $project: projectRules });
 
   const routes = await Route.aggregate(pipeline);
 
@@ -207,16 +211,26 @@ const createTransport = async (userId, { transportNumber, name, type, operator, 
     throw err;
   }
 
-  const transport = await Transport.create({
-    transportNumber,
-    name,
-    type,
-    operator:      operator      || undefined,
-    amenities:     amenities     || [],
-    totalSeats:    totalSeats    || undefined,
-    vehicleNumber: vehicleNumber || undefined,
-    authorityId: authority._id,
-  });
+  let transport;
+  try {
+    transport = await Transport.create({
+      transportNumber,
+      name,
+      type,
+      operator:      operator      || undefined,
+      amenities:     amenities     || [],
+      totalSeats:    totalSeats    || undefined,
+      vehicleNumber: vehicleNumber || undefined,
+      authorityId: authority._id,
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      const error = new Error(`A transport with number '${transportNumber}' already exists.`);
+      error.statusCode = 400;
+      throw error;
+    }
+    throw err;
+  }
 
   await Authority.findByIdAndUpdate(
     authority._id,
@@ -256,8 +270,17 @@ const updateTransport = async (userId, transportId, updates) => {
     }
   });
 
-  await transport.save();
-  return transport;
+  try {
+    await transport.save();
+    return transport;
+  } catch (err) {
+    if (err.code === 11000) {
+      const error = new Error(`A transport with number '${updates.transportNumber || 'that name'}' already exists.`);
+      error.statusCode = 400;
+      throw error;
+    }
+    throw err;
+  }
 };
 
 /**
