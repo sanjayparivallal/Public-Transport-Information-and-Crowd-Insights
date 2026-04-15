@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { loginUser } from '../../api/authApi';
+import {  loginUser  } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { MailIcon, LockIcon, EyeIcon, EyeOffIcon, LogInIcon } from '../../components/icons';
 import AuthLayout from '../../components/AuthLayout';

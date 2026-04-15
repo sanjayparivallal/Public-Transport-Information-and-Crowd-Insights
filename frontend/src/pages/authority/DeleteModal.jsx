@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { deleteTransport } from '../../api/adminApi';
+import {  deleteTransport  } from '../../api';
 import { AlertIcon, TrashIcon, PlusIcon, BusIcon, TrainIcon } from '../../components/icons';
 
 /* ── Delete Confirmation Modal ───────────────────────────── */

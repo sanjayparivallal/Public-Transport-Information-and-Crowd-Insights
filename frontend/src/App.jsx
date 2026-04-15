@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -9,6 +10,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import VantaBackground from './components/VantaBackground';
 import Chatbot from './components/Chatbot';
+import PageTransition from './components/PageTransition';
 
 /* ── Auth pages (eager — small, always needed) ─────────── */
 import Login           from './pages/auth/Login';
@@ -86,38 +88,40 @@ const App = () => {
       {/* Chatbot — visible on all authenticated routes */}
       {showNavbar && <Chatbot />}
       <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* ── Public routes (no auth needed) ── */}
-          <Route path="/login"            element={<Login />} />
-          <Route path="/signup/commuter"  element={<SignupCommuter />} />
-          <Route path="/signup/authority" element={<SignupAuthority />} />
+        <AnimatePresence mode="wait">
+          <Routes location={useLocation()} key={useLocation().pathname}>
+            {/* ── Public routes (no auth needed) ── */}
+            <Route path="/login"            element={<PageTransition><Login /></PageTransition>} />
+            <Route path="/signup/commuter"  element={<PageTransition><SignupCommuter /></PageTransition>} />
+            <Route path="/signup/authority" element={<PageTransition><SignupAuthority /></PageTransition>} />
 
-          {/* ── Protected routes ── */}
-          <Route element={<PrivateRoute />}>
-            {/* Dashboards */}
-            <Route path="/dashboard"           element={<CommuterDashboard />} />
-            <Route path="/dashboard/commuter"  element={<CommuterDashboard />} />
+            {/* ── Protected routes ── */}
+            <Route element={<PrivateRoute />}>
+              {/* Dashboards */}
+              <Route path="/dashboard"           element={<PageTransition><CommuterDashboard /></PageTransition>} />
+              <Route path="/dashboard/commuter"  element={<PageTransition><CommuterDashboard /></PageTransition>} />
 
-            {/* Search & Transport */}
-            <Route path="/search"         element={<SearchRoutes />} />
-            <Route path="/transport/:id"  element={<TransportDetail />} />
+              {/* Search & Transport */}
+              <Route path="/search"         element={<PageTransition><SearchRoutes /></PageTransition>} />
+              <Route path="/transport/:id"  element={<PageTransition><TransportDetail /></PageTransition>} />
 
-            {/* Profile pages */}
-            <Route path="/profile"          element={<Profile />} />
-            <Route path="/profile/user"     element={<UserProfile />} />
-          </Route>
+              {/* Profile pages */}
+              <Route path="/profile"          element={<PageTransition><Profile /></PageTransition>} />
+              <Route path="/profile/user"     element={<PageTransition><UserProfile /></PageTransition>} />
+            </Route>
 
-          {/* ── Authority-only routes ── */}
-          <Route element={<AuthorityRoute />}>
-            <Route path="/dashboard/authority" element={<AuthorityDashboard />} />
-            <Route path="/profile/authority" element={<AuthorityProfile />} />
-            <Route path="/authority/manage"  element={<ManageTransport />} />
-          </Route>
+            {/* ── Authority-only routes ── */}
+            <Route element={<AuthorityRoute />}>
+              <Route path="/dashboard/authority" element={<PageTransition><AuthorityDashboard /></PageTransition>} />
+              <Route path="/profile/authority" element={<PageTransition><AuthorityProfile /></PageTransition>} />
+              <Route path="/authority/manage"  element={<PageTransition><ManageTransport /></PageTransition>} />
+            </Route>
 
-          {/* ── Default redirects ── */}
-          <Route path="/"  element={<RootRedirect />} />
-          <Route path="*"  element={<RootRedirect />} />
-        </Routes>
+            {/* ── Default redirects ── */}
+            <Route path="/"  element={<RootRedirect />} />
+            <Route path="*"  element={<RootRedirect />} />
+          </Routes>
+        </AnimatePresence>
       </Suspense>
     </>
   );

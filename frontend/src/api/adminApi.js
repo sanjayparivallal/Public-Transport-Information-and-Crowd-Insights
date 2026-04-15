@@ -28,15 +28,6 @@ export const getAllIncidentsForAuthority = (params = {}) => api.get('/incidents'
  * @param {string} transportId
  */
 export const getCrowdForTransport = (transportId) => api.get(`/crowd/${transportId}`);
-
-/**
- * Assign driver or conductor to a transport.
- * @param {string} transportId
- * @param {{ email: string, assignRole: 'driver'|'conductor' }} data
- */
-export const assignStaff = (transportId, data) =>
-  api.post(`/transport/${transportId}/assign`, data);
-
 /**
  * Remove driver or conductor from a transport.
  * @param {string} transportId
@@ -44,23 +35,6 @@ export const assignStaff = (transportId, data) =>
  */
 export const removeStaff = (transportId, role) =>
   api.delete(`/transport/${transportId}/unassign/${role}`);
-
-/**
- * Create a transport (admin shorthand).
- * @param {{ transportNumber: string, name: string, type: 'bus'|'train' }} data
- */
-export const createTransport = (data) => api.post('/transport', data);
-
-/**
- * Update a transport (admin shorthand).
- */
-export const updateTransport = (transportId, data) => api.put(`/transport/${transportId}`, data);
-
-/**
- * Delete a transport (admin shorthand).
- */
-export const deleteTransport = (transportId) => api.delete(`/transport/${transportId}`);
-
 /**
  * Get all users eligible to be assigned as staff
  */

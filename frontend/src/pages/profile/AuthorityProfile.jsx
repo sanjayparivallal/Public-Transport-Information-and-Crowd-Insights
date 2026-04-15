@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getProfile, updateProfile } from '../../api/userApi';
-import { getManagedTransports } from '../../api/adminApi';
+import {  getProfile, updateProfile  } from '../../api';
+import {  getManagedTransports  } from '../../api';
 import { BuildingIcon, UserIcon, EditIcon, CheckCircleIcon, AlertIcon, PauseIcon, KeyIcon, PlusIcon, ShieldIcon, GlobeIcon } from '../../components/icons';
 import Skeleton from '../../components/Skeleton';
 

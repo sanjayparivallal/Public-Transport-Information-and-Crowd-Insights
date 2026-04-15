@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { assignStaff, getStaffCandidates } from '../../api/adminApi';
+import {  assignStaff, getStaffCandidates  } from '../../api';
 import SearchableCombobox from '../../components/SearchableCombobox';
 import { UserIcon, PlusIcon, AlertIcon, CheckCircleIcon, BusIcon, TrainIcon } from '../../components/icons';
 

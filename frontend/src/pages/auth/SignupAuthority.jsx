@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { registerAuthority } from '../../api/authApi';
+import {  registerAuthority  } from '../../api';
 import { MailIcon, LockIcon, EyeIcon, EyeOffIcon, UserIcon, BuildingIcon, LocationIcon, IdCardIcon } from '../../components/icons';
 import AuthLayout from '../../components/AuthLayout';
 

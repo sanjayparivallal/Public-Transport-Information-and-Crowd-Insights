@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import {
+import { 
   getAuthorityProfile,
   getManagedTransports,
   getAllIncidentsForAuthority,
-} from '../../api/adminApi';
-import { deleteIncident } from '../../api/incidentApi';
+ } from '../../api';
+import {  deleteIncident  } from '../../api';
 import {
   BusIcon, TrainIcon, AlertIcon, ClipboardIcon,
   SearchIcon, WrenchIcon, ArrowRightIcon,

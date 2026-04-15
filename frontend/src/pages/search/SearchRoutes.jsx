@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { searchTransports } from '../../api/transportApi';
+import {  searchTransports  } from '../../api';
 import SearchPageHeader from './SearchPageHeader';
 import SearchForm from './SearchForm';
 import SearchResultsPanel from './SearchResultsPanel';

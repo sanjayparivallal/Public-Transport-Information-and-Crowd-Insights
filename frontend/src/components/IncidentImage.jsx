@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getIncidentImage } from '../api/incidentApi';
+import {  getIncidentImage  } from '../api';
 
 const IncidentImage = ({ incidentId, FallbackIcon, color, onPreview }) => {
   const [imgData, setImgData] = useState(null);
@@ -23,7 +23,7 @@ const IncidentImage = ({ incidentId, FallbackIcon, color, onPreview }) => {
 
   if (loading) {
     return (
-      <div className="h-48 flex items-center justify-center animate-pulse bg-slate-100">
+      <div className="h-48 flex items-center justify-center skeleton">
         <FallbackIcon size={32} style={{ color: '#cbd5e1' }} />
       </div>
     );

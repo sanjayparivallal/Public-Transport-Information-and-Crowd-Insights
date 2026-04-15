@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllCrowdReports, deleteCrowdReport } from '../../api/crowdApi';
+import {  getAllCrowdReports, deleteCrowdReport  } from '../../api';
 import CrowdBadge from '../../components/CrowdBadge';
 import ConfirmModal from '../../components/ConfirmModal';
 import { UsersIcon, ClockIcon, TrashIcon, ActivityIcon } from '../../components/icons';

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Trash2, Send, Bot, Loader } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import QuickChips from './QuickChips';
-import { sendChatMessage, getChatHistory, clearChatHistory } from '../../api/chatApi';
+import {  sendChatMessage, getChatHistory, clearChatHistory  } from '../../api';
 
 const ROLE_LABELS = {
   commuter:  'Commuter',

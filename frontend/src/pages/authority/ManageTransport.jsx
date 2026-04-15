@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import {
+import { 
   getManagedTransports,
   updateTransport,
   removeStaff,
-} from '../../api/adminApi';
+ } from '../../api';
 import { BusIcon, TrainIcon, EditIcon, WrenchIcon, AlertIcon, SearchIcon, TrashIcon, MapIcon, RefreshIcon, PlusIcon } from '../../components/icons';
 import TransportRoutesModal from './TransportRoutesModal';
 import TransportFormModal from './TransportFormModal';
@@ -462,12 +462,6 @@ const ManageTransport = () => {
       {showRoutesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <button
-              onClick={() => setShowRoutesModal(false)}
-              className="absolute top-4 right-4 z-10 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
-            >
-              <PlusIcon size={20} className="rotate-45" />
-            </button>
             <TransportRoutesModal transport={routeTarget} onClose={() => setShowRoutesModal(false)} />
           </div>
         </div>

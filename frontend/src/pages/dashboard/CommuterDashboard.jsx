@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getProfile } from '../../api/userApi';
-import { getTransportById } from '../../api/transportApi';
-import { getCrowd } from '../../api/crowdApi';
+import {  getProfile  } from '../../api';
+import {  getTransportById  } from '../../api';
+import {  getCrowd  } from '../../api';
 import DashboardAssignedTransport from './DashboardAssignedTransport';
 import DashboardFavouriteTransports from './DashboardFavouriteTransports';
 import DashboardMyIncidents from './DashboardMyIncidents';

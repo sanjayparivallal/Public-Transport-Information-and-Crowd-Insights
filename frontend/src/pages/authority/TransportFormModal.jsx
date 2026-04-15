@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { createTransport, updateTransport } from '../../api/adminApi';
+import {  createTransport, updateTransport  } from '../../api';
 import {
   EditIcon, PlusIcon, AlertIcon, BusIcon, TrainIcon, CheckCircleIcon,
   WrenchIcon, UserIcon, ClipboardIcon, ActivityIcon, StarIcon,

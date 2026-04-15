@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { updateLivePosition } from '../../api/crowdApi';
+import {  updateLivePosition  } from '../../api';
 import { LocationIcon, ClockIcon, CheckCircleIcon, AlertIcon } from '../../components/icons';
 
 const DashboardLiveTracking = ({ transport }) => {

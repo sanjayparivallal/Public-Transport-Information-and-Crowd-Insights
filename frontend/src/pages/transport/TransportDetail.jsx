@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { getTransportById } from '../../api/transportApi';
-import { getCrowd, submitCrowdReport, updateCrowdLevel, updateLivePosition, deleteCrowdReport } from '../../api/crowdApi';
-import { getIncidentsByTransport, deleteIncident, reportIncident } from '../../api/incidentApi';
-import { addFavourite, removeFavourite } from '../../api/userApi';
+import {  getTransportById  } from '../../api';
+import {  getCrowd, submitCrowdReport, updateCrowdLevel, updateLivePosition, deleteCrowdReport  } from '../../api';
+import {  getIncidentsByTransport, deleteIncident, reportIncident  } from '../../api';
+import {  addFavourite, removeFavourite  } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import CrowdBadge from '../../components/CrowdBadge';
 import StopsTimeline from '../../components/StopsTimeline';

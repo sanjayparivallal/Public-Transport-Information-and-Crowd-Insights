@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { registerCommuter } from '../../api/authApi';
+import {  registerCommuter  } from '../../api';
 import { MailIcon, LockIcon, EyeIcon, EyeOffIcon, UserIcon } from '../../components/icons';
 import AuthLayout from '../../components/AuthLayout';
 

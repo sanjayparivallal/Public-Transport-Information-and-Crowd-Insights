@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllIncidents, deleteIncident } from '../../api/incidentApi';
+import {  getAllIncidents, deleteIncident  } from '../../api';
 import IncidentList from '../../components/IncidentList';
 import ConfirmModal from '../../components/ConfirmModal';
 import { ClipboardIcon, BellIcon } from '../../components/icons';

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getProfile, updateProfile } from '../../api/userApi';
+import {  getProfile, updateProfile  } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { CheckCircleIcon, AlertIcon, EditIcon, KeyIcon, PlusIcon, SaveIcon } from '../../components/icons';
 import ProfileViewInfo from './ProfileViewInfo';

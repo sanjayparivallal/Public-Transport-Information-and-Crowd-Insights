@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getIncidentsByTransport } from '../../api/incidentApi';
+import {  getIncidentsByTransport  } from '../../api';
 import IncidentList from '../../components/IncidentList';
 import { AlertIcon, BellIcon } from '../../components/icons';
 

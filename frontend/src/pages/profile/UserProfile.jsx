@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getProfile, updateProfile } from "../../api/userApi";
-import { getTransportById } from "../../api/transportApi";
+import {  getProfile, updateProfile  } from '../../api';
+import {  getTransportById  } from '../../api';
 import {
   UserIcon,
   EditIcon,

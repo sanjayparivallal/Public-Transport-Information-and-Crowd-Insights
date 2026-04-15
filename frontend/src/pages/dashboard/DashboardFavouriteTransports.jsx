@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getCrowd } from '../../api/crowdApi';
-import { removeFavourite } from '../../api/userApi';
+import {  getCrowd  } from '../../api';
+import {  removeFavourite  } from '../../api';
 import { BusIcon, TrainIcon, StarIcon, SearchIcon, MapPinIcon, ActivityIcon, ArrowRightIcon, TrashIcon } from '../../components/icons';
 import CrowdBadge from '../../components/CrowdBadge';
 
